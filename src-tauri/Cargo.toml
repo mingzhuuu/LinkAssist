@@ -29,7 +29,7 @@ futures = "0.3"
 tokio-serial = "5.4"
 serialport = "4"
 socket2 = "0.6"
-mlua = { version = "0.10", features = ["lua54", "serialize", "vendored", "send"] }
+mlua = { version = "0.12", features = ["lua54", "serialize", "vendored", "send"] }
 tauri-plugin-dialog = "2.7.0"
 axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio"] }
 reqwest = { version = "0.12", default-features = false, features = ["json"] }
