@@ -33,7 +33,7 @@ mlua = { version = "0.10", features = ["lua54", "serialize", "vendored", "send"]
 tauri-plugin-dialog = "2.7.0"
 axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio"] }
 reqwest = { version = "0.12", default-features = false, features = ["json"] }
-base64 = "0.22"
+base64 = "0.23"
 flate2 = "1"
 hex = "0.4"
 sha2 = "0.10"
