@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "LinkAssist",
+  "version": "0.1.0",
+  "identifier": "com.linkassist.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist",
+    "removeUnusedCommands": true
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "LinkAssist",
+        "width": 1400,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 680,
+        "decorations": false,
+        "dragDropEnabled": false,
+        "transparent": true,
+        "resizable": true,
+        "shadow": false,
+        "visible": false,
+        "skipTaskbar": true,
+        "theme": "Dark"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost; object-src 'none'; base-uri 'none'; frame-src 'none'",
+      "devCsp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost ws://127.0.0.1:1420 ws://127.0.0.1:1421; object-src 'none'; base-uri 'none'; frame-src 'none'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "resources": {
+      "../LICENSE": "LICENSE",
+      "../THIRD_PARTY_NOTICES.md": "THIRD_PARTY_NOTICES.md",
+      "../third-party-licenses/": "third-party-licenses/"
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "wix": {
+        "language": "en-US"
+      },
+      "nsis": {
+        "languages": ["English", "SimpChinese"],
+        "displayLanguageSelector": true
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "13.3",
+      "frameworks": []
+    },
+    "linux": {
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0", "libbluetooth-dev"]
+      },
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    },
+    "shortDescription": "LinkAssist - BLE, UART, TCP/IP Debug Tool",
+    "longDescription": "LinkAssist is a professional debugging application for BLE, UART, and TCP/IP communication protocols with real-time data visualization, protocol parsing, Lua scripting, and multi-channel support.",
+    "category": "DeveloperTool",
+    "copyright": "Copyright (c) 2026 LinkAssist contributors",
+    "license": "MIT"
+  }
+}

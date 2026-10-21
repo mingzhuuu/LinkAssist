@@ -1,0 +1,10 @@
+rpm,delay,mode,value
+0,2,percent,0
+100,2,percent,10
+200,2,percent,20
+300,2,percent,30
+400,2,percent,40
+500,2,percent,50
+600,30,power,100
+700,40,power,150
+800,60,power,200

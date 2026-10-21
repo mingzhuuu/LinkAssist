@@ -1,0 +1,5 @@
+rpm,delay,mode,value
+100,60,grade,1
+100,60,grade,2.5
+100,60,grade,0
+100,60,grade,-1

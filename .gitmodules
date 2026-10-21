@@ -1,0 +1,6 @@
+[submodule "bluetooth-numbers-database"]
+	path = bluetooth-numbers-database
+	url = https://github.com/nordicsemi/bluetooth-numbers-database.git
+[submodule "registries"]
+	path = registries
+	url = https://github.com/WebBluetoothCG/registries.git

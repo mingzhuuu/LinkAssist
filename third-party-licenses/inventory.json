@@ -1,0 +1,3142 @@
+{
+  "target": "x86_64-pc-windows-msvc",
+  "packages": [
+    {
+      "ecosystem": "npm",
+      "name": "@tauri-apps/api",
+      "version": "2.12.4",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE-2.0",
+        "LICENSE-MIT",
+        "LICENSE.spdx"
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "@tauri-apps/plugin-dialog",
+      "version": "2.8.3",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE.spdx"
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "@types/react",
+      "version": "19.3.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "csstype",
+      "version": "3.2.3",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "react",
+      "version": "19.3.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "react-dom",
+      "version": "19.3.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "scheduler",
+      "version": "0.28.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "uplot",
+      "version": "1.6.32",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "zustand",
+      "version": "5.0.15",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "adler2",
+      "version": "2.0.1",
+      "license": "0BSD OR MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-0BSD",
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "aho-corasick",
+      "version": "1.1.5",
+      "license": "Unlicense OR MIT",
+      "licenseFiles": [
+        "COPYING",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "alloc-no-stdlib",
+      "version": "3.0.0",
+      "license": "BSD-3-Clause",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "alloc-stdlib",
+      "version": "0.3.0",
+      "license": "BSD-3-Clause",
+      "licenseFiles": [],
+      "upstream": {
+        "file": "alloc-stdlib-0.3.0.txt",
+        "source": "https://github.com/dropbox/rust-alloc-no-stdlib/tree/0a81fd6928ea3b33c8cd484aa4575d50ffb98012/alloc-stdlib",
+        "url": "https://raw.githubusercontent.com/dropbox/rust-alloc-no-stdlib/0a81fd6928ea3b33c8cd484aa4575d50ffb98012/LICENSE"
+      }
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "anyhow",
+      "version": "1.0.104",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "async-trait",
+      "version": "0.1.92",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "atomic-waker",
+      "version": "1.1.2",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT",
+        "LICENSE-THIRD-PARTY"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "autocfg",
+      "version": "1.5.1",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "axum-core",
+      "version": "0.5.6",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "axum",
+      "version": "0.8.9",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "base64",
+      "version": "0.22.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "base64",
+      "version": "0.23.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "bit-set",
+      "version": "0.8.0",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "bit-vec",
+      "version": "0.8.0",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "bitflags",
+      "version": "1.3.2",
+      "license": "MIT/Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "bitflags",
+      "version": "2.13.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "block-buffer",
+      "version": "0.10.4",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "brotli-decompressor",
+      "version": "6.0.1",
+      "license": "BSD-3-Clause/MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "brotli",
+      "version": "9.0.0",
+      "license": "BSD-3-Clause AND MIT",
+      "licenseFiles": [
+        "LICENSE.BSD-3-Clause",
+        "LICENSE.MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "bs58",
+      "version": "0.5.1",
+      "license": "MIT/Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "bstr",
+      "version": "1.13.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "COPYING",
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "btleplug",
+      "version": "0.12.0",
+      "license": "MIT/Apache-2.0/BSD-3-Clause",
+      "licenseFiles": [
+        "LICENSE.md"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "byteorder",
+      "version": "1.5.0",
+      "license": "Unlicense OR MIT",
+      "licenseFiles": [
+        "COPYING",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "bytes",
+      "version": "1.12.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "camino",
+      "version": "1.2.6",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "cargo_metadata",
+      "version": "0.19.2",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "cargo_toml",
+      "version": "1.0.1",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "cargo-platform",
+      "version": "0.1.9",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "cc",
+      "version": "1.9.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "cfb",
+      "version": "0.14.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "cfg-if",
+      "version": "1.0.5",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "chrono",
+      "version": "0.4.45",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "cookie",
+      "version": "0.18.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "cpufeatures",
+      "version": "0.2.17",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "crc32fast",
+      "version": "1.5.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "crossbeam-channel",
+      "version": "0.5.17",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT",
+        "LICENSE-THIRD-PARTY"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "crossbeam-utils",
+      "version": "0.8.23",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "crypto-common",
+      "version": "0.1.7",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "cssparser-macros",
+      "version": "0.7.1",
+      "license": "MPL-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "cssparser",
+      "version": "0.37.0",
+      "license": "MPL-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "ctor",
+      "version": "1.0.13",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "darling_core",
+      "version": "0.24.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "darling_macro",
+      "version": "0.24.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "darling",
+      "version": "0.24.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "dashmap",
+      "version": "6.2.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "defmt-macros",
+      "version": "1.2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "defmt-parser",
+      "version": "1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "defmt",
+      "version": "1.2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "deranged",
+      "version": "0.5.9",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-Apache",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "derive_more-impl",
+      "version": "2.1.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "derive_more",
+      "version": "2.1.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "digest",
+      "version": "0.10.7",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "dirs-sys",
+      "version": "0.5.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "dirs",
+      "version": "7.0.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "displaydoc",
+      "version": "0.2.7",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "dom_query",
+      "version": "0.28.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "dpi",
+      "version": "0.1.2",
+      "license": "Apache-2.0 AND MIT",
+      "licenseFiles": [
+        "LICENSE",
+        "LICENSE-LIBM-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "dtoa-short",
+      "version": "0.3.5",
+      "license": "MPL-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "dtoa",
+      "version": "1.0.11",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "dunce",
+      "version": "1.0.5",
+      "license": "CC0-1.0 OR MIT-0 OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "dyn-clone",
+      "version": "1.0.20",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "either",
+      "version": "1.19.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "embed-resource",
+      "version": "3.0.12",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "env_home",
+      "version": "0.1.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "equivalent",
+      "version": "1.0.3",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "erased-serde",
+      "version": "0.4.10",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "fastrand",
+      "version": "2.5.0",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "fdeflate",
+      "version": "0.3.7",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "find-msvc-tools",
+      "version": "0.1.15",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "flate2",
+      "version": "1.1.10",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "fnv",
+      "version": "1.0.7",
+      "license": "Apache-2.0 / MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "foldhash",
+      "version": "0.2.0",
+      "license": "Zlib",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "form_urlencoded",
+      "version": "1.2.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "futures-channel",
+      "version": "0.3.34",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "futures-core",
+      "version": "0.3.34",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "futures-executor",
+      "version": "0.3.34",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "futures-io",
+      "version": "0.3.34",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "futures-macro",
+      "version": "0.3.34",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "futures-sink",
+      "version": "0.3.34",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "futures-task",
+      "version": "0.3.34",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "futures-util",
+      "version": "0.3.34",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "futures",
+      "version": "0.3.34",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "generic-array",
+      "version": "0.14.7",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "getrandom",
+      "version": "0.3.4",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "getrandom",
+      "version": "0.4.3",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "glob",
+      "version": "0.3.4",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "hashbrown",
+      "version": "0.12.3",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "hashbrown",
+      "version": "0.14.5",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "hashbrown",
+      "version": "0.17.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "heck",
+      "version": "0.5.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "hex",
+      "version": "0.4.3",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "html5ever",
+      "version": "0.39.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "http-body-util",
+      "version": "0.1.5",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "http-body",
+      "version": "1.1.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "http",
+      "version": "1.5.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "httparse",
+      "version": "1.10.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "httpdate",
+      "version": "1.0.3",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "hyper-util",
+      "version": "0.1.21",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "hyper",
+      "version": "1.12.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "ico",
+      "version": "0.5.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "icu_collections",
+      "version": "2.3.0",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "icu_locale_core",
+      "version": "2.3.0",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "icu_normalizer_data",
+      "version": "2.3.0",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "icu_normalizer",
+      "version": "2.3.0",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "icu_properties_data",
+      "version": "2.3.0",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "icu_properties",
+      "version": "2.3.0",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "icu_provider",
+      "version": "2.3.1",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "ident_case",
+      "version": "1.0.1",
+      "license": "MIT/Apache-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "idna_adapter",
+      "version": "1.2.2",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "idna",
+      "version": "1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "indexmap",
+      "version": "1.9.3",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "indexmap",
+      "version": "2.14.2",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "infer",
+      "version": "0.22.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "ipnet",
+      "version": "2.12.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "itoa",
+      "version": "1.0.18",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "jiff-core",
+      "version": "0.1.1",
+      "license": "Unlicense OR MIT",
+      "licenseFiles": [
+        "COPYING",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "jiff-tzdb-platform",
+      "version": "0.1.3",
+      "license": "Unlicense OR MIT",
+      "licenseFiles": [
+        "COPYING",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "jiff-tzdb",
+      "version": "0.1.9",
+      "license": "Unlicense OR MIT",
+      "licenseFiles": [
+        "COPYING",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "jiff",
+      "version": "0.2.38",
+      "license": "Unlicense OR MIT",
+      "licenseFiles": [
+        "COPYING",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "json-patch",
+      "version": "4.2.0",
+      "license": "MIT/Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "jsonptr",
+      "version": "0.7.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "keyboard-types",
+      "version": "0.8.3",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "libc",
+      "version": "0.2.191",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "litemap",
+      "version": "0.8.3",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "lock_api",
+      "version": "0.4.14",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "log",
+      "version": "0.4.34",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "lua-src",
+      "version": "547.0.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "luajit-src",
+      "version": "210.5.12+a4f56a4",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "markup5ever",
+      "version": "0.39.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "matchit",
+      "version": "0.8.4",
+      "license": "MIT AND BSD-3-Clause",
+      "licenseFiles": [
+        "LICENSE",
+        "LICENSE.httprouter"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "memchr",
+      "version": "2.8.3",
+      "license": "Unlicense OR MIT",
+      "licenseFiles": [
+        "COPYING",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "mime",
+      "version": "0.3.17",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "miniz_oxide",
+      "version": "0.8.9",
+      "license": "MIT OR Zlib OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE",
+        "LICENSE-APACHE.md",
+        "LICENSE-MIT.md",
+        "LICENSE-ZLIB.md"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "miniz_oxide",
+      "version": "0.9.1",
+      "license": "MIT OR Zlib OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE",
+        "LICENSE-APACHE.md",
+        "LICENSE-MIT.md",
+        "LICENSE-ZLIB.md"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "mio-serial",
+      "version": "5.0.7",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "mio",
+      "version": "1.2.4",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "mlua-sys",
+      "version": "0.6.8",
+      "license": "MIT",
+      "licenseFiles": [],
+      "upstream": {
+        "file": "mlua-sys-0.6.8.txt",
+        "source": "https://github.com/mlua-rs/mlua/tree/31efd0cf727c3aee0b733a8dedac024589e1700c/mlua-sys",
+        "url": "https://raw.githubusercontent.com/mlua-rs/mlua/31efd0cf727c3aee0b733a8dedac024589e1700c/LICENSE"
+      }
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "mlua",
+      "version": "0.10.5",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "muda",
+      "version": "0.20.0",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT",
+        "LICENSE.spdx"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "new_debug_unreachable",
+      "version": "1.0.6",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "num-conv",
+      "version": "0.2.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-Apache",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "num-traits",
+      "version": "0.2.19",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "once_cell",
+      "version": "1.21.4",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "option-ext",
+      "version": "0.2.0",
+      "license": "MPL-2.0",
+      "licenseFiles": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "ordered-float",
+      "version": "2.10.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "parking_lot_core",
+      "version": "0.9.12",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "parking_lot",
+      "version": "0.12.5",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "percent-encoding",
+      "version": "2.3.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "phf_codegen",
+      "version": "0.13.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "phf_generator",
+      "version": "0.13.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "phf_macros",
+      "version": "0.13.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "phf_shared",
+      "version": "0.13.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "phf",
+      "version": "0.13.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "pin-project-lite",
+      "version": "0.2.17",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "pkg-config",
+      "version": "0.3.34",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "plist",
+      "version": "1.10.2",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENCE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "png",
+      "version": "0.17.16",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "png",
+      "version": "0.18.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "potential_utf",
+      "version": "0.1.6",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "powerfmt",
+      "version": "0.2.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-Apache",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "precomputed-hash",
+      "version": "0.1.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "proc-macro2",
+      "version": "1.0.107",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "quick-xml",
+      "version": "0.42.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE-MIT.md"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "quote",
+      "version": "1.0.47",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "raw-window-handle",
+      "version": "0.6.2",
+      "license": "MIT OR Apache-2.0 OR Zlib",
+      "licenseFiles": [
+        "LICENSE-APACHE.md",
+        "LICENSE-MIT.md",
+        "LICENSE-ZLIB.md"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "ref-cast-impl",
+      "version": "1.0.27",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "ref-cast",
+      "version": "1.0.27",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "regex-automata",
+      "version": "0.4.18",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "regex-syntax",
+      "version": "0.8.11",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "regex",
+      "version": "1.13.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "reqwest",
+      "version": "0.12.28",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "rfd",
+      "version": "0.16.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "rustc_version",
+      "version": "0.4.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "rustc-hash",
+      "version": "2.1.3",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "rustversion",
+      "version": "1.0.23",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "ryu",
+      "version": "1.0.23",
+      "license": "Apache-2.0 OR BSL-1.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-BOOST"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "same-file",
+      "version": "1.0.6",
+      "license": "Unlicense/MIT",
+      "licenseFiles": [
+        "COPYING",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "schemars_derive",
+      "version": "0.8.22",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "schemars",
+      "version": "0.8.22",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "schemars",
+      "version": "0.9.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "schemars",
+      "version": "1.2.3",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "scopeguard",
+      "version": "1.2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "selectors",
+      "version": "0.38.0",
+      "license": "MPL-2.0",
+      "licenseFiles": [],
+      "upstream": {
+        "file": "selectors-0.38.0.txt",
+        "source": "https://github.com/servo/stylo/tree/572ecba2d1600e7c3d490586692a209faf703baa/selectors",
+        "url": "https://www.mozilla.org/media/MPL/2.0/index.txt"
+      }
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "semver",
+      "version": "1.0.28",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde_core",
+      "version": "1.0.229",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde_derive_internals",
+      "version": "0.29.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde_derive",
+      "version": "1.0.229",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde_json",
+      "version": "1.0.154",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde_path_to_error",
+      "version": "0.1.20",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde_repr",
+      "version": "0.1.21",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde_spanned",
+      "version": "1.1.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde_urlencoded",
+      "version": "0.7.1",
+      "license": "MIT/Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde_with_macros",
+      "version": "3.24.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde_with",
+      "version": "3.24.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde-untagged",
+      "version": "0.1.9",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde-value",
+      "version": "0.7.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "COPYING"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serde",
+      "version": "1.0.229",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serialize-to-javascript-impl",
+      "version": "0.1.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serialize-to-javascript",
+      "version": "0.1.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "serialport",
+      "version": "4.10.1",
+      "license": "MPL-2.0",
+      "licenseFiles": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "servo_arc",
+      "version": "0.4.3",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "sha2",
+      "version": "0.10.9",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "shlex",
+      "version": "2.0.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "simd-adler32",
+      "version": "0.3.10",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE.md"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "siphasher",
+      "version": "1.0.4",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "COPYING",
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "slab",
+      "version": "0.4.12",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "smallvec",
+      "version": "1.16.3",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "socket2",
+      "version": "0.6.5",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "softbuffer",
+      "version": "0.4.8",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "stable_deref_trait",
+      "version": "1.2.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "static_assertions",
+      "version": "1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "static_vcruntime",
+      "version": "3.0.0",
+      "license": "MIT OR Apache-2.0 OR Zlib",
+      "licenseFiles": [
+        "LICENSE",
+        "LICENSE-APACHE",
+        "LICENSE-MIT",
+        "LICENSE-ZLIB"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "string_cache_codegen",
+      "version": "0.6.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "string_cache",
+      "version": "0.9.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "strsim",
+      "version": "0.11.1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "syn",
+      "version": "2.0.119",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "syn",
+      "version": "3.0.9",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "sync_wrapper",
+      "version": "1.0.2",
+      "license": "Apache-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "synstructure",
+      "version": "0.14.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tao",
+      "version": "0.37.1",
+      "license": "Apache-2.0",
+      "licenseFiles": [
+        "LICENSE",
+        "LICENSE.spdx"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tauri-build",
+      "version": "2.7.3",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE-2.0",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tauri-codegen",
+      "version": "2.7.3",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE-2.0",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tauri-macros",
+      "version": "2.7.3",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE-2.0",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tauri-plugin-dialog",
+      "version": "2.8.3",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE.spdx",
+        "LICENSE_APACHE-2.0",
+        "LICENSE_MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tauri-plugin-fs",
+      "version": "2.7.1",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE.spdx",
+        "LICENSE_APACHE-2.0",
+        "LICENSE_MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tauri-plugin",
+      "version": "2.7.2",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [],
+      "upstream": {
+        "file": "tauri-plugin-2.7.2.txt",
+        "source": "https://github.com/tauri-apps/tauri/tree/59b63ab500da9859f12d8888c3298bc29bba0b92/crates/tauri-plugin",
+        "url": "https://raw.githubusercontent.com/tauri-apps/tauri/59b63ab500da9859f12d8888c3298bc29bba0b92/LICENSE-MIT"
+      }
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tauri-runtime-wry",
+      "version": "2.12.2",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE-2.0",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tauri-runtime",
+      "version": "2.12.2",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE-2.0",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tauri-utils",
+      "version": "2.10.2",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE-2.0",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tauri-winres",
+      "version": "0.3.7",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tauri",
+      "version": "2.12.4",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE-2.0",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tendril",
+      "version": "0.5.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "thiserror-impl",
+      "version": "2.0.21",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "thiserror",
+      "version": "2.0.21",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "time-core",
+      "version": "0.1.9",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-Apache",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "time-macros",
+      "version": "0.2.32",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-Apache",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "time",
+      "version": "0.3.55",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-Apache",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tinystr",
+      "version": "0.8.4",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tinyvec",
+      "version": "1.13.3",
+      "license": "Zlib OR Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE.md",
+        "LICENSE-MIT.md",
+        "LICENSE-ZLIB.md"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tokio-macros",
+      "version": "2.7.2",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tokio-serial",
+      "version": "5.5.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tokio-stream",
+      "version": "0.1.19",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tokio-util",
+      "version": "0.7.20",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tokio",
+      "version": "1.54.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "toml_datetime",
+      "version": "1.1.2+spec-1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "toml_parser",
+      "version": "1.1.5+spec-1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "toml_writer",
+      "version": "1.1.3+spec-1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "toml",
+      "version": "1.1.8+spec-1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tower-http",
+      "version": "0.6.11",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tower-layer",
+      "version": "0.3.3",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tower-service",
+      "version": "0.3.3",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tower",
+      "version": "0.5.3",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tracing-core",
+      "version": "0.1.36",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tracing",
+      "version": "0.1.44",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "tray-icon",
+      "version": "0.25.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT",
+        "LICENSE.spdx"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "try-lock",
+      "version": "0.2.5",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "typeid",
+      "version": "1.0.3",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "typenum",
+      "version": "1.20.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE",
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "unicode-ident",
+      "version": "1.0.27",
+      "license": "(MIT OR Apache-2.0) AND Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT",
+        "LICENSE-UNICODE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "unicode-segmentation",
+      "version": "1.13.3",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "url",
+      "version": "2.5.8",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "urlpattern",
+      "version": "0.6.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "utf8_iter",
+      "version": "1.0.4",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "uuid",
+      "version": "1.28.0",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "version_check",
+      "version": "0.9.5",
+      "license": "MIT/Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "vswhom-sys",
+      "version": "0.1.3",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "vswhom",
+      "version": "0.1.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "walkdir",
+      "version": "2.5.0",
+      "license": "Unlicense/MIT",
+      "licenseFiles": [
+        "COPYING",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "want",
+      "version": "0.3.2",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "web_atoms",
+      "version": "0.2.6",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "web-time",
+      "version": "1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "webview2-com-macros",
+      "version": "0.8.1",
+      "license": "MIT",
+      "licenseFiles": [],
+      "upstream": {
+        "file": "webview2-com-0.39.1.txt",
+        "source": "https://github.com/wravery/webview2-rs/tree/edc2caf886175ccaebe86078c9cfe1ae2a187328",
+        "url": "https://raw.githubusercontent.com/wravery/webview2-rs/edc2caf886175ccaebe86078c9cfe1ae2a187328/LICENSE"
+      }
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "webview2-com-sys",
+      "version": "0.39.1",
+      "license": "MIT",
+      "licenseFiles": [],
+      "upstream": {
+        "file": "webview2-com-0.39.1.txt",
+        "source": "https://github.com/wravery/webview2-rs/tree/edc2caf886175ccaebe86078c9cfe1ae2a187328",
+        "url": "https://raw.githubusercontent.com/wravery/webview2-rs/edc2caf886175ccaebe86078c9cfe1ae2a187328/LICENSE"
+      }
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "webview2-com",
+      "version": "0.39.1",
+      "license": "MIT",
+      "licenseFiles": [],
+      "upstream": {
+        "file": "webview2-com-0.39.1.txt",
+        "source": "https://github.com/wravery/webview2-rs/tree/edc2caf886175ccaebe86078c9cfe1ae2a187328",
+        "url": "https://raw.githubusercontent.com/wravery/webview2-rs/edc2caf886175ccaebe86078c9cfe1ae2a187328/LICENSE"
+      }
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "which",
+      "version": "7.0.3",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "winapi-util",
+      "version": "0.1.11",
+      "license": "Unlicense OR MIT",
+      "licenseFiles": [
+        "COPYING",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "window-vibrancy",
+      "version": "0.8.1",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT",
+        "LICENSE.spdx"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows_x86_64_msvc",
+      "version": "0.52.6",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows_x86_64_msvc",
+      "version": "0.53.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-collections",
+      "version": "0.3.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-core",
+      "version": "0.62.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-future",
+      "version": "0.3.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-implement",
+      "version": "0.60.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-interface",
+      "version": "0.59.3",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-link",
+      "version": "0.2.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-numerics",
+      "version": "0.3.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-result",
+      "version": "0.4.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-strings",
+      "version": "0.5.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-sys",
+      "version": "0.52.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-sys",
+      "version": "0.60.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-sys",
+      "version": "0.61.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-targets",
+      "version": "0.52.6",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-targets",
+      "version": "0.53.5",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-threading",
+      "version": "0.2.1",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows-version",
+      "version": "0.1.7",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "windows",
+      "version": "0.62.2",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "license-apache-2.0",
+        "license-mit"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "winnow",
+      "version": "1.0.4",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "winreg",
+      "version": "0.56.0",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "winsafe",
+      "version": "0.0.19",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE.md"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "writeable",
+      "version": "0.6.4",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "wry",
+      "version": "0.57.0",
+      "license": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT",
+        "LICENSE.spdx"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "yoke-derive",
+      "version": "0.8.4",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "yoke",
+      "version": "0.8.3",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "zerofrom-derive",
+      "version": "0.1.8",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "zerofrom",
+      "version": "0.1.8",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "zerotrie",
+      "version": "0.2.5",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "zerovec-derive",
+      "version": "0.11.6",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "zerovec",
+      "version": "0.11.8",
+      "license": "Unicode-3.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "zlib-rs",
+      "version": "0.6.8",
+      "license": "Zlib",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "cargo",
+      "name": "zmij",
+      "version": "1.0.23",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "ecosystem": "dataset",
+      "name": "bluetooth-numbers-database",
+      "version": "f775114b057960b5f62d15c594c9335d112cb101",
+      "license": "BSD-3-Clause",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "ecosystem": "dataset",
+      "name": "registries",
+      "version": "228b62c31c177c9b770b79896aec9ef660f62216",
+      "license": "Apache-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    }
+  ],
+  "missingLicenseTexts": []
+}

@@ -1,0 +1,423 @@
+@import "tailwindcss" source(none);
+@config "../../tailwind.config.js";
+@source "../";
+@source not "../__tests__";
+
+/* Preserve v3's visual scale while using the maintained compiler. */
+@theme {
+  --radius-sm: 0.125rem;
+  --radius: 0.25rem;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+
+    --surface: 238 242 247;
+    --surface-secondary: 241 245 249;
+    --surface-tertiary: 232 237 244;
+    --surface-overlay: 255 255 255;
+    --text-primary: 23 32 51;
+    --text-secondary: 71 85 105;
+    --text-muted: 100 116 139;
+    --text-faint: 148 163 184;
+    --border-default: rgba(51, 65, 85, 0.16);
+    --border-hover: rgba(51, 65, 85, 0.24);
+    --border-active: rgba(51, 65, 85, 0.34);
+    --divider-default: rgba(51, 65, 85, 0.12);
+    --road: 248 250 252;
+
+    /* Accents tuned for readable text and controls on light surfaces */
+    --accent-blue: 37 99 235;
+    --accent-green: 21 128 61;
+    --accent-red: 220 38 38;
+    --accent-yellow: 161 98 7;
+    --accent-mauve: 124 58 237;
+
+    /* Reusable translucent layers */
+    --layer-hover: rgba(71, 85, 105, 0.07);
+    --layer-active: rgba(71, 85, 105, 0.12);
+    --layer-selected: rgba(71, 85, 105, 0.095);
+    --ring-offset: #eef2f7;
+    --scrollbar-thumb: rgba(51, 65, 85, 0.24);
+    --scrollbar-thumb-hover: rgba(51, 65, 85, 0.38);
+  }
+
+  .dark {
+    color-scheme: dark;
+
+    --surface: 16 16 16;
+    --surface-secondary: 26 26 26;
+    --surface-tertiary: 17 17 17;
+    --surface-overlay: 34 34 34;
+    --text-primary: 224 224 224;
+    --text-secondary: 160 160 160;
+    --text-muted: 102 102 102;
+    --text-faint: 68 68 68;
+    --border-default: rgba(255, 255, 255, 0.12);
+    --border-hover: rgba(255, 255, 255, 0.18);
+    --border-active: rgba(255, 255, 255, 0.24);
+    --divider-default: rgba(255, 255, 255, 0.10);
+    --road: 22 22 22;
+
+    /* Preserve the original black-theme accent palette */
+    --accent-blue: 91 155 245;
+    --accent-green: 74 222 128;
+    --accent-red: 248 113 113;
+    --accent-yellow: 251 191 36;
+    --accent-mauve: 167 139 250;
+
+    /* Reusable translucent layers */
+    --layer-hover: rgba(255, 255, 255, 0.05);
+    --layer-active: rgba(255, 255, 255, 0.1);
+    --layer-selected: rgba(255, 255, 255, 0.08);
+    --ring-offset: #101010;
+    --scrollbar-thumb: rgba(255, 255, 255, 0.08);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.14);
+  }
+
+  .high-contrast {
+    color-scheme: dark;
+
+    --surface: 0 0 0;
+    --surface-secondary: 0 0 0;
+    --surface-tertiary: 0 0 0;
+    --surface-overlay: 0 0 0;
+    --text-primary: 255 255 255;
+    --text-secondary: 255 255 0;
+    --text-muted: 204 204 204;
+    --text-faint: 153 153 153;
+    --border-default: rgba(255, 255, 255, 1);
+    --border-hover: rgba(0, 255, 255, 1);
+    --border-active: rgba(255, 255, 0, 1);
+    --divider-default: rgba(255, 255, 255, 0.72);
+    --road: 0 0 0;
+
+    /* Bright saturated accents keep contrast on pure black; without these the
+       values would fall through to whichever base theme class is co-applied */
+    --accent-blue: 102 178 255;
+    --accent-green: 0 230 118;
+    --accent-red: 255 82 82;
+    --accent-yellow: 255 235 59;
+    --accent-mauve: 179 136 255;
+
+    /* Reusable translucent layers */
+    --layer-hover: rgba(255, 255, 255, 0.2);
+    --layer-active: rgba(255, 255, 255, 0.3);
+    --layer-selected: rgba(255, 255, 255, 0.25);
+    --ring-offset: #000000;
+    --scrollbar-thumb: rgba(255, 255, 255, 1);
+    --scrollbar-thumb-hover: rgba(0, 255, 255, 1);
+  }
+
+  .high-contrast-light {
+    color-scheme: light;
+
+    --surface: 248 250 252;
+    --surface-secondary: 248 250 252;
+    --surface-tertiary: 241 245 249;
+    --surface-overlay: 255 255 255;
+    --text-primary: 0 0 0;
+    --text-secondary: 30 41 59;
+    --text-muted: 51 65 85;
+    --text-faint: 71 85 105;
+    --border-default: rgba(0, 0, 0, 1);
+    --border-hover: rgba(0, 79, 196, 1);
+    --border-active: rgba(91, 33, 182, 1);
+    --divider-default: rgba(0, 0, 0, 0.72);
+    --road: 255 255 255;
+
+    /* Dark saturated accents retain contrast against white backgrounds */
+    --accent-blue: 0 79 196;
+    --accent-green: 0 107 60;
+    --accent-red: 176 0 32;
+    --accent-yellow: 118 85 0;
+    --accent-mauve: 91 33 182;
+
+    /* Reusable translucent layers */
+    --layer-hover: rgba(15, 23, 42, 0.1);
+    --layer-active: rgba(15, 23, 42, 0.18);
+    --layer-selected: rgba(15, 23, 42, 0.14);
+    --ring-offset: #f8fafc;
+    --scrollbar-thumb: rgba(0, 0, 0, 1);
+    --scrollbar-thumb-hover: rgba(0, 79, 196, 1);
+  }
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    /* Keep transparent so the rounded window container's corners stay
+       cut out — an opaque background here would paint square corners
+       behind the rounded surface on the borderless/transparent window. */
+    background: transparent;
+  }
+
+  body {
+    @apply text-text-primary font-sans antialiased;
+    overflow: hidden;
+  }
+}
+
+/* ── Scrollbar ───────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* ── Component classes ───────────────────────────────── */
+@layer components {
+  /* Panel card */
+  .panel-card {
+    @apply bg-surface-overlay/50 border border-border rounded-sm;
+  }
+  .panel-card-solid {
+    @apply bg-surface-overlay border border-border rounded-sm;
+  }
+
+  .btn-icon {
+    @apply w-7 h-7 flex items-center justify-center rounded-sm
+           text-text-muted hover:text-text-primary hover:bg-[var(--layer-hover)]
+           transition-colors duration-100 cursor-pointer;
+  }
+  .terminal-tab-accent-mauve {
+    @apply bg-accent-mauve/10;
+    box-shadow: inset 0 -2px 0 0 rgb(var(--accent-mauve) / 0.55);
+  }
+  .terminal-tab-accent-green {
+    @apply bg-accent-green/10;
+    box-shadow: inset 0 -2px 0 0 rgb(var(--accent-green) / 0.55);
+  }
+  .terminal-tab-accent-blue {
+    @apply bg-accent-blue/10;
+    box-shadow: inset 0 -2px 0 0 rgb(var(--accent-blue) / 0.55);
+  }
+  .btn-channel-action {
+    @apply inline-flex min-w-[88px] h-8 items-center justify-center rounded-lg px-2.5
+           text-sm font-medium font-sans transition-all duration-150;
+  }
+  .channel-config-row {
+      @apply relative flex min-h-[40px] items-center justify-between gap-4 px-4 py-1.5
+        hover:bg-[var(--layer-hover)] transition-all duration-150
+           after:absolute after:bottom-0 after:left-2 after:right-2 after:border-b after:border-border
+        after:content-[''] last:after:hidden;
+  }
+  .channel-config-label {
+    @apply text-[10px] text-text-muted font-semibold tracking-wider uppercase shrink-0;
+  }
+  .channel-config-control {
+    @apply w-[200px] max-w-[60%] shrink-0 h-8;
+  }
+
+  /* Canvas row — GATT-card-style inset divider */
+  .canvas-table-row {
+    @apply relative hover:bg-[var(--layer-hover)] transition-all duration-150;
+  }
+  .canvas-table-row::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0.5rem;
+    right: 0.5rem;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .canvas-table-row:last-child::after {
+    display: none;
+  }
+  .canvas-form-row {
+    @apply relative grid items-center gap-1 px-3;
+  }
+  .canvas-form-row::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0.5rem;
+    right: 0.5rem;
+    border-bottom: 1px solid var(--border-default);
+    pointer-events: none;
+    transition: border-color 150ms ease;
+  }
+  .canvas-form-row:hover::after {
+    border-bottom-color: var(--border-active);
+  }
+
+  .scrollbar-stable {
+    scrollbar-gutter: stable;
+  }
+  .empty-state {
+    @apply flex flex-col items-center justify-center h-full text-text-muted;
+  }
+  .channel-item {
+    @apply relative flex items-center gap-3 px-3 py-2 cursor-pointer
+           transition-colors duration-100 hover:bg-[var(--layer-hover)];
+  }
+  .channel-item-active {
+    background-color: transparent;
+  }
+  .channel-item-active:hover {
+    background-color: transparent;
+  }
+  .channel-item-active::before {
+    content: '';
+    bottom: 3px;
+    left: var(--channel-active-left-inset, 2px);
+    right: 3px;
+    top: 3px;
+    @apply pointer-events-none absolute z-0 rounded-sm border-l-2 ring-1 ring-inset;
+  }
+  .channel-item-active-blue::before {
+    @apply border-l-accent-blue bg-accent-blue/10 ring-accent-blue/20;
+  }
+  .channel-item-active-mauve::before {
+    @apply border-l-accent-mauve bg-accent-mauve/10 ring-accent-mauve/20;
+  }
+  .channel-item-active-green::before {
+    @apply border-l-accent-green bg-accent-green/10 ring-accent-green/20;
+  }
+  .channel-selector {
+    @apply relative inline-grid h-4 w-4 shrink-0 place-items-center rounded-full border border-border bg-surface text-accent-mauve transition-colors duration-100;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .channel-selector::after {
+    content: '';
+    @apply h-1.5 w-1.5 scale-0 rounded-full bg-current transition-transform duration-100;
+  }
+  .channel-selector:checked::after {
+    @apply scale-100;
+  }
+  .channel-selector:focus-visible {
+    @apply ring-2 ring-accent-mauve/40 ring-offset-2 ring-offset-[var(--ring-offset)] outline-none;
+  }
+  .terminal-tag-text {
+    position: relative;
+    top: 1px;
+  }
+  .channel-tag-text-offset {
+    position: relative;
+    top: 1px;
+    left: 4px;
+  }
+  /* Input base */
+  .input-base {
+    @apply bg-surface-tertiary border border-border rounded-md px-2.5 py-1
+           text-sm text-text-primary outline-none
+           focus:border-accent-mauve/40 transition-colors duration-100;
+  }
+  .select-base {
+    @apply bg-surface-tertiary border border-border rounded-sm px-2.5 py-1.5
+           text-sm text-text-secondary outline-none
+           focus:border-accent-mauve/40 transition-colors duration-100;
+  }
+
+  /* Window control buttons */
+  .window-control {
+    @apply w-11 h-8 flex items-center justify-center
+           text-text-muted hover:text-text-primary transition-colors duration-100;
+  }
+  .window-control-close:hover {
+    @apply bg-red-500/80 text-text-primary;
+  }
+  .main-window-control {
+    @apply relative;
+  }
+  .main-window-control::before {
+    content: '';
+    @apply pointer-events-none absolute inset-x-0 bottom-full h-0.5 transition-colors duration-100;
+  }
+  .main-window-control:hover::before {
+    background: var(--layer-selected);
+  }
+  .main-window-control > svg {
+    transform: translateY(-1px);
+  }
+  .main-window-control.window-control-close:hover::before {
+    @apply bg-red-500/80;
+  }
+}
+
+/* ── Animations ───────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); max-height: 0; }
+  to { opacity: 1; transform: translateY(0); max-height: 500px; }
+}
+
+.animate-fade-in { animation: fadeIn 0.15s ease-out; }
+.animate-slide-in { animation: slideIn 0.15s ease-out; }
+.animate-slide-down { animation: slideDown 0.2s ease-out; }
+
+/* The native main window stays hidden until persistence and the restored
+   bounds are ready. Start its first visible frame slightly inset, then settle
+   into place so a transparent WebView does not appear as an abrupt popup. */
+html.main-window-revealing #root {
+  opacity: 0;
+  transform: translateY(5px) scale(0.992);
+}
+
+html.main-window-revealing.main-window-revealed #root {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity 140ms ease-out,
+    transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.main-window-revealing #root,
+  html.main-window-revealing.main-window-revealed #root {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ── Tauri window drag ───────────────────────────────── */
+[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+[data-window-titlebar] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.window-control,
+.btn-icon,
+button {
+  -webkit-app-region: no-drag;
+}
+
+.serial-timeout-input::-webkit-outer-spin-button,
+.serial-timeout-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.serial-timeout-input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

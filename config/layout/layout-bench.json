@@ -1,0 +1,1027 @@
+{
+  "channels": [
+    {
+      "id": "6576ed5a-b0bc-4f78-821e-f8944501746b",
+      "name": "BLE",
+      "channel_type": "ble",
+      "settings": {
+        "nameFilter": "",
+        "rssiFilter": -76,
+        "hasServicesFilter": true,
+        "hasNameFilter": true,
+        "connectableFilter": true
+      }
+    },
+    {
+      "id": "b3d2f919-0fd9-45cd-9e4b-0c4739a5d2dc",
+      "name": "Torque",
+      "channel_type": "serial",
+      "settings": {
+        "path": "COM6",
+        "baudRate": 9600,
+        "dataBits": 8,
+        "stopBits": 1,
+        "parity": "none",
+        "flowControl": "none",
+        "receiveTimeoutMs": 50
+      }
+    },
+    {
+      "id": "4798991f-9ee5-4879-ad09-88c6f75371d8",
+      "name": "Motor",
+      "channel_type": "serial",
+      "settings": {
+        "path": "COM5",
+        "baudRate": 9600,
+        "dataBits": 8,
+        "stopBits": 1,
+        "parity": "none",
+        "flowControl": "none",
+        "receiveTimeoutMs": 50
+      }
+    },
+    {
+      "id": "d20803ed-2422-4f2a-a55b-7c6e5467c28c",
+      "name": "UART",
+      "channel_type": "serial",
+      "settings": {
+        "path": "COM4",
+        "baudRate": 115200,
+        "dataBits": 8,
+        "stopBits": 1,
+        "parity": "none",
+        "flowControl": "none",
+        "receiveTimeoutMs": 50
+      }
+    }
+  ],
+  "ui": {
+    "left_panel_width": 48,
+    "right_panel_width": 1145.1481675435512,
+    "center_split_ratio": 0.5830202573312688,
+    "center_top_visible": true,
+    "center_bottom_visible": true,
+    "right_panel_visible": true,
+    "active_channel_id": "6576ed5a-b0bc-4f78-821e-f8944501746b",
+    "data_view_mode": "text",
+    "theme_mode": "dark",
+    "send_format": "ascii",
+    "channel_panel_visible": true,
+    "show_input_prefix": true,
+    "show_timestamp": true,
+    "show_received": true,
+    "terminal_layout": {
+      "root": {
+        "paneId": "42bbb885-5a9f-4013-aeb6-dcc7521480af",
+        "type": "leaf"
+      },
+      "panes": {
+        "42bbb885-5a9f-4013-aeb6-dcc7521480af": {
+          "tabs": [
+            {
+              "id": "c8559ec8-25d8-4c03-961d-09817a5c0acf",
+              "channelId": null,
+              "label": "TERMINAL",
+              "isPinned": true
+            },
+            {
+              "id": "3e40863f-4260-412e-bd0c-d7256bea9fd1",
+              "channelId": "6576ed5a-b0bc-4f78-821e-f8944501746b",
+              "label": "BLE"
+            },
+            {
+              "id": "6486b1b7-55a1-491c-9d9e-919f3328851d",
+              "channelId": "b3d2f919-0fd9-45cd-9e4b-0c4739a5d2dc",
+              "label": "Torque"
+            },
+            {
+              "id": "f6daa61f-906b-4474-b93b-d013c8684217",
+              "channelId": "4798991f-9ee5-4879-ad09-88c6f75371d8",
+              "label": "Motor"
+            }
+          ],
+          "activeTabId": "f6daa61f-906b-4474-b93b-d013c8684217",
+          "showCommandsPanel": false,
+          "cmdHistory": [
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "01 32 81 f5",
+            "0x01 0x32 0x81 0xf5",
+            "0x01, 0x32, 0x81, 0xf5",
+            "'user'",
+            "5",
+            "'version'",
+            "'version'",
+            "6",
+            "'user'",
+            "4",
+            "'get_pt,0,0'",
+            "'get_pt,0,0'",
+            "\"get_pt,0,0\"",
+            "\"get_pt,0,0\"",
+            "'get_pt,0,0'",
+            "7",
+            "'user'",
+            "'user'4",
+            "4",
+            "'user'",
+            "5",
+            "12",
+            "12",
+            "12",
+            "2",
+            "12",
+            "12"
+          ]
+        }
+      },
+      "focusedPaneId": "42bbb885-5a9f-4013-aeb6-dcc7521480af"
+    },
+    "restore_canvas_layout": true,
+    "channel_quick_open_selected_ids": []
+  },
+  "protocol": {
+    "mode": "Passthrough",
+    "field_definitions": [],
+    "lua_script": "",
+    "linked_channel_id": "4798991f-9ee5-4879-ad09-88c6f75371d8",
+    "linked_service_uuid": null,
+    "linked_char_uuid": null
+  },
+  "saved_commands": {
+    "commandSets": {
+      "b3d2f919-0fd9-45cd-9e4b-0c4739a5d2dc": {
+        "groups": [],
+        "commands": []
+      }
+    },
+    "expandedGroups": {},
+    "savedConfigs": {}
+  },
+  "canvases": [
+    {
+      "activationMode": "auto",
+      "active": false,
+      "config": {
+        "channels": [
+          {
+            "bleTarget": {
+              "charUuid": "00002ad2-0000-1000-8000-00805f9b34fb",
+              "serviceUuid": "00001826-0000-1000-8000-00805f9b34fb"
+            },
+            "channelId": "6576ed5a-b0bc-4f78-821e-f8944501746b",
+            "protocolTemplateId": null
+          }
+        ],
+        "chart": {
+          "kind": "line",
+          "xSource": {
+            "kind": "timestamp",
+            "format": "@T:HMS.MS",
+            "timeFormat": {
+              "hour": true,
+              "minute": false,
+              "second": false,
+              "millisecond": true
+            }
+          },
+          "series": [
+            {
+              "id": "d8f84ae9-de1c-4e13-9844-e955687a4173",
+              "name": "Series 1",
+              "color": "#a78bfa",
+              "extractor": {
+                "source": "raw",
+                "offset": 0,
+                "format": "UInt8",
+                "formula": ""
+              }
+            }
+          ],
+          "yAxis": {
+            "mode": "auto"
+          }
+        },
+        "dataSource": "raw",
+        "table": {
+          "columns": [
+            {
+              "alias": "Speed",
+              "format": "UInt16LE",
+              "formula": "x * 0.01",
+              "id": "6e32149e-38bd-4cff-8b7e-e2fcf2edd037",
+              "offset": 2
+            },
+            {
+              "alias": "Cadence",
+              "format": "UInt16LE",
+              "formula": "x / 2.0",
+              "id": "5832ff91-0917-4f25-9024-11ef884c0837",
+              "offset": 4
+            },
+            {
+              "alias": "Power",
+              "format": "UInt16LE",
+              "formula": "x",
+              "id": "48cda3f8-cb27-40e7-890e-6419d8bbaaf8",
+              "offset": 6
+            }
+          ]
+        },
+        "type": "table"
+      },
+      "id": "54aeac7d-6eab-44b9-b842-7ab538463b98",
+      "maximized": false,
+      "name": "FTMS",
+      "rect": {
+        "x": 475.1311222352615,
+        "y": 0,
+        "width": 233.0668758116135,
+        "height": 573.9366342156569
+      },
+      "savedRect": null,
+      "savedSnapped": null,
+      "snapped": true,
+      "zIndex": 1175
+    },
+    {
+      "activationMode": "auto",
+      "active": false,
+      "config": {
+        "channels": [
+          {
+            "bleTarget": {
+              "charUuid": "00002ad9-0000-1000-8000-00805f9b34fb",
+              "serviceUuid": "00001826-0000-1000-8000-00805f9b34fb"
+            },
+            "channelId": "6576ed5a-b0bc-4f78-821e-f8944501746b",
+            "protocolTemplateId": null
+          }
+        ],
+        "chart": {
+          "kind": "line",
+          "xSource": {
+            "kind": "timestamp",
+            "format": "@T:HMS.MS",
+            "timeFormat": {
+              "hour": true,
+              "millisecond": true,
+              "minute": false,
+              "second": false
+            }
+          },
+          "series": [
+            {
+              "id": "19cb94ff-d7be-4f6f-978c-db1ccd264d11",
+              "name": "Series 1",
+              "color": "#a78bfa",
+              "extractor": {
+                "source": "raw",
+                "offset": 0,
+                "format": "UInt8",
+                "formula": ""
+              }
+            }
+          ],
+          "yAxis": {
+            "mode": "auto"
+          }
+        },
+        "dataSource": "raw",
+        "form": {
+          "kind": "form",
+          "mode": "send",
+          "rows": [
+            {
+              "column": {
+                "alias": "4阻力",
+                "format": "UInt8",
+                "formula": "",
+                "id": "2172c77a-bb5f-4d5b-8676-d59720442722",
+                "offset": 0
+              },
+              "defaultValue": "4",
+              "editable": true,
+              "id": "7dfe1fb7-17ea-4dd8-ac98-c131c7c9b8ec",
+              "label": "Mode",
+              "visible": false
+            },
+            {
+              "column": {
+                "alias": "%",
+                "format": "UInt8",
+                "formula": "",
+                "id": "43302bfb-0832-4220-b233-6df8158ddcd8",
+                "offset": 1
+              },
+              "defaultValue": "0",
+              "editable": true,
+              "id": "2818ab1d-bf53-4f74-ad9a-800a3641e2a9",
+              "label": "目标阻力"
+            }
+          ],
+          "sendConfig": {}
+        },
+        "table": {
+          "columns": []
+        },
+        "type": "form"
+      },
+      "id": "e33c27e3-2d71-41ca-8063-8b2246a2caa1",
+      "maximized": false,
+      "name": "",
+      "rect": {
+        "x": -8.302955529587734,
+        "y": 0,
+        "width": 239.65692024841792,
+        "height": 56.50672134094481
+      },
+      "savedRect": null,
+      "savedSnapped": null,
+      "snapped": true,
+      "zIndex": 1185
+    },
+    {
+      "activationMode": "auto",
+      "active": false,
+      "config": {
+        "channels": [
+          {
+            "bleTarget": {
+              "charUuid": "00002ad9-0000-1000-8000-00805f9b34fb",
+              "serviceUuid": "00001826-0000-1000-8000-00805f9b34fb"
+            },
+            "channelId": "6576ed5a-b0bc-4f78-821e-f8944501746b",
+            "protocolTemplateId": null
+          }
+        ],
+        "chart": {
+          "kind": "line",
+          "xSource": {
+            "kind": "timestamp",
+            "format": "@T:HMS.MS",
+            "timeFormat": {
+              "hour": true,
+              "millisecond": true,
+              "minute": false,
+              "second": false
+            }
+          },
+          "series": [
+            {
+              "id": "0eedd5f7-b014-4d60-8bbc-a9787a001946",
+              "name": "Series 1",
+              "color": "#a78bfa",
+              "extractor": {
+                "source": "raw",
+                "offset": 0,
+                "format": "UInt8",
+                "formula": ""
+              }
+            }
+          ],
+          "yAxis": {
+            "mode": "auto"
+          }
+        },
+        "dataSource": "raw",
+        "form": {
+          "kind": "form",
+          "mode": "send",
+          "rows": [
+            {
+              "column": {
+                "alias": "5功率",
+                "format": "UInt8",
+                "formula": "",
+                "id": "346e7322-660c-4fc0-8fef-73ce19083fbf",
+                "offset": 0
+              },
+              "defaultValue": "5",
+              "editable": true,
+              "id": "e5d090d2-8399-46b0-b77f-612f620e492f",
+              "label": "Mode",
+              "visible": false
+            },
+            {
+              "column": {
+                "alias": "W",
+                "format": "UInt16LE",
+                "formula": "",
+                "id": "8c0ae3c1-5072-4ba1-90bf-a5d7ef906fad",
+                "offset": 1
+              },
+              "defaultValue": "100",
+              "editable": true,
+              "id": "6d03ab4b-6543-4f4d-a37d-50e88b790254",
+              "label": "目标功率"
+            }
+          ],
+          "sendConfig": {}
+        },
+        "table": {
+          "columns": []
+        },
+        "type": "form"
+      },
+      "id": "2f458037-461a-4485-9037-8d5344ae09c3",
+      "maximized": false,
+      "name": "",
+      "rect": {
+        "x": -8.253556045529109,
+        "y": 56.50672134094481,
+        "width": 239.6075207643593,
+        "height": 56.30396872356863
+      },
+      "savedRect": null,
+      "savedSnapped": null,
+      "snapped": true,
+      "zIndex": 1188
+    },
+    {
+      "activationMode": "auto",
+      "active": false,
+      "config": {
+        "channels": [
+          {
+            "bleTarget": {
+              "charUuid": "00002ad9-0000-1000-8000-00805f9b34fb",
+              "serviceUuid": "00001826-0000-1000-8000-00805f9b34fb"
+            },
+            "channelId": "6576ed5a-b0bc-4f78-821e-f8944501746b",
+            "protocolTemplateId": null
+          }
+        ],
+        "chart": {
+          "kind": "line",
+          "xSource": {
+            "kind": "timestamp",
+            "format": "@T:HMS.MS",
+            "timeFormat": {
+              "hour": true,
+              "millisecond": true,
+              "minute": false,
+              "second": false
+            }
+          },
+          "series": [
+            {
+              "id": "5a2d0220-79a6-4e7d-9e08-272851f4431c",
+              "name": "Series 1",
+              "color": "#a78bfa",
+              "extractor": {
+                "source": "raw",
+                "offset": 0,
+                "format": "UInt8",
+                "formula": ""
+              }
+            }
+          ],
+          "yAxis": {
+            "mode": "auto"
+          }
+        },
+        "dataSource": "raw",
+        "form": {
+          "kind": "form",
+          "mode": "send",
+          "rows": [
+            {
+              "column": {
+                "alias": "17模拟骑",
+                "format": "UInt8",
+                "formula": "",
+                "id": "e34c9d81-4827-4148-918e-9a3d53ab0f24",
+                "offset": 0
+              },
+              "defaultValue": "17",
+              "editable": true,
+              "id": "dccfc50c-8489-4637-993a-718a4b7f008a",
+              "label": "Mode",
+              "visible": false
+            },
+            {
+              "column": {
+                "alias": "0.001m/s",
+                "format": "Int16LE",
+                "formula": "x*1000",
+                "id": "784f9728-c2c8-4631-bf36-9a9f48860980",
+                "offset": 1
+              },
+              "defaultValue": "0",
+              "editable": true,
+              "id": "295bd3db-fd4c-4a10-a4e8-c5dcd2164c9b",
+              "label": "Wind Speed"
+            },
+            {
+              "column": {
+                "alias": "0.01%",
+                "format": "Int16LE",
+                "formula": "x * 100",
+                "id": "ed9c53ad-242a-46fd-9923-c497858186b3",
+                "offset": 3
+              },
+              "defaultValue": "1",
+              "editable": true,
+              "id": "10d5129a-9039-452c-bf51-eeba59c90f8c",
+              "label": "Grade"
+            },
+            {
+              "column": {
+                "alias": "0.0001",
+                "format": "UInt8",
+                "formula": "x * 10000",
+                "id": "47e9514c-85c1-45d5-8ab4-582b871e3920",
+                "offset": 5
+              },
+              "defaultValue": "0.004",
+              "editable": true,
+              "id": "ad20e93a-266a-427b-9b0f-e6900b71f96d",
+              "label": "CRR"
+            },
+            {
+              "column": {
+                "alias": "0.01",
+                "format": "UInt8",
+                "formula": "x * 100",
+                "id": "ae9bf50d-5d03-43dd-96bb-20457d2f3be1",
+                "offset": 6
+              },
+              "defaultValue": "0.51",
+              "editable": true,
+              "id": "9028c56d-3d95-415b-9544-4597fe3f9d22",
+              "label": "CW"
+            }
+          ],
+          "sendConfig": {}
+        },
+        "table": {
+          "columns": []
+        },
+        "type": "form"
+      },
+      "id": "3497076f-307e-40b4-8fa7-96b9a6038e51",
+      "maximized": false,
+      "name": "",
+      "rect": {
+        "x": -8.253556045529109,
+        "y": 112.81069006451344,
+        "width": 239.5743505036546,
+        "height": 172.6754479497095
+      },
+      "savedRect": null,
+      "savedSnapped": null,
+      "snapped": true,
+      "zIndex": 1191
+    },
+    {
+      "activationMode": "auto",
+      "active": false,
+      "config": {
+        "channels": [
+          {
+            "channelId": "4798991f-9ee5-4879-ad09-88c6f75371d8",
+            "protocolTemplateId": null
+          }
+        ],
+        "chart": {
+          "kind": "line",
+          "xSource": {
+            "kind": "timestamp",
+            "format": "@T:HMS.MS",
+            "timeFormat": {
+              "hour": true,
+              "minute": false,
+              "second": false,
+              "millisecond": true
+            }
+          },
+          "series": [
+            {
+              "id": "bc2986f0-b855-4bb0-93ff-60193eadc3d7",
+              "name": "Series 1",
+              "color": "#a78bfa",
+              "extractor": {
+                "source": "raw",
+                "offset": 0,
+                "format": "UInt8",
+                "formula": ""
+              }
+            }
+          ],
+          "yAxis": {
+            "mode": "auto"
+          }
+        },
+        "dataSource": "raw",
+        "script": {
+          "sourceType": "file",
+          "luaPath": "../script/script-serial-rpm-example.lua",
+          "autoRun": false,
+          "stopOnFailure": true,
+          "defaultTimeoutMs": 2000,
+          "defaultDataFormat": "hex",
+          "logLimit": 500,
+          "csvLogOutputs": {
+            "rpmLoopLog": {
+              "enabled": false
+            }
+          }
+        },
+        "table": {
+          "columns": []
+        },
+        "type": "script"
+      },
+      "id": "c00a417a-6a4a-4e8b-ab92-0d2f94e526c0",
+      "maximized": false,
+      "name": "测表",
+      "rect": {
+        "x": -8.844033328044816,
+        "y": 403.589403953226,
+        "width": 240.197998046875,
+        "height": 170.7878536881049
+      },
+      "savedRect": null,
+      "savedSnapped": null,
+      "snapped": true,
+      "zIndex": 1202
+    },
+    {
+      "activationMode": "auto",
+      "active": false,
+      "config": {
+        "channels": [
+          {
+            "channelId": "b3d2f919-0fd9-45cd-9e4b-0c4739a5d2dc",
+            "protocolTemplateId": null
+          }
+        ],
+        "chart": {
+          "kind": "line",
+          "xSource": {
+            "kind": "timestamp",
+            "format": "@T:HMS.MS",
+            "timeFormat": {
+              "hour": true,
+              "minute": false,
+              "second": false,
+              "millisecond": true
+            }
+          },
+          "series": [
+            {
+              "id": "643d5830-5cb3-4da1-b9eb-904c669ee183",
+              "name": "Series 1",
+              "color": "#a78bfa",
+              "extractor": {
+                "source": "raw",
+                "offset": 0,
+                "format": "UInt8",
+                "formula": ""
+              }
+            }
+          ],
+          "yAxis": {
+            "mode": "auto"
+          }
+        },
+        "dataSource": "raw",
+        "lifecycleScript": {
+          "sourceType": "file",
+          "enabled": false,
+          "runOnActivate": true,
+          "runOnDeactivate": true,
+          "stopOnFailure": true,
+          "defaultTimeoutMs": 2000,
+          "defaultDataFormat": "hex",
+          "logLimit": 200
+        },
+        "table": {
+          "columns": [
+            {
+              "alias": "Torque",
+              "format": "Float32LE",
+              "formula": "100 * (x - 10000) / 5000",
+              "id": "4e23819f-70a6-4fb5-8275-58dfee933c0e",
+              "offset": 3
+            },
+            {
+              "alias": "RPM",
+              "format": "Float32LE",
+              "formula": "x * 60 / 1024.0",
+              "id": "fd2ebccf-1fe2-48a0-bc2d-ab273395b3fe",
+              "offset": 7
+            },
+            {
+              "alias": "Power",
+              "format": "UInt8",
+              "formula": "Torque * RPM * 2 * 3.14 / 60",
+              "id": "6601c59c-8540-426e-9f8c-8d2ed7c2747d",
+              "offset": 0
+            }
+          ]
+        },
+        "type": "form",
+        "form": {
+          "kind": "form",
+          "mode": "send",
+          "rows": [],
+          "sendConfig": {}
+        }
+      },
+      "id": "77bbba5f-5769-4ddb-a953-8a1308cc9580",
+      "maximized": false,
+      "name": "扭力计",
+      "rect": {
+        "x": 231.35396471883018,
+        "y": 0,
+        "width": 243.77715751643132,
+        "height": 574.3772576413309
+      },
+      "savedRect": null,
+      "savedSnapped": null,
+      "snapped": true,
+      "zIndex": 1182
+    },
+    {
+      "activationMode": "auto",
+      "active": false,
+      "config": {
+        "channels": [
+          {
+            "channelId": "b3d2f919-0fd9-45cd-9e4b-0c4739a5d2dc",
+            "protocolTemplateId": null
+          }
+        ],
+        "chart": {
+          "kind": "line",
+          "xSource": {
+            "kind": "timestamp",
+            "format": "@T:HMS.MS",
+            "timeFormat": {
+              "hour": true,
+              "minute": false,
+              "second": false,
+              "millisecond": true
+            }
+          },
+          "series": [
+            {
+              "id": "8425f2a8-b64a-4de2-a40e-c6a1589fb170",
+              "name": "Series 1",
+              "color": "#a78bfa",
+              "extractor": {
+                "source": "raw",
+                "offset": 0,
+                "format": "UInt8",
+                "formula": ""
+              }
+            }
+          ],
+          "yAxis": {
+            "mode": "auto"
+          }
+        },
+        "dataSource": "raw",
+        "script": {
+          "sourceType": "file",
+          "luaPath": "../script/script-torque-sensor-32h-read.lua",
+          "autoRun": false,
+          "stopOnFailure": true,
+          "defaultTimeoutMs": 2000,
+          "defaultDataFormat": "hex",
+          "logLimit": 500
+        },
+        "table": {
+          "columns": []
+        },
+        "type": "script"
+      },
+      "id": "87f0bd1d-7352-45c0-98aa-3b2483941bcd",
+      "maximized": false,
+      "name": "扭力读取",
+      "rect": {
+        "x": -8.679205541874467,
+        "y": 346.48613801422295,
+        "width": 240.197998046875,
+        "height": 56.211421124571075
+      },
+      "savedRect": null,
+      "savedSnapped": null,
+      "snapped": true,
+      "zIndex": 1204
+    },
+    {
+      "activationMode": "auto",
+      "active": false,
+      "config": {
+        "channels": [
+          {
+            "channelId": "4798991f-9ee5-4879-ad09-88c6f75371d8",
+            "protocolTemplateId": null,
+            "protocolFile": "../protocol/protocol-teco-rpm-command.lua"
+          }
+        ],
+        "chart": {
+          "kind": "bar",
+          "series": [],
+          "yAxis": {
+            "mode": "auto"
+          }
+        },
+        "dataSource": "parsed",
+        "form": {
+          "kind": "form",
+          "mode": "send",
+          "rows": [
+            {
+              "column": {
+                "alias": "电机转速",
+                "format": "Ascii",
+                "formula": "",
+                "id": "ba039979-8e47-44a5-88e9-0a6cdb7091ce",
+                "offset": 0
+              },
+              "editable": true,
+              "id": "d95a55ce-3676-468a-90a0-0b7c77d64f5c",
+              "label": "电机转速",
+              "visible": true,
+              "parsedFieldId": "speed"
+            }
+          ],
+          "sendConfig": {}
+        },
+        "lifecycleScript": {
+          "sourceType": "file",
+          "luaPath": "../script/canvas-lifecycle-form-motor-init-stop.lua",
+          "enabled": false,
+          "runOnActivate": true,
+          "runOnDeactivate": true,
+          "stopOnFailure": true,
+          "defaultTimeoutMs": 2000,
+          "defaultDataFormat": "hex",
+          "logLimit": 200
+        },
+        "table": {
+          "columns": [
+            {
+              "alias": "New Col",
+              "format": "UInt8",
+              "formula": "",
+              "id": "5f4d9a0b-7175-4417-a908-fb0e86a5ac63",
+              "offset": 0
+            }
+          ]
+        },
+        "type": "form"
+      },
+      "id": "bf72daf7-e67a-4f28-ad56-f4ae9e389dac",
+      "maximized": false,
+      "name": "",
+      "rect": {
+        "x": -8.679205541874467,
+        "y": 285.48613801422295,
+        "width": 240,
+        "height": 61
+      },
+      "savedRect": null,
+      "savedSnapped": null,
+      "snapped": true,
+      "zIndex": 1198
+    },
+    {
+      "id": "af9001a4-27b2-4900-b3b5-e2172f36034b",
+      "name": "FTMS-Custom",
+      "rect": {
+        "x": 708.197998046875,
+        "y": 0,
+        "width": 428,
+        "height": 574
+      },
+      "savedRect": null,
+      "savedSnapped": null,
+      "zIndex": 1171,
+      "active": false,
+      "activationMode": "auto",
+      "maximized": false,
+      "snapped": false,
+      "config": {
+        "type": "table",
+        "dataSource": "raw",
+        "channels": [
+          {
+            "channelId": "6576ed5a-b0bc-4f78-821e-f8944501746b",
+            "protocolTemplateId": null,
+            "bleTarget": {
+              "serviceUuid": "00001826-0000-1000-8000-00805f9b34fb",
+              "charUuid": "00002ad2-0000-1000-8000-00805f9b34fb"
+            }
+          }
+        ],
+        "table": {
+          "columns": [
+            {
+              "id": "40120947-4a26-4bfc-b6ac-2deb15381ebf",
+              "alias": "wheel_rpm",
+              "offset": 8,
+              "format": "UInt16LE",
+              "formula": ""
+            },
+            {
+              "id": "092ddd02-6885-4d40-bf2f-95af3f3b1a7a",
+              "alias": "adc",
+              "offset": 10,
+              "format": "Int16LE",
+              "formula": ""
+            },
+            {
+              "id": "0b96625b-6cf8-42d7-b65a-c3abd8e0d2b7",
+              "alias": "current",
+              "offset": 12,
+              "format": "Int16LE",
+              "formula": ""
+            },
+            {
+              "id": "86cd449b-9b69-46ca-a9b2-8fb4ea6e0c33",
+              "alias": "silicon_temp",
+              "offset": 14,
+              "format": "Int16LE",
+              "formula": ""
+            },
+            {
+              "id": "777d76ab-468c-40b5-bf68-130a43d9f141",
+              "alias": "pwm",
+              "offset": 16,
+              "format": "Int16LE",
+              "formula": ""
+            },
+            {
+              "id": "3f7e92ff-5482-485d-8e3b-6825ce539216",
+              "alias": "wheel_temp",
+              "offset": 18,
+              "format": "Int16LE",
+              "formula": ""
+            }
+          ]
+        },
+        "chart": {
+          "kind": "line",
+          "xSource": {
+            "kind": "timestamp",
+            "format": "@T:HMS.MS",
+            "timeFormat": {
+              "hour": true,
+              "minute": false,
+              "second": false,
+              "millisecond": true
+            }
+          },
+          "series": [],
+          "yAxis": {
+            "mode": "auto"
+          }
+        }
+      }
+    }
+  ],
+  "mcp_tools": {
+    "scripts": [
+      {
+        "luaPath": "../mcp/mcp-tool-protocol-inspector.lua",
+        "exposeToMcp": false
+      }
+    ],
+    "enabled": false
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "channels": [
+    {
+      "id": "demo-server",
+      "name": "TCP Server",
+      "channel_type": "tcp",
+      "settings": { "mode": "server", "serverAddress": "127.0.0.1:17890" }
+    },
+    {
+      "id": "demo-client",
+      "name": "TCP Client",
+      "channel_type": "tcp",
+      "settings": { "mode": "client", "clientAddress": "127.0.0.1:17890" }
+    }
+  ],
+  "ui": {
+    "left_panel_width": 190,
+    "center_panel_width": 550,
+    "right_panel_width": 500,
+    "center_split_ratio": 0.45,
+    "center_top_visible": true,
+    "center_bottom_visible": true,
+    "right_panel_visible": true,
+    "simple_mode": false,
+    "active_channel_id": "demo-server",
+    "data_view_mode": "text",
+    "theme_mode": "dark",
+    "send_format": "ascii",
+    "receive_format": "hex",
+    "channel_panel_visible": true,
+    "show_input_prefix": true,
+    "show_timestamp": true,
+    "show_received": true,
+    "restore_canvas_layout": true,
+    "terminal_layout": {
+      "root": { "type": "leaf", "paneId": "demo-pane" },
+      "focusedPaneId": "demo-pane",
+      "panes": {
+        "demo-pane": {
+          "tabs": [
+            { "id": "demo-server-tab", "channelId": "demo-server", "label": "TCP Server" },
+            { "id": "demo-client-tab", "channelId": "demo-client", "label": "TCP Client" }
+          ],
+          "activeTabId": "demo-client-tab",
+          "showCommandsPanel": false,
+          "cmdHistory": []
+        }
+      }
+    }
+  },
+  "protocol": { "mode": "Passthrough", "field_definitions": [], "lua_script": "" },
+  "canvases": [
+    {
+      "id": "demo-table",
+      "name": "First byte",
+      "rect": { "x": 15, "y": 15, "width": 440, "height": 220 },
+      "savedRect": null,
+      "savedSnapped": null,
+      "zIndex": 1,
+      "active": false,
+      "activationMode": "auto",
+      "maximized": false,
+      "snapped": false,
+      "config": {
+        "type": "table",
+        "dataSource": "raw",
+        "channels": [{ "channelId": "demo-server", "protocolTemplateId": null }],
+        "table": {
+          "columns": [
+            { "id": "byte", "alias": "Byte 0", "offset": 0, "format": "UInt8", "formula": "" },
+            { "id": "scaled", "alias": "Scaled × 2", "offset": 0, "format": "UInt8", "formula": "x * 2" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "demo-chart",
+      "name": "Received values",
+      "rect": { "x": 15, "y": 250, "width": 440, "height": 240 },
+      "savedRect": null,
+      "savedSnapped": null,
+      "zIndex": 2,
+      "active": false,
+      "activationMode": "auto",
+      "maximized": false,
+      "snapped": false,
+      "config": {
+        "type": "chart",
+        "dataSource": "raw",
+        "channels": [{ "channelId": "demo-server", "protocolTemplateId": null }],
+        "chart": {
+          "kind": "line",
+          "xSource": { "kind": "timestamp" },
+          "yAxis": { "mode": "auto" },
+          "series": [{
+            "id": "value",
+            "name": "Byte 0",
+            "color": "#38bdf8",
+            "extractor": { "source": "raw", "offset": 0, "format": "UInt8", "formula": "" }
+          }]
+        }
+      }
+    }
+  ],
+  "mcp_tools": { "enabled": false, "scripts": [] }
+}

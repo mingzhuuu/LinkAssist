@@ -1,0 +1,18 @@
+# 统一行尾：仓库与工作区均使用 LF，避免 Windows autocrlf 导致的假改动
+* text=auto eol=lf
+
+# 二进制文件禁止任何转换
+*.png binary
+*.ico binary
+*.icns binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# Preserve the upstream bytes used by vendor/backports.json on every platform.
+vendor/** -text
