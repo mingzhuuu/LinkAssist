@@ -1,0 +1,44 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+target/
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+*.pdf
+
+# Local developer state and private configuration (examples remain trackable)
+.codex-icon-scale/
+.sisyphus/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+snapshot-*.exe
+/*.exe
+src-tauri/rpmLoopLog.csv
+src-tauri/linkassist-layout.json
+src-tauri/调试指令.json
+install_omo.ps1

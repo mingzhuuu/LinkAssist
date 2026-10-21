@@ -1,0 +1,21 @@
+name: Bug report / 问题反馈
+description: Report a reproducible problem without private device data.
+body:
+  - type: input
+    id: environment
+    attributes:
+      label: Version and OS / 版本与系统
+      placeholder: LinkAssist version, Windows version, installation method
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps and expected/actual behavior / 复现步骤及预期、实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized logs or screenshots / 脱敏日志或截图
+      description: Remove tokens, passwords, private paths, device identifiers and customer data. Report vulnerabilities through SECURITY.md.

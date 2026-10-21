@@ -1,0 +1,73 @@
+diff --git a/glib/Cargo.toml b/glib/Cargo.toml
+index 132e07d..27d6470 100644
+--- a/glib/Cargo.toml
++++ b/glib/Cargo.toml
+@@ -123,6 +123,7 @@ version = "^0.1"
+ version = "3"
+ 
+ [dev-dependencies.trybuild2]
++package = "trybuild"
+ version = "1"
+ 
+ [features]
+diff --git a/glib/src/variant_iter.rs b/glib/src/variant_iter.rs
+index b406172..e0997f6 100644
+--- a/glib/src/variant_iter.rs
++++ b/glib/src/variant_iter.rs
+@@ -117,13 +117,13 @@ impl<'a> VariantStrIter<'a> {
+ 
+     fn impl_get(&self, i: usize) -> &'a str {
+         unsafe {
+-            let p: *mut libc::c_char = std::ptr::null_mut();
++            let mut p: *mut libc::c_char = std::ptr::null_mut();
+             let s = b"&s\0";
+             ffi::g_variant_get_child(
+                 self.variant.to_glib_none().0,
+                 i,
+                 s as *const u8 as *const _,
+-                &p,
++                &mut p,
+                 std::ptr::null::<i8>(),
+             );
+             let p = std::ffi::CStr::from_ptr(p);
+diff --git a/glib/tests/linkassist_variant_str_iter.rs b/glib/tests/linkassist_variant_str_iter.rs
+new file mode 100644
+--- /dev/null
++++ b/glib/tests/linkassist_variant_str_iter.rs
+@@ -0,0 +1,36 @@
++use glib::prelude::*;
++
++// Run in release mode: the old immutable FFI out-pointer is UB and may only
++// fail when the compiler optimizes away the foreign write (RUSTSEC-2024-0429).
++#[test]
++fn string_array_iteration_preserves_borrowed_values() {
++    let expected = ["", "ASCII", "蓝牙", "🦀", "last"];
++    let variant = expected.to_variant();
++    assert_eq!(variant.array_iter_str().unwrap().collect::<Vec<_>>(), expected);
++    assert_eq!(variant.array_iter_str().unwrap().rev().collect::<Vec<_>>(), expected.into_iter().rev().collect::<Vec<_>>());
++    let mut iterator = variant.array_iter_str().unwrap();
++    let first = iterator.next().unwrap();
++    assert_eq!(iterator.next_back(), Some("last"));
++    assert_eq!(iterator.nth(1), Some("蓝牙"));
++    assert_eq!(iterator.nth_back(0), Some("🦀"));
++    assert_eq!(iterator.len(), 0);
++    assert_eq!(iterator.next(), None);
++    assert_eq!(iterator.next_back(), None);
++    drop(iterator);
++    assert_eq!(first, "");
++    assert_eq!(variant.array_iter_str().unwrap().last(), Some("last"));
++}
++
++#[test]
++fn empty_and_exhausted_string_arrays_are_fused() {
++    let empty: Vec<&str> = vec![];
++    let variant = empty.to_variant();
++    assert_eq!(variant.array_iter_str().unwrap().next(), None);
++    let variant = ["one", "two"].to_variant();
++    let mut iterator = variant.array_iter_str().unwrap();
++    assert_eq!(iterator.nth(2), None);
++    assert_eq!(iterator.next_back(), None);
++    let mut iterator = variant.array_iter_str().unwrap();
++    assert_eq!(iterator.nth_back(2), None);
++    assert_eq!(iterator.next(), None);
++}

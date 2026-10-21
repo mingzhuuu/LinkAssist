@@ -1,0 +1,10 @@
+# Isolated workspace for compiling and testing the GTK compatibility backports.
+# The application uses the identical patches from src-tauri/Cargo.toml.
+[workspace]
+members = ["glib", "glib-macros", "gtk3-macros"]
+resolver = "2"
+
+[patch.crates-io]
+glib = { path = "glib" }
+glib-macros = { path = "glib-macros" }
+gtk3-macros = { path = "gtk3-macros" }

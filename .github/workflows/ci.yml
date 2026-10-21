@@ -1,0 +1,101 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          submodules: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install Rust
+        run: rustup toolchain install 1.94.1 --profile minimal
+      - run: npm ci
+      - run: npm run check
+      - run: npm run check:rust-backports
+      - run: cargo check --manifest-path vendor/Cargo.toml --locked -p glib-macros -p gtk3-macros --lib
+      - run: npm run test:rust-macros
+      - run: npm audit --audit-level=moderate
+      - run: cargo test --manifest-path src-tauri/Cargo.toml --lib --locked
+      - run: npm run licenses:generate
+      - name: Build embedded frontend
+        run: npm run tauri build -- --debug --no-bundle
+      - run: npm run test:integration
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: failure()
+        with:
+          name: test-diagnostics
+          path: logs/core-smoke-*/core.log
+          retention-days: 7
+  rust-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: cargo install cargo-audit --version 0.22.2 --locked
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm run audit:rust
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: rust-audit-evidence
+          path: logs/rust-audit-*/
+          retention-days: 14
+  gtk-backports:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: rustup toolchain install 1.94.1 --profile minimal
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev
+      - run: npm run check:rust-backports
+      - run: cargo test --manifest-path vendor/Cargo.toml --locked --release -p glib --lib --test linkassist_variant_str_iter
+      - run: cargo test --manifest-path vendor/Cargo.toml --locked --release -p glib-macros --tests
+      - run: cargo test --manifest-path vendor/Cargo.toml --locked --release -p gtk3-macros --test linkassist_template
+      - run: npm run test:rust-macros
+  secrets:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Scan complete Git history
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $archive = Join-Path $env:RUNNER_TEMP 'gitleaks.zip'
+          $tool = Join-Path $env:RUNNER_TEMP 'gitleaks'
+          Invoke-WebRequest 'https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_windows_x64.zip' -OutFile $archive
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash -ne 'D29144DEFF3A68AA93CED33DDDF84B7FDC26070ADD4AA0F4513094C8332AFC4E') { throw 'Checksum mismatch' }
+          Expand-Archive $archive $tool
+          & (Join-Path $tool 'gitleaks.exe') git --redact --no-banner --log-opts='--all' .
+          if ($LASTEXITCODE -ne 0) { throw 'Secret scan failed' }

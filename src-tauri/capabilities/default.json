@@ -1,0 +1,31 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window and detached terminal windows",
+  "windows": ["main", "terminal-*"],
+  "permissions": [
+    "core:event:default",
+    "core:window:default",
+    "core:window:allow-create",
+    "core:window:allow-start-dragging",
+    "core:window:allow-minimize",
+    "core:window:allow-maximize",
+    "core:window:allow-unmaximize",
+    "core:window:allow-close",
+    "core:window:allow-destroy",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-set-size",
+    "core:window:allow-set-position",
+    "core:window:allow-set-focus",
+    "core:window:allow-set-theme",
+    "core:window:allow-inner-size",
+    "core:window:allow-outer-position",
+    "core:window:allow-is-maximized",
+    "core:webview:default",
+    "core:webview:allow-create-webview-window",
+    "dialog:allow-save",
+    "dialog:allow-open"
+  ]
+}

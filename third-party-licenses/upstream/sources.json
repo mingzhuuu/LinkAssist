@@ -1,0 +1,37 @@
+{
+  "alloc-stdlib@0.3.0": {
+    "file": "alloc-stdlib-0.3.0.txt",
+    "source": "https://github.com/dropbox/rust-alloc-no-stdlib/tree/0a81fd6928ea3b33c8cd484aa4575d50ffb98012/alloc-stdlib",
+    "url": "https://raw.githubusercontent.com/dropbox/rust-alloc-no-stdlib/0a81fd6928ea3b33c8cd484aa4575d50ffb98012/LICENSE"
+  },
+  "mlua-sys@0.6.8": {
+    "file": "mlua-sys-0.6.8.txt",
+    "source": "https://github.com/mlua-rs/mlua/tree/31efd0cf727c3aee0b733a8dedac024589e1700c/mlua-sys",
+    "url": "https://raw.githubusercontent.com/mlua-rs/mlua/31efd0cf727c3aee0b733a8dedac024589e1700c/LICENSE"
+  },
+  "selectors@0.38.0": {
+    "file": "selectors-0.38.0.txt",
+    "source": "https://github.com/servo/stylo/tree/572ecba2d1600e7c3d490586692a209faf703baa/selectors",
+    "url": "https://www.mozilla.org/media/MPL/2.0/index.txt"
+  },
+  "tauri-plugin@2.7.2": {
+    "file": "tauri-plugin-2.7.2.txt",
+    "source": "https://github.com/tauri-apps/tauri/tree/59b63ab500da9859f12d8888c3298bc29bba0b92/crates/tauri-plugin",
+    "url": "https://raw.githubusercontent.com/tauri-apps/tauri/59b63ab500da9859f12d8888c3298bc29bba0b92/LICENSE-MIT"
+  },
+  "webview2-com@0.39.1": {
+    "file": "webview2-com-0.39.1.txt",
+    "source": "https://github.com/wravery/webview2-rs/tree/edc2caf886175ccaebe86078c9cfe1ae2a187328",
+    "url": "https://raw.githubusercontent.com/wravery/webview2-rs/edc2caf886175ccaebe86078c9cfe1ae2a187328/LICENSE"
+  },
+  "webview2-com-macros@0.8.1": {
+    "file": "webview2-com-0.39.1.txt",
+    "source": "https://github.com/wravery/webview2-rs/tree/edc2caf886175ccaebe86078c9cfe1ae2a187328",
+    "url": "https://raw.githubusercontent.com/wravery/webview2-rs/edc2caf886175ccaebe86078c9cfe1ae2a187328/LICENSE"
+  },
+  "webview2-com-sys@0.39.1": {
+    "file": "webview2-com-0.39.1.txt",
+    "source": "https://github.com/wravery/webview2-rs/tree/edc2caf886175ccaebe86078c9cfe1ae2a187328",
+    "url": "https://raw.githubusercontent.com/wravery/webview2-rs/edc2caf886175ccaebe86078c9cfe1ae2a187328/LICENSE"
+  }
+}
