@@ -639,7 +639,7 @@ export const BlePanel = React.memo(function BlePanel({ channelId }: { channelId:
       {/* Scanner area (Device list container) */}
       <div
         ref={gattCardRef}
-        className="relative isolate bg-surface border border-border rounded-lg p-2 flex min-h-0 flex-col overflow-hidden"
+        className="channel-panel-card relative isolate bg-surface border border-border rounded-lg p-2 flex min-h-0 flex-col overflow-hidden"
       >
         <div className="min-h-0 flex-1 overflow-y-auto scrollbar-stable">
           {showGatt ? (

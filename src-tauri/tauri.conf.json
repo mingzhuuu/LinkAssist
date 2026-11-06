@@ -14,8 +14,9 @@
     "windows": [
       {
         "title": "LinkAssist",
-        "width": 1400,
-        "height": 900,
+        "width": 1160,
+        "height": 740,
+        "maximized": false,
         "minWidth": 1024,
         "minHeight": 680,
         "decorations": false,
@@ -25,7 +26,7 @@
         "shadow": false,
         "visible": false,
         "skipTaskbar": true,
-        "theme": "Dark"
+        "theme": "Light"
       }
     ],
     "security": {

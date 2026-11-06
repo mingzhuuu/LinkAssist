@@ -8,7 +8,6 @@ describe('canvasFrameBounds', () => {
     useUIStore.setState({
       leftPanelWidth: 48,
       channelPanelVisible: true,
-      simpleMode: false,
     });
   });
 
@@ -35,20 +34,16 @@ describe('canvasFrameBounds', () => {
       expect(getChannelPanelRightWin(container)).toBe(64);
     });
 
-    it('falls back to leftPanelWidth when channel panel is visible and simpleMode is false', () => {
-      useUIStore.setState({ leftPanelWidth: 80, channelPanelVisible: true, simpleMode: false });
+    it('falls back to leftPanelWidth when channel panel is visible', () => {
+      useUIStore.setState({ leftPanelWidth: 80, channelPanelVisible: true });
       expect(getChannelPanelRightWin(null)).toBe(80);
     });
 
     it('falls back to 0 when channel panel is hidden', () => {
-      useUIStore.setState({ leftPanelWidth: 80, channelPanelVisible: false, simpleMode: false });
+      useUIStore.setState({ leftPanelWidth: 80, channelPanelVisible: false });
       expect(getChannelPanelRightWin(null)).toBe(0);
     });
 
-    it('falls back to 0 when simpleMode is enabled', () => {
-      useUIStore.setState({ leftPanelWidth: 80, channelPanelVisible: true, simpleMode: true });
-      expect(getChannelPanelRightWin(null)).toBe(0);
-    });
   });
 
   describe('canvas boundary clamping: strict left/top limits, right/bottom exceeding', () => {

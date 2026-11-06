@@ -16,8 +16,7 @@ export function getChannelPanelRightWin(container: HTMLElement | null): number {
     return contentArea.getBoundingClientRect().left;
   }
   const uiState = useUIStore.getState();
-  const effectiveChannelPanelVisible = !uiState.simpleMode && uiState.channelPanelVisible;
-  return effectiveChannelPanelVisible ? uiState.leftPanelWidth : 0;
+  return uiState.channelPanelVisible ? uiState.leftPanelWidth : 0;
 }
 
 export function rangesOverlapOrNear(

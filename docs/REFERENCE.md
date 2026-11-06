@@ -153,7 +153,7 @@
 | `import_from_file` | Import content from a file path. The default 'utf8' encoding fails on binary files; pass encoding 'base64' to read any file, including firmware images. |
 | `get_recent_events` | Return recent Core events/logs buffered by the headless core. |
 
-## 应用文件（251）
+## 应用文件（257）
 
 目录职责见 [架构说明](ARCHITECTURE.md)。根目录构建入口另见 [开发与验证](DEVELOPMENT.md)。
 
@@ -242,6 +242,7 @@
 - [src/__tests__/CanvasContainerCorners.test.tsx](../src/__tests__/CanvasContainerCorners.test.tsx)
 - [src/__tests__/CanvasEditDialogBundledLua.test.tsx](../src/__tests__/CanvasEditDialogBundledLua.test.tsx)
 - [src/__tests__/CanvasScriptHeader.test.tsx](../src/__tests__/CanvasScriptHeader.test.tsx)
+- [src/__tests__/ChannelConfigDrawer.test.tsx](../src/__tests__/ChannelConfigDrawer.test.tsx)
 - [src/__tests__/ChannelQuickOpenButton.test.tsx](../src/__tests__/ChannelQuickOpenButton.test.tsx)
 - [src/__tests__/DisplayPanelViewportReset.test.tsx](../src/__tests__/DisplayPanelViewportReset.test.tsx)
 - [src/__tests__/GattExplorer.test.tsx](../src/__tests__/GattExplorer.test.tsx)
@@ -293,6 +294,7 @@
 - [src/components/channels/tcp/index.ts](../src/components/channels/tcp/index.ts)
 - [src/components/channels/uart/UartPanel.tsx](../src/components/channels/uart/UartPanel.tsx)
 - [src/components/channels/uart/index.ts](../src/components/channels/uart/index.ts)
+- [src/components/common/ChannelSelectionCircle.tsx](../src/components/common/ChannelSelectionCircle.tsx)
 - [src/components/common/ErrorBoundary.tsx](../src/components/common/ErrorBoundary.tsx)
 - [src/components/common/GlobalTooltip.tsx](../src/components/common/GlobalTooltip.tsx)
 - [src/components/common/Icons.tsx](../src/components/common/Icons.tsx)
@@ -337,6 +339,7 @@
 - [src/components/display/viewportUtils.ts](../src/components/display/viewportUtils.ts)
 - [src/components/layout/AGENTS.md](../src/components/layout/AGENTS.md)
 - [src/components/layout/CenterPanel.tsx](../src/components/layout/CenterPanel.tsx)
+- [src/components/layout/ChannelConfigDrawer.tsx](../src/components/layout/ChannelConfigDrawer.tsx)
 - [src/components/layout/DetachedTerminalWindow.tsx](../src/components/layout/DetachedTerminalWindow.tsx)
 - [src/components/layout/LeftPanel.tsx](../src/components/layout/LeftPanel.tsx)
 - [src/components/layout/MainLayout.tsx](../src/components/layout/MainLayout.tsx)
@@ -346,13 +349,16 @@
 - [src/components/layout/SavedCommandsDialog.tsx](../src/components/layout/SavedCommandsDialog.tsx)
 - [src/components/layout/SavedCommandsPanel.tsx](../src/components/layout/SavedCommandsPanel.tsx)
 - [src/components/layout/SettingsDialog.tsx](../src/components/layout/SettingsDialog.tsx)
+- [src/components/layout/TerminalChannels.tsx](../src/components/layout/TerminalChannels.tsx)
 - [src/components/layout/TerminalContextMenu.tsx](../src/components/layout/TerminalContextMenu.tsx)
 - [src/components/layout/TerminalLeafPane.tsx](../src/components/layout/TerminalLeafPane.tsx)
 - [src/components/layout/TitleBar.tsx](../src/components/layout/TitleBar.tsx)
+- [src/components/layout/channelCardGeometry.ts](../src/components/layout/channelCardGeometry.ts)
 - [src/components/layout/eventSubscriptions.ts](../src/components/layout/eventSubscriptions.ts)
 - [src/components/layout/index.ts](../src/components/layout/index.ts)
 - [src/components/layout/layoutImport.ts](../src/components/layout/layoutImport.ts)
 - [src/components/layout/terminalUtils.ts](../src/components/layout/terminalUtils.ts)
+- [src/components/layout/useChannelCardGeometry.ts](../src/components/layout/useChannelCardGeometry.ts)
 - [src/components/parser/GattExplorer.tsx](../src/components/parser/GattExplorer.tsx)
 - [src/components/parser/index.ts](../src/components/parser/index.ts)
 - [src/hooks/AGENTS.md](../src/hooks/AGENTS.md)

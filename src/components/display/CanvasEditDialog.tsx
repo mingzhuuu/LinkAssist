@@ -844,6 +844,7 @@ export const CanvasEditDialog: React.FC<CanvasEditDialogProps> = ({ open, canvas
     if (!path) {
       mergeCsvLogOutputs(Object.keys(saved), saved);
       scriptCsvLogLoadedPathRef.current = null;
+      setScriptCsvLogLoading(false);
       setScriptFileError('');
       return;
     }
@@ -851,8 +852,8 @@ export const CanvasEditDialog: React.FC<CanvasEditDialogProps> = ({ open, canvas
     scriptCsvLogLoadedPathRef.current = path;
     setScriptCsvLogLoading(true);
     try {
-      if (scriptCsvLogLoadedPathRef.current !== path) return;
       const targetNames = Object.keys((await parseScriptLuaFile(path)).csvLog ?? {});
+      if (scriptCsvLogLoadedPathRef.current !== path) return;
       mergeCsvLogOutputs(targetNames.length > 0 ? targetNames : Object.keys(saved), saved);
       setScriptFileError('');
     } catch (error) {
@@ -1455,20 +1456,20 @@ export const CanvasEditDialog: React.FC<CanvasEditDialogProps> = ({ open, canvas
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9000] flex items-center justify-center bg-black/40 dark:bg-black/60 px-4 backdrop-blur-sm"
+      className="main-dialog-backdrop fixed inset-0 z-[9000] flex items-center justify-center bg-black/40 dark:bg-black/60 px-4 backdrop-blur-sm"
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
       onContextMenu={handleBackdropContextMenu}
     >
       <div
-        className="flex max-h-[90vh] w-full max-w-[52rem] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_24px_60px_rgba(0,0,0,0.4)]"
+        className="flex h-[min(640px,calc(100vh-4rem))] w-full max-w-[52rem] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_24px_60px_rgba(0,0,0,0.4)]"
         onClick={(event) => event.stopPropagation()}
         onMouseDown={(event) => event.stopPropagation()}
         onMouseUp={(event) => event.stopPropagation()}
         onContextMenu={(event) => event.stopPropagation()}
       >
-        <div className="min-h-0 flex-1 space-y-7 overflow-y-auto px-6 pt-6 pb-6">
-          <section className="px-1">
+        <div className="flex min-h-0 flex-1 flex-col gap-5 p-6">
+          <section className="shrink-0 px-1">
             <label className="block text-sm font-medium text-text-primary">
               <span className="sr-only">Name</span>
             <input
@@ -1481,11 +1482,11 @@ export const CanvasEditDialog: React.FC<CanvasEditDialogProps> = ({ open, canvas
             </label>
           </section>
 
-          <section className="px-1">
+          <section className="max-h-[35%] shrink-0 overflow-y-auto px-1">
             {channels.length === 0 ? (
               <div className="rounded-xl border border-border px-5 py-4 text-sm text-text-muted">No channels available</div>
             ) : (
-              <div className="max-h-[280px] overflow-y-auto rounded-xl border border-border">
+              <div className="rounded-xl border border-border">
                 {channels.map((channel) => {
                   const isSelected = selectedChannels.some((item) => item.channelId === channel.id);
                   const link = selectedChannels.find((item) => item.channelId === channel.id);
@@ -1639,9 +1640,8 @@ export const CanvasEditDialog: React.FC<CanvasEditDialogProps> = ({ open, canvas
             )}
           </section>
 
-          <section className="px-1">
-            <div className="space-y-3">
-               <div className="flex items-center gap-7 border-b border-border-hover">
+          <section className="flex min-h-0 flex-1 flex-col gap-3 px-1">
+               <div className="flex shrink-0 items-center gap-7 border-b border-border-hover">
                  {CANVAS_TYPE_TABS.map((item) => (
                   <button
                     key={item.value}
@@ -1660,7 +1660,7 @@ export const CanvasEditDialog: React.FC<CanvasEditDialogProps> = ({ open, canvas
                 ))}
               </div>
 
-            <div className="relative flex h-[min(420px,60vh)] min-h-[300px] flex-col overflow-hidden rounded-xl border border-border">
+            <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
 
           {type === 'table' && (
             <>
@@ -1808,19 +1808,11 @@ export const CanvasEditDialog: React.FC<CanvasEditDialogProps> = ({ open, canvas
           )}
 
           {type === 'script' && (
-            <div className="h-full overflow-y-auto p-4 pr-5">
-            <div className="space-y-4 rounded border border-border p-3">
-              <div>
-                <h3 className="text-sm font-medium text-text-primary">Script Automation</h3>
-                <p className="mt-1 text-xs text-text-muted">
-                  Lua drives automated Serial / TCP Client / UDP tests. File-based scripts must declare <span className="font-mono">-- linkassist:type = script</span>. CSV files are loaded dynamically from paths declared in the script.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="min-h-0 space-y-4 overflow-y-auto p-4">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_10rem]">
                 {scriptBundled ? (
                   <div className="rounded border border-accent-green/30 bg-accent-green/10 px-3 py-2 text-xs text-text-secondary">
-                    Bundled Lua automation script. Its source is managed by this snapshot and cannot be changed.
+                    Bundled Lua automation script
                   </div>
                 ) : (
                   <label className="space-y-1">
@@ -1828,7 +1820,7 @@ export const CanvasEditDialog: React.FC<CanvasEditDialogProps> = ({ open, canvas
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
-                        className="input-base flex-1 text-sm"
+                        className="input-base min-w-0 flex-1 text-sm"
                         value={scriptLuaPath}
                         onChange={(event) => {
                           scriptCsvLogLoadedPathRef.current = null;
@@ -1887,43 +1879,38 @@ export const CanvasEditDialog: React.FC<CanvasEditDialogProps> = ({ open, canvas
                 </div>
               )}
 
-              <div className="space-y-3 rounded border border-border p-3">
-                <div>
-                  <div className="text-sm font-medium text-text-secondary">Business CSV Logs</div>
-                  <div className="mt-1 text-xs text-text-muted">Lua defines csvLog columns; this canvas controls whether each log is saved and where.</div>
-                </div>
-                {scriptCsvLogLoading ? (
-                  <div className="text-xs text-text-muted">Loading csvLog targets...</div>
-                ) : Object.keys(scriptCsvLogOutputs).length === 0 ? (
-                  <div className="text-xs text-text-muted">No csvLog targets detected in the current Lua script.</div>
-                ) : Object.entries(scriptCsvLogOutputs).map(([target, output]) => (
-                  <div key={target} className="space-y-2 rounded border border-border/70 p-2">
-                    <label className="flex items-center gap-2 text-sm text-text-secondary">
+              {scriptCsvLogLoading && <div className="text-xs text-text-muted">Loading CSV logs...</div>}
+              {!scriptCsvLogLoading && Object.keys(scriptCsvLogOutputs).length > 0 && (
+                <section className="space-y-2 border-t border-border pt-3">
+                  <h3 className="text-sm font-medium text-text-secondary">CSV Logs</h3>
+                  {Object.entries(scriptCsvLogOutputs).map(([target, output]) => (
+                    <div key={target} className="space-y-2 rounded border border-border/70 p-2">
+                      <label className="flex items-center gap-2 text-sm text-text-secondary">
+                        <input
+                          type="checkbox"
+                          checked={output.enabled}
+                          onChange={(event) => setScriptCsvLogOutputs((current) => ({
+                            ...current,
+                            [target]: { ...current[target], enabled: event.target.checked },
+                          }))}
+                        />
+                        Save {target}
+                      </label>
                       <input
-                        type="checkbox"
-                        checked={output.enabled}
+                        type="text"
+                        className="input-base w-full text-sm"
+                        value={output.path}
                         onChange={(event) => setScriptCsvLogOutputs((current) => ({
                           ...current,
-                          [target]: { ...current[target], enabled: event.target.checked },
+                          [target]: { ...current[target], path: event.target.value },
                         }))}
+                        disabled={!output.enabled}
+                        placeholder={`${target}.csv (current program folder)`}
                       />
-                      Save {target}
-                    </label>
-                    <input
-                      type="text"
-                      className="input-base w-full text-sm"
-                      value={output.path}
-                      onChange={(event) => setScriptCsvLogOutputs((current) => ({
-                        ...current,
-                        [target]: { ...current[target], path: event.target.value },
-                      }))}
-                      disabled={!output.enabled}
-                      placeholder={`${target}.csv (current program folder)`}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+                    </div>
+                  ))}
+                </section>
+              )}
             </div>
           )}
 
@@ -2501,7 +2488,6 @@ export const CanvasEditDialog: React.FC<CanvasEditDialogProps> = ({ open, canvas
               </button>
             </>
           )}
-            </div>
             </div>
           </section>
         </div>

@@ -84,8 +84,8 @@ describe('ChannelQuickOpenButton', () => {
     expect(quickBtn).toBeTruthy();
     fireEvent.click(quickBtn);
 
-    // Picker header is shown
-    expect(screen.getByText('Open channels')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Open channels' })).toBeTruthy();
+    expect(screen.queryByText('Open channels')).toBeNull();
 
     // The channels are rendered as buttons with role="checkbox"
     const channelItems = screen.getAllByRole('checkbox');
@@ -114,11 +114,11 @@ describe('ChannelQuickOpenButton', () => {
 
     // Open via right-click
     fireEvent.contextMenu(quickBtn);
-    expect(screen.getByText('Open channels')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Open channels' })).toBeTruthy();
 
     // Close via right-click
     fireEvent.contextMenu(quickBtn);
-    expect(screen.queryByText('Open channels')).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Open channels' })).toBeNull();
   });
 
   it('does not trigger window drag or window maximize when clicking inside channel picker in MainLayout', async () => {
@@ -135,7 +135,7 @@ describe('ChannelQuickOpenButton', () => {
     act(() => {
       fireEvent.click(quickBtn);
     });
-    expect(screen.getByText('Open channels')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Open channels' })).toBeTruthy();
 
     const channelButtons = screen.getAllByRole('checkbox');
     expect(channelButtons).toHaveLength(2);
@@ -165,7 +165,7 @@ describe('ChannelQuickOpenButton', () => {
     expect(appWindowMock.startDragging).not.toHaveBeenCalled();
   });
 
-  it('does not trigger title-bar Simple mode context menu when right-clicking quick open button', async () => {
+  it('does not trigger title-bar layout menu when right-clicking quick open button', async () => {
     let renderResult: ReturnType<typeof render> | undefined;
     await act(async () => {
       renderResult = render(<MainLayout />);
@@ -180,8 +180,7 @@ describe('ChannelQuickOpenButton', () => {
     });
 
     // Channel picker opens
-    expect(screen.getByText('Open channels')).toBeTruthy();
-    // Simple mode context menu must NOT appear
-    expect(screen.queryByRole('menuitem', { name: /Simple mode/i })).toBeNull();
+    expect(screen.getByRole('group', { name: 'Open channels' })).toBeTruthy();
+    expect(screen.queryByRole('menuitemcheckbox')).toBeNull();
   });
 });

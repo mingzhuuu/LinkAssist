@@ -173,7 +173,7 @@ export const TcpPanel = React.memo(function TcpPanel({ channelId }: { channelId:
       </div>
 
       {/* Content area — rounded bordered container */}
-      <div className="bg-surface border border-border rounded-lg flex min-h-0 flex-col overflow-y-auto scrollbar-stable">
+      <div className="channel-panel-card bg-surface border border-border rounded-lg flex min-h-0 flex-col overflow-y-auto scrollbar-stable">
         <div>
           {mode === 'client' && (
               <div className={tcpAddressRowClassName}>

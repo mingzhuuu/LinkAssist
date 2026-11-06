@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDownIcon } from './Icons';
 
@@ -48,6 +48,7 @@ export const RoundedSelect: React.FC<RoundedSelectProps> = ({
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerId = useId();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const toneClasses = {
@@ -152,6 +153,7 @@ export const RoundedSelect: React.FC<RoundedSelectProps> = ({
   };
 
   const hideTooltip = () => setTooltip(null);
+  const portalTheme = containerRef.current?.closest('.light-surface') ? 'light-surface' : '';
 
   return (
     <>
@@ -164,6 +166,8 @@ export const RoundedSelect: React.FC<RoundedSelectProps> = ({
       >
         <button
           type="button"
+          id={triggerId}
+          aria-expanded={isOpen}
           disabled={disabled}
           onClick={() => setIsOpen(current => !current)}
           className={joinClassNames(
@@ -181,7 +185,8 @@ export const RoundedSelect: React.FC<RoundedSelectProps> = ({
           menuPosition && createPortal(
             <div
               ref={menuRef}
-              className="fixed z-[10000] overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
+              data-portal-owner={triggerId}
+              className={joinClassNames(portalTheme, 'fixed z-[10000] overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_30px_rgba(0,0,0,0.35)]')}
               style={{
                 top: menuPosition.top,
                 left: menuPosition.left,
@@ -224,7 +229,7 @@ export const RoundedSelect: React.FC<RoundedSelectProps> = ({
 
       {tooltip && createPortal(
         <div
-          className="pointer-events-none fixed z-[10010] max-w-[220px] animate-fade-in rounded-2xl border border-border bg-surface-overlay/95 px-3 py-2 text-xs font-medium text-text-primary shadow-xl shadow-black/30 backdrop-blur-sm whitespace-nowrap"
+          className={joinClassNames(portalTheme, 'pointer-events-none fixed z-[10010] max-w-[220px] animate-fade-in rounded-2xl border border-border bg-surface-overlay/95 px-3 py-2 text-xs font-medium text-text-primary shadow-xl shadow-black/30 backdrop-blur-sm whitespace-nowrap')}
           style={{
             top: tooltip.top,
             left: tooltip.left,

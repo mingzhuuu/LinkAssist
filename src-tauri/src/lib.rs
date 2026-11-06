@@ -522,18 +522,15 @@ fn run_tauri_core(headless: bool, core_lock: discovery::CoreInstanceLock) {
             }
 
             let config = persistence::load_config(app.handle()).unwrap_or_default();
-            let simple_mode = config.ui.simple_mode;
             let mcp_tools_enabled = mcp_tools::mcp_tools_enabled(&config).unwrap_or(true);
             tray_mcp_tool_access.set_enabled(mcp_tools_enabled);
-            if !simple_mode {
-                if let Err(error) = setup_tray(
-                    app.handle(),
-                    &tray_ui_lifecycle,
-                    &setup_tray_requests,
-                    &tray_mcp_tool_access,
-                ) {
-                    log::warn!("Failed to initialize the tray icon: {error}");
-                }
+            if let Err(error) = setup_tray(
+                app.handle(),
+                &tray_ui_lifecycle,
+                &setup_tray_requests,
+                &tray_mcp_tool_access,
+            ) {
+                log::warn!("Failed to initialize the tray icon: {error}");
             }
 
             let app_handle = app.handle().clone();

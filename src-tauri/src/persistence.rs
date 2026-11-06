@@ -45,8 +45,9 @@ pub struct UiConfig {
     pub center_bottom_visible: bool,
     #[serde(default = "default_right_panel_visible")]
     pub right_panel_visible: bool,
-    #[serde(default)]
-    pub simple_mode: bool,
+    // Read older canvas-only layouts so the frontend can migrate their panel flags.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub simple_mode: Option<bool>,
     #[serde(default)]
     pub active_channel_id: Option<String>,
     pub data_view_mode: String,
@@ -104,7 +105,7 @@ fn default_center_split() -> f64 {
 }
 
 fn default_theme() -> String {
-    "dark".to_string()
+    "light".to_string()
 }
 
 fn default_send_format() -> String {
@@ -120,7 +121,7 @@ fn default_channel_panel_visible() -> bool {
 }
 
 fn default_center_top_visible() -> bool {
-    true
+    false
 }
 
 fn default_center_bottom_visible() -> bool {
@@ -139,16 +140,16 @@ impl Default for UiConfig {
     fn default() -> Self {
         Self {
             left_panel_width: 40.0,
-            right_panel_width: 360.0,
-            center_panel_width: Some(560.0),
+            right_panel_width: 444.0,
+            center_panel_width: Some(670.0),
             center_split_ratio: 0.5,
-            center_top_visible: true,
+            center_top_visible: false,
             center_bottom_visible: true,
             right_panel_visible: true,
-            simple_mode: false,
+            simple_mode: None,
             active_channel_id: None,
             data_view_mode: "text".to_string(),
-            theme_mode: "dark".to_string(),
+            theme_mode: default_theme(),
             send_format: "ascii".to_string(),
             receive_format: "hex".to_string(),
             channel_panel_visible: true,

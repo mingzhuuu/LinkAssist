@@ -502,7 +502,7 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
         ? 'px-2 pb-2 pt-0'
         : 'px-2.5 pb-2.5 pt-0'}`}>
         <div className="flex items-stretch gap-0">
-          <div className="flex-1">
+          <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
             {rows.length === 0 ? (
               <div className="text-center py-8 text-text-muted text-xs">
                 No rows configured. Edit canvas to add rows.

@@ -1,3 +1,4 @@
+import type { UiEntry } from '../types/persistence';
 import { create } from 'zustand';
 import type { FileDialogDirectories, FileDialogDirectoryKind } from '../lib';
 import { DEFAULT_FILE_DIALOG_DIRS } from '../lib';
@@ -9,7 +10,7 @@ export type SendFormat = TerminalDataFormat;
 export const LEFT_PANEL_MIN_WIDTH = 40;
 export const LEFT_PANEL_MAX_WIDTH = 150;
 export const CENTER_PANEL_MIN_WIDTH = 300;
-export const CENTER_PANEL_DEFAULT_WIDTH = 560;
+export const CENTER_PANEL_DEFAULT_WIDTH = 670;
 
 const clampLeftPanelWidth = (width: number) => (
   Math.min(LEFT_PANEL_MAX_WIDTH, Math.max(LEFT_PANEL_MIN_WIDTH, width))
@@ -33,9 +34,10 @@ interface UIStore {
   rightPanelWidth: number;
   centerSplitRatio: number;
   centerTopVisible: boolean;
+  /** Temporary channel settings overlay; never saved to the layout. */
+  channelConfigPreview: boolean;
   centerBottomVisible: boolean;
   rightPanelVisible: boolean;
-  simpleMode: boolean;
   dataViewMode: DataViewMode;
   showAddChannelMenu: boolean;
   themeMode: ThemeMode;
@@ -55,10 +57,12 @@ interface UIStore {
   setCenterPanelWidth: (width: number) => void;
   setRightPanelWidth: (width: number) => void;
   setCenterSplitRatio: (ratio: number) => void;
+  restorePanelVisibility: (ui: Partial<UiEntry>) => void;
   setCenterTopVisible: (visible: boolean) => void;
+  openChannelConfig: () => void;
+  closeChannelConfig: () => void;
   setCenterBottomVisible: (visible: boolean) => void;
   setRightPanelVisible: (visible: boolean) => void;
-  setSimpleMode: (enabled: boolean) => void;
   setDataViewMode: (mode: LegacyDataViewMode) => void;
   setShowAddChannelMenu: (show: boolean) => void;
   setThemeMode: (mode: ThemeMode) => void;
@@ -85,7 +89,7 @@ const THEME_MODES: ThemeMode[] = ['dark', 'light', 'system', 'high-contrast', 'h
 /**
  * Detached windows do not run persistence, so they receive the current theme
  * via the `?theme=` query param and initialize the store from it. The main
- * window has no such param and falls back to 'system' until persistence loads.
+ * window has no such param and falls back to 'light' until persistence loads.
  */
 function getInitialThemeMode(): ThemeMode {
   try {
@@ -96,18 +100,18 @@ function getInitialThemeMode(): ThemeMode {
   } catch {
     /* noop */
   }
-  return 'system';
+  return 'light';
 }
 
 export const useUIStore = create<UIStore>((set) => ({
   leftPanelWidth: LEFT_PANEL_MIN_WIDTH,
   centerPanelWidth: CENTER_PANEL_DEFAULT_WIDTH,
-  rightPanelWidth: 360,
+  rightPanelWidth: 444,
   centerSplitRatio: 0.5,
-  centerTopVisible: true,
+  centerTopVisible: false,
+  channelConfigPreview: false,
   centerBottomVisible: true,
   rightPanelVisible: true,
-  simpleMode: false,
   dataViewMode: 'text',
   showAddChannelMenu: false,
   themeMode: getInitialThemeMode(),
@@ -115,7 +119,7 @@ export const useUIStore = create<UIStore>((set) => ({
   receiveFormat: 'hex',
   channelPanelVisible: true,
   showInputPrefix: true,
-  showTimestamp: true,
+  showTimestamp: false,
   showReceived: true,
   terminalChannelSettings: {},
   restoreCanvasLayout: true,
@@ -126,16 +130,29 @@ export const useUIStore = create<UIStore>((set) => ({
   setCenterPanelWidth: (width) => set({ centerPanelWidth: clampCenterPanelWidth(width) }),
   setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
   setCenterSplitRatio: (ratio) => set({ centerSplitRatio: ratio }),
-  setCenterTopVisible: (visible) => set({ centerTopVisible: visible }),
+  restorePanelVisibility: (ui) => set((state) => {
+    if (ui.simple_mode === true) {
+      return { rightPanelVisible: true, centerTopVisible: false, centerBottomVisible: false, channelPanelVisible: false, channelConfigPreview: false };
+    }
+    return {
+      rightPanelVisible: typeof ui.right_panel_visible === 'boolean' ? ui.right_panel_visible : state.rightPanelVisible,
+      centerTopVisible: typeof ui.center_top_visible === 'boolean' ? ui.center_top_visible : state.centerTopVisible,
+      centerBottomVisible: typeof ui.center_bottom_visible === 'boolean' ? ui.center_bottom_visible : state.centerBottomVisible,
+      channelPanelVisible: typeof ui.channel_panel_visible === 'boolean' ? ui.channel_panel_visible : state.channelPanelVisible,
+      channelConfigPreview: false,
+    };
+  }),
+  setCenterTopVisible: (visible) => set({ centerTopVisible: visible, channelConfigPreview: false }),
+  openChannelConfig: () => set((state) => ({ channelConfigPreview: !state.centerTopVisible })),
+  closeChannelConfig: () => set({ channelConfigPreview: false }),
   setCenterBottomVisible: (visible) => set({ centerBottomVisible: visible }),
   setRightPanelVisible: (visible) => set({ rightPanelVisible: visible }),
-  setSimpleMode: (enabled) => set({ simpleMode: enabled }),
   setDataViewMode: (mode) => set({ dataViewMode: mode === 'image' ? 'chart' : mode }),
   setShowAddChannelMenu: (show) => set({ showAddChannelMenu: show }),
   setThemeMode: (mode) => set({ themeMode: mode }),
   setSendFormat: (format) => set({ sendFormat: format }),
   setReceiveFormat: (format) => set({ receiveFormat: format }),
-  setChannelPanelVisible: (visible) => set({ channelPanelVisible: visible }),
+  setChannelPanelVisible: (visible) => set({ channelPanelVisible: visible, channelConfigPreview: false }),
   setShowInputPrefix: (show) => set({ showInputPrefix: show }),
   setShowTimestamp: (show) => set({ showTimestamp: show }),
   setShowReceived: (show) => set({ showReceived: show }),
@@ -157,8 +174,8 @@ export const useUIStore = create<UIStore>((set) => ({
   resetCanvasViewport: () => set((state) => ({
     canvasViewportResetVersion: state.canvasViewportResetVersion + 1,
   })),
-  toggleChannelPanel: () => set((state) => ({ channelPanelVisible: !state.channelPanelVisible })),
-  toggleCenterTopVisible: () => set((state) => ({ centerTopVisible: !state.centerTopVisible })),
+  toggleChannelPanel: () => set((state) => ({ channelPanelVisible: !state.channelPanelVisible, channelConfigPreview: false })),
+  toggleCenterTopVisible: () => set((state) => ({ centerTopVisible: !state.centerTopVisible, channelConfigPreview: false })),
   toggleCenterBottomVisible: () => set((state) => ({ centerBottomVisible: !state.centerBottomVisible })),
   toggleRightPanelVisible: () => set((state) => ({ rightPanelVisible: !state.rightPanelVisible })),
 }));

@@ -34,6 +34,13 @@ describe('viewportUtils', () => {
     expect(worldToDisplayRect(rect, transform).y).toBe(50);
   });
 
+  it('only scrolls horizontally when an actual canvas edge exceeds the available width', () => {
+    const canvas = { maximized: false, rect: { x: 0, y: 0, width: 48, height: 80 } };
+    expect(getCanvasScrollBounds([], 1, 100).maxScrollX).toBe(0);
+    expect(getCanvasScrollBounds([canvas], 48, 100).maxScrollX).toBe(0);
+    expect(getCanvasScrollBounds([canvas], 47, 100).maxScrollX).toBeGreaterThan(0);
+  });
+
   it('expands scroll bounds when canvases exceed the viewport on X or Y axes', () => {
     const bounds = getCanvasScrollBounds([
       { rect: { x: 40, y: 50, width: 100, height: 80 }, maximized: false },

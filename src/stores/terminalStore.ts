@@ -18,12 +18,17 @@ export interface TerminalEntry {
   bleMetadata?: BleTerminalMetadata;
   /** Shown only by the aggregate TERMINAL tab to identify the traffic source. */
   sourceLabel?: string;
+  sourceChannelId?: string;
 }
+
+export type ReceiveChannels = 'all' | string[];
 
 export interface ChannelTab {
   id: string;
   channelId: string | null;
   label: string;
+  /** Older layouts use channelId for both directions. New tabs can receive from several channels. */
+  receiveChannels?: ReceiveChannels;
   isPinned?: boolean;
   meta?: {
     originPaneId?: string;
@@ -61,15 +66,7 @@ export interface PaneState {
   selectedTcpClientId: string | null;
 }
 
-export interface TerminalLayoutTabSnapshot {
-  id: string;
-  channelId: string | null;
-  label: string;
-  isPinned?: boolean;
-  meta?: {
-    originPaneId?: string;
-  };
-}
+export type TerminalLayoutTabSnapshot = ChannelTab;
 
 export interface TerminalLayoutPaneSnapshot {
   tabs: TerminalLayoutTabSnapshot[];
@@ -102,7 +99,8 @@ interface TerminalStore {
   getLayoutSnapshot: () => TerminalLayoutSnapshot;
   restoreLayoutSnapshot: (snapshot: TerminalLayoutSnapshot) => void;
 
-  addTab: (paneId: string, channelId: string, label: string) => string;
+  configureTab: (paneId: string, tabId: string, receive: ReceiveChannels, target: string | null) => void;
+  addTab: (paneId: string, channelId: string | null, label: string, receiveChannels?: ReceiveChannels) => string;
   renameTab: (paneId: string, tabId: string, label: string) => void;
   removeTab: (paneId: string, tabId: string) => void;
 
@@ -124,7 +122,7 @@ interface TerminalStore {
   setUdpTargetAddr: (paneId: string, addr: string | null) => void;
   setSelectedTcpClient: (paneId: string, clientId: string | null) => void;
   clearEntries: (paneId: string) => void;
-  appendEntry: (paneId: string, kind: EntryKind, text: string, timestamp?: number, data?: number[], bleMetadata?: BleTerminalMetadata, sourceLabel?: string) => void;
+  appendEntry: (paneId: string, kind: EntryKind, text: string, timestamp?: number, data?: number[], bleMetadata?: BleTerminalMetadata, sourceLabel?: string, sourceChannelId?: string) => void;
   appendEntryToChannel: (channelId: string, kind: EntryKind, text: string, timestamp?: number, data?: number[], bleMetadata?: BleTerminalMetadata, sourceLabel?: string) => void;
   appendEntryToTerminal: (kind: EntryKind, text: string, timestamp?: number, data?: number[], bleMetadata?: BleTerminalMetadata, sourceLabel?: string) => void;
 }
@@ -132,6 +130,16 @@ interface TerminalStore {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 let _entryCounter = 0;
+
+export function receiveChannelsFor(tab: ChannelTab): ReceiveChannels {
+  return tab.receiveChannels ?? (tab.channelId ? [tab.channelId] : 'all');
+}
+
+export function visibleTerminalEntries(tab: ChannelTab | undefined, entries: TerminalEntry[]): TerminalEntry[] {
+  const receive = tab ? receiveChannelsFor(tab) : 'all';
+  if (receive === 'all') return entries;
+  return entries.filter(entry => entry.sourceChannelId ? receive.includes(entry.sourceChannelId) : !entry.sourceLabel);
+}
 
 function makeTerminalTab(isPinned = true): ChannelTab {
   return { id: crypto.randomUUID(), channelId: null, label: 'TERMINAL', isPinned };
@@ -144,6 +152,7 @@ function makeEntry(
   data?: number[],
   bleMetadata?: BleTerminalMetadata,
   sourceLabel?: string,
+  sourceChannelId?: string,
 ): TerminalEntry {
   return {
     id: _entryCounter++,
@@ -153,6 +162,7 @@ function makeEntry(
     data: data ? [...data] : undefined,
     bleMetadata: bleMetadata ? { ...bleMetadata } : undefined,
     sourceLabel,
+    sourceChannelId,
   };
 }
 
@@ -190,6 +200,7 @@ function cloneChannelTab(tab: ChannelTab, id = crypto.randomUUID()): ChannelTab 
   return {
     id,
     channelId: tab.channelId,
+    receiveChannels: tab.receiveChannels,
     label: tab.label,
     isPinned: tab.isPinned,
     meta: tab.meta ? { ...tab.meta } : undefined,
@@ -331,6 +342,7 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
         tabs: pane.tabs.map(tab => ({
           id: tab.id,
           channelId: tab.channelId,
+          receiveChannels: tab.receiveChannels,
           label: tab.label,
           isPinned: tab.isPinned,
           meta: tab.meta ? { ...tab.meta } : undefined,
@@ -379,7 +391,7 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
     });
   },
 
-  addTab: (paneId, channelId, label) => {
+  addTab: (paneId, channelId, label, receiveChannels) => {
     const tabId = crypto.randomUUID();
     set(state => {
       const pane = state.panes[paneId];
@@ -389,7 +401,7 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
           ...state.panes,
           [paneId]: {
             ...pane,
-            tabs: [...pane.tabs, { id: tabId, channelId, label }],
+            tabs: [...pane.tabs, { id: tabId, channelId, label, receiveChannels }],
             activeTabId: tabId,
             entries: [],
             tabEntries: { ...pane.tabEntries, [tabId]: [] },
@@ -401,6 +413,22 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
     });
     return tabId;
   },
+
+  configureTab: (paneId, tabId, receive, target) => set(state => {
+    const pane = state.panes[paneId];
+    const tab = pane?.tabs.find(item => item.id === tabId);
+    if (!tab || (receive !== 'all' && !receive.length)) return state;
+    const channelId = receive === 'all' || (target && receive.includes(target)) ? target : null;
+    const targetChanged = tab.channelId !== channelId;
+    return { panes: { ...state.panes, [paneId]: {
+      ...pane,
+      tabs: pane.tabs.map(item => item.id === tabId ? { ...item, receiveChannels: receive, channelId } : item),
+      ...(targetChanged && { tabWriteTargets: { ...pane.tabWriteTargets, [tabId]: null } }),
+      ...(targetChanged && pane.activeTabId === tabId && {
+        selectedWriteTarget: null, selectMode: false, selectOptions: [], udpTargetAddr: null, selectedTcpClientId: null,
+      }),
+    } } };
+  }),
 
   renameTab: (paneId, tabId, label) => {
     set(state => {
@@ -486,8 +514,9 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
     set(state => {
       const pane = state.panes[paneId];
       if (!pane) return {};
-      // Validate that the tab exists in this pane
-      if (!pane.tabs.some(t => t.id === tabId)) return {};
+      const nextTab = pane.tabs.find(t => t.id === tabId);
+      if (!nextTab) return {};
+      const previousTab = pane.tabs.find(t => t.id === pane.activeTabId);
       return {
         panes: {
           ...state.panes,
@@ -495,6 +524,7 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
             ...pane,
             activeTabId: tabId,
             entries: pane.tabEntries[tabId] ?? [],
+            ...(previousTab?.channelId !== nextTab.channelId && { selectMode: false, selectOptions: [], selectedTcpClientId: null, udpTargetAddr: null }),
             selectedWriteTarget: pane.tabWriteTargets[tabId] ?? null,
           },
         },
@@ -512,7 +542,7 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
 
       // Copy current active tab (deep copy) into new pane
       const activeTab = pane.tabs.find(t => t.id === pane.activeTabId);
-      const isActiveMasterTab = activeTab?.channelId === null;
+      const isActiveMasterTab = activeTab?.channelId === null && activeTab.receiveChannels === undefined;
       const copiedTab = activeTab && !isActiveMasterTab ? cloneChannelTab(activeTab) : null;
       const copiedEntries = activeTab ? cloneTerminalEntries(pane.tabEntries[activeTab.id]) : [];
       const newPaneTabs: ChannelTab[] = copiedTab ? [copiedTab] : [masterTab];
@@ -824,11 +854,11 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
     });
   },
 
-  appendEntry: (paneId, kind, text, timestamp, data, bleMetadata, sourceLabel) => {
+  appendEntry: (paneId, kind, text, timestamp, data, bleMetadata, sourceLabel, sourceChannelId) => {
     set(state => {
       const pane = state.panes[paneId];
       if (!pane) return {};
-      const entry = makeEntry(kind, text, timestamp, data, bleMetadata, sourceLabel);
+      const entry = makeEntry(kind, text, timestamp, data, bleMetadata, sourceLabel, sourceChannelId);
       const activeTabId = pane.activeTabId;
       const next = appendBounded(pane.entries, entry);
       const tabEntries = activeTabId
@@ -855,13 +885,16 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
     const resolvedSourceLabel = sourceLabel ?? Object.values(state.panes)
       .flatMap(pane => pane.tabs)
       .find(tab => tab.channelId === channelId)?.label ?? channelId;
-    const entry = makeEntry(kind, text, timestamp, data, bleMetadata, resolvedSourceLabel);
+    const entry = makeEntry(kind, text, timestamp, data, bleMetadata, resolvedSourceLabel, channelId);
     const newPanes = { ...state.panes };
     let changed = false;
 
     for (const paneId of Object.keys(newPanes)) {
       const pane = newPanes[paneId];
-      const matchingTabs = pane.tabs.filter(tab => tab.channelId === channelId || tab.channelId === null);
+      const matchingTabs = pane.tabs.filter(tab => {
+        const receive = receiveChannelsFor(tab);
+        return receive === 'all' || receive.includes(channelId);
+      });
       if (matchingTabs.length === 0) continue;
 
       const nextTabEntries = { ...pane.tabEntries };
@@ -893,7 +926,7 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
 
     for (const paneId of Object.keys(newPanes)) {
       const pane = newPanes[paneId];
-      const terminalTabs = pane.tabs.filter(tab => tab.channelId === null);
+      const terminalTabs = pane.tabs.filter(tab => receiveChannelsFor(tab) === 'all');
       if (terminalTabs.length === 0) continue;
 
       const nextTabEntries = { ...pane.tabEntries };

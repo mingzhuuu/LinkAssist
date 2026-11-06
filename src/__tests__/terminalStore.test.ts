@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { useTerminalStore, type PaneState } from '../stores/terminalStore';
+import { useTerminalStore, visibleTerminalEntries, type PaneState } from '../stores/terminalStore';
 
 function createTestPaneState(): PaneState {
   const terminalTabId = crypto.randomUUID();
@@ -46,6 +46,27 @@ function findTabByChannelId(pane: PaneState, channelId: string) {
 describe('terminalStore history retention', () => {
   beforeEach(() => {
     resetTerminalStore();
+  });
+
+  it('routes mixed receive channels independently of the send target across a layout restore', () => {
+    const paneId = resetTerminalStore();
+    const store = useTerminalStore.getState();
+    const tabId = store.panes[paneId].activeTabId!;
+    store.configureTab(paneId, tabId, ['a', 'b'], 'b');
+    store.restoreLayoutSnapshot(store.getLayoutSnapshot());
+    store.appendEntryToChannel('a', 'rx', 'A');
+    store.appendEntryToChannel('b', 'rx', 'B');
+    store.appendEntryToChannel('c', 'rx', 'C');
+    store.appendEntryToTerminal('rx', 'Unmapped');
+    const pane = useTerminalStore.getState().panes[paneId];
+    expect(pane.entries.map(entry => entry.text)).toEqual(['A', 'B']);
+    expect(pane.tabs[0]).toMatchObject({ receiveChannels: ['a', 'b'], channelId: 'b' });
+    expect(visibleTerminalEntries({ ...pane.tabs[0], receiveChannels: ['b'] }, pane.entries).map(entry => entry.text)).toEqual(['B']);
+    store.configureTab(paneId, tabId, [], null);
+    expect(useTerminalStore.getState().panes[paneId].tabs[0]).toEqual(pane.tabs[0]);
+    store.configureTab(paneId, tabId, 'all', 'a');
+    store.appendEntryToChannel('new', 'rx', 'New channel');
+    expect(useTerminalStore.getState().panes[paneId].entries.slice(-1)[0]?.text).toBe('New channel');
   });
 
   it('retains channel history for inactive tabs until they are selected', () => {

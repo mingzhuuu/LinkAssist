@@ -3,16 +3,19 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { emit, emitTo, listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { useChannelStore, useBleStore, useSerialStore, useTcpStore, useUIStore } from '../../stores';
-import { useTerminalStore, ChannelTab } from '../../stores/terminalStore';
+import { useTerminalStore, visibleTerminalEntries, receiveChannelsFor, ChannelTab } from '../../stores/terminalStore';
 import { MinimizeIcon, MaximizeIcon, RestoreIcon, CloseIcon, DockIcon, BluetoothIcon, UsbIcon, WifiIcon } from '../common/Icons';
+import { applyDetachedConnections, type DetachedConnections } from '../../lib/detachWindow';
+import { resolveTerminalLink, useValidTerminalChannels, TerminalChannelPicker, terminalChannels, terminalTabLabel, terminalTabColor } from './TerminalChannels';
 import type { DetachPayload, ReattachPayload, TerminalSettingsChangedPayload } from '../../lib/detachWindow';
 import {
   channelActivitySourceLabel,
   shouldDisplayChannelActivity,
 } from '../../lib/channelActivity';
 import type { DetachedTerminalEntryEvent } from '../../types';
-import { sendWithImmediateTxEcho } from '../../lib/terminalSend';
+import { prepareTerminalNetworkSend, sendWithImmediateTxEcho } from '../../lib/terminalSend';
 import { createEventSubscriptions } from './eventSubscriptions';
+import { ChannelSelectionCircle } from '../common/ChannelSelectionCircle';
 import { TerminalContextMenu } from './TerminalContextMenu';
 import { formatInputTimestamp, formatTerminalEntryParts, formatTerminalEntryText, toHex } from './terminalUtils';
 
@@ -48,7 +51,11 @@ export const DetachedTerminalWindow: React.FC = () => {
   const pane = useTerminalStore(s => focusedPaneId ? s.panes[focusedPaneId] : null);
   const activeTab = pane?.tabs.find(t => t.id === pane.activeTabId);
   const { channels } = useChannelStore();
-  const linkedChannel = channels.find(c => c.id === (activeTab?.channelId ?? null));
+  useValidTerminalChannels(focusedPaneId, pane?.tabs, channels);
+  const visibleEntries = visibleTerminalEntries(activeTab, pane?.entries ?? []);
+  const selectedChannels = activeTab ? terminalChannels(activeTab, channels) : [];
+  const linkedChannel = selectedChannels.find(c => c.id === activeTab?.channelId);
+  const [picker, setPicker] = useState<{ x: number; y: number } | null>(null);
 
   // Subscribe to receive initial state
   useEffect(() => {
@@ -57,17 +64,20 @@ export const DetachedTerminalWindow: React.FC = () => {
     let gotInit = false;
 
     const setup = async () => {
+      const stopSync = await listen<DetachedConnections>('terminal-connections', event => {
+        if (!cancelled) applyDetachedConnections(event.payload);
+      });
       const unlisten = await listen<DetachPayload>('detach-init', (event) => {
-        if (cancelled) return;
+        if (cancelled || gotInit) return;
         gotInit = true;
+        if (event.payload.connections) applyDetachedConnections(event.payload.connections);
         const { tab, entries, terminalSettings: initialTerminalSettings } = event.payload;
 
         // Build a single-pane terminal store from the received tab
         const paneId = crypto.randomUUID();
         const newTab: ChannelTab = {
+          ...tab,
           id: crypto.randomUUID(),
-          channelId: tab.channelId,
-          label: tab.label,
           isPinned: false,
         };
 
@@ -80,15 +90,15 @@ export const DetachedTerminalWindow: React.FC = () => {
               showCommandsPanel: false,
               entries: entries ?? [],
               tabEntries: { [newTab.id]: entries ?? [] },
-              tabWriteTargets: { [newTab.id]: null },
+              tabWriteTargets: { [newTab.id]: event.payload.writeTarget ?? null },
               cmdInput: '',
               cmdHistory: [],
               historyIndex: -1,
               autoScroll: true,
-              selectedWriteTarget: null,
+              selectedWriteTarget: event.payload.writeTarget ?? null,
               selectMode: false,
               selectOptions: [],
-              udpTargetAddr: null,
+              udpTargetAddr: event.payload.udpTargetAddr ?? null,
               selectedTcpClientId: null,
             },
           },
@@ -112,7 +122,7 @@ export const DetachedTerminalWindow: React.FC = () => {
         }
       })();
 
-      return unlisten;
+      return () => { unlisten(); stopSync(); };
     };
 
     const unlistenPromise = setup();
@@ -161,7 +171,7 @@ export const DetachedTerminalWindow: React.FC = () => {
     };
 
     const payload: ReattachPayload = {
-      tab: { id: tab.id, channelId: tab.channelId, label: tab.label, isPinned: false },
+      tab: { ...tab, isPinned: false },
       entries,
       channelType: ch?.type,
       terminalSettings: currentTerminalSettings,
@@ -288,16 +298,28 @@ export const DetachedTerminalWindow: React.FC = () => {
       return;
     }
 
+    if (!linkedChannel && !raw.startsWith('/')) {
+      useTerminalStore.getState().appendEntry(focusedPaneId, 'system', 'Use /link <channel-name-or-index> to select a send target.');
+      return;
+    }
     useTerminalStore.getState().pushCmdHistory(focusedPaneId, raw);
     useTerminalStore.getState().setCmdInput(focusedPaneId, '');
 
     if (raw.startsWith('/')) {
       useTerminalStore.getState().appendEntry(focusedPaneId, 'tx', raw);
       // Simple command handling for detached window
-      if (raw === '/clear') {
+      const [command, ...args] = raw.split(/\s+/);
+      if (command.toLowerCase() === '/link') {
+        if (!activeTab) return;
+        const result = resolveTerminalLink(activeTab, channels, args.join(' '));
+        const store = useTerminalStore.getState();
+        if (result.error) { store.appendEntry(focusedPaneId, 'system', result.error); return; }
+        store.configureTab(focusedPaneId, activeTab.id, result.receive, result.target.id);
+        store.appendEntry(focusedPaneId, 'system', `Send target: ${result.target.name}`);
+      } else if (raw === '/clear') {
         useTerminalStore.getState().clearEntries(focusedPaneId);
       } else if (raw === '/help') {
-        useTerminalStore.getState().appendEntry(focusedPaneId, 'system', 'Detached window — limited commands: /clear, /help');
+        useTerminalStore.getState().appendEntry(focusedPaneId, 'system', 'Detached commands: /link <channel-name-or-index>, /clear, /help');
       } else {
         useTerminalStore.getState().appendEntry(focusedPaneId, 'system', `Command not supported in detached window: ${raw}`);
       }
@@ -355,6 +377,8 @@ export const DetachedTerminalWindow: React.FC = () => {
         timestamp,
         data,
         bleMetadata,
+        linkedChannel.name,
+        linkedChannel.id,
       );
       void emit('detached-terminal-entry', {
         channelId: linkedChannel.id,
@@ -369,31 +393,10 @@ export const DetachedTerminalWindow: React.FC = () => {
     };
 
     try {
-      if (linkedChannel.type === 'serial') {
-        const { openConnections } = useSerialStore.getState();
-        if (openConnections.length === 0) {
-          useTerminalStore.getState().appendEntry(focusedPaneId, 'system', 'No serial port open');
-          return;
-        }
-        await invoke('send_serial_data', { connectionId: openConnections[0], data: bytes });
-      } else if (linkedChannel.type === 'tcp') {
-        const tcpState = useTcpStore.getState();
-        if (tcpState.mode === 'client' && tcpState.clientConnections.length > 0) {
-          await invoke('tcp_send', { connectionId: tcpState.clientConnections[0].id, data: bytes });
-        } else if (tcpState.mode === 'server' && tcpState.serverClients.length > 0) {
-          await invoke('tcp_server_send', { clientId: tcpState.serverClients[0].id, data: bytes });
-        } else if (tcpState.mode === 'udp' && tcpState.udpBound) {
-          const udpAddr = currentPane.udpTargetAddr;
-          if (!udpAddr) {
-            useTerminalStore.getState().appendEntry(focusedPaneId, 'system', 'No UDP target set');
-            return;
-          }
-          await invoke('udp_send', { addr: udpAddr, data: bytes });
-        } else {
-          useTerminalStore.getState().appendEntry(focusedPaneId, 'system', 'No active TCP connection');
-          return;
-        }
-      } else if (linkedChannel.type === 'ble') {
+      if (linkedChannel.type !== 'ble') {
+        const send = prepareTerminalNetworkSend(linkedChannel, currentPane, bytes, message => useTerminalStore.getState().appendEntry(focusedPaneId, 'system', message));
+        await send();
+      } else {
         if (!connectedDeviceId) {
           useTerminalStore.getState().appendEntry(focusedPaneId, 'system', 'BLE not connected');
           return;
@@ -423,7 +426,7 @@ export const DetachedTerminalWindow: React.FC = () => {
     } catch (error) {
       appendAndRelay('system', `Send error: ${error}`);
     }
-  }, [focusedPaneId, linkedChannel, connectedDeviceId]);
+  }, [focusedPaneId, activeTab, channels, linkedChannel, connectedDeviceId]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!focusedPaneId) return;
@@ -456,14 +459,15 @@ export const DetachedTerminalWindow: React.FC = () => {
   useEffect(() => {
     if (!focusedPaneId) return;
     const events = createEventSubscriptions();
+    const receive = activeTab ? receiveChannelsFor(activeTab) : [];
+    const accepts = (id?: string | null) => receive === 'all' || (!!id && receive.includes(id));
 
     // Serial data
     events.listen('serial-data-received', (event) => {
       const { connectionId, data, timestamp } = event.payload;
-      const isMaster = !linkedChannel;
       const mappedChannelId = useSerialStore.getState().connectionMap[connectionId];
-      if (!isMaster && (linkedChannel.type !== 'serial' || mappedChannelId !== linkedChannel.id)) return;
-      if (!isMaster && !showReceivedRef.current) return;
+      if (!accepts(mappedChannelId)) return;
+      if (receive !== 'all' && !showReceivedRef.current) return;
       const hex = data.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
       useTerminalStore.getState().appendEntry(
         focusedPaneId,
@@ -473,16 +477,16 @@ export const DetachedTerminalWindow: React.FC = () => {
         data,
         undefined,
         `SERIAL · ${connectionId}`,
+        mappedChannelId,
       );
     });
 
     // TCP data
     events.listen('tcp-data-received', (event) => {
       const { connectionId, data, timestamp } = event.payload;
-      const isMaster = !linkedChannel;
       const mappedChannelId = useTcpStore.getState().connectionMap[connectionId];
-      if (!isMaster && (linkedChannel.type !== 'tcp' || mappedChannelId !== linkedChannel.id)) return;
-      if (!isMaster && !showReceivedRef.current) return;
+      if (!accepts(mappedChannelId)) return;
+      if (receive !== 'all' && !showReceivedRef.current) return;
       const hex = data.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
       useTerminalStore.getState().appendEntry(
         focusedPaneId,
@@ -492,16 +496,16 @@ export const DetachedTerminalWindow: React.FC = () => {
         data,
         undefined,
         `TCP · ${connectionId}`,
+        mappedChannelId,
       );
     });
 
     // UDP data
     events.listen('udp-data-received', (event) => {
       const { localAddr, remoteAddr, data, timestamp } = event.payload;
-      const isMaster = !linkedChannel;
       const mappedChannelId = useTcpStore.getState().connectionMap[`udp:${localAddr}`];
-      if (!isMaster && (linkedChannel.type !== 'tcp' || mappedChannelId !== linkedChannel.id)) return;
-      if (!isMaster && !showReceivedRef.current) return;
+      if (!accepts(mappedChannelId)) return;
+      if (receive !== 'all' && !showReceivedRef.current) return;
       const hex = data.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
       useTerminalStore.getState().appendEntry(
         focusedPaneId,
@@ -511,16 +515,16 @@ export const DetachedTerminalWindow: React.FC = () => {
         data,
         undefined,
         `UDP · ${localAddr}`,
+        mappedChannelId,
       );
     });
 
     // BLE notifications
     events.listen('ble-notification-received', (event) => {
       const { deviceId, serviceUuid, charUuid, data, timestamp } = event.payload;
-      const isMaster = !linkedChannel;
-      if (!isMaster && linkedChannel.type !== 'ble') return;
-      if (!isMaster && useBleStore.getState().getChannelIdForDevice(deviceId) !== linkedChannel.id) return;
-      if (!isMaster && !showReceivedRef.current) return;
+      const mappedChannelId = useBleStore.getState().getChannelIdForDevice(deviceId);
+      if (!accepts(mappedChannelId)) return;
+      if (receive !== 'all' && !showReceivedRef.current) return;
       useTerminalStore.getState().appendEntry(
         focusedPaneId,
         'rx',
@@ -529,12 +533,12 @@ export const DetachedTerminalWindow: React.FC = () => {
         data,
         { serviceUuid, charUuid },
         `BLE · ${deviceId}`,
+        mappedChannelId ?? undefined,
       );
     });
 
     events.listen('channel-activity', (event) => {
       const activity = event.payload;
-      const isMaster = !linkedChannel;
       const mappedChannelId = activity.transport === 'ble' && activity.endpoint?.deviceId
         ? useBleStore.getState().getChannelIdForDevice(activity.endpoint.deviceId)
         : activity.transport === 'serial' && activity.connectionId
@@ -542,10 +546,7 @@ export const DetachedTerminalWindow: React.FC = () => {
           : activity.connectionId
             ? useTcpStore.getState().connectionMap[activity.connectionId]
             : undefined;
-      const targetsLinkedChannel = !!linkedChannel && (
-        activity.channelId === linkedChannel.id || mappedChannelId === linkedChannel.id
-      );
-      if (!isMaster && !targetsLinkedChannel) return;
+      if (!accepts(mappedChannelId ?? activity.channelId)) return;
       if (!shouldDisplayChannelActivity(activity)) return;
 
       const sourceLabel = channelActivitySourceLabel(activity);
@@ -561,6 +562,7 @@ export const DetachedTerminalWindow: React.FC = () => {
           activity.data,
           bleMetadata,
           sourceLabel,
+          mappedChannelId ?? activity.channelId ?? undefined,
         );
         return;
       }
@@ -574,11 +576,12 @@ export const DetachedTerminalWindow: React.FC = () => {
         undefined,
         undefined,
         sourceLabel,
+        mappedChannelId ?? activity.channelId ?? undefined,
       );
     });
 
     return events.dispose;
-  }, [focusedPaneId, linkedChannel]);
+  }, [focusedPaneId, activeTab]);
 
   // ─── Render ────────────────────────────────────────────────────────
 
@@ -596,12 +599,12 @@ export const DetachedTerminalWindow: React.FC = () => {
 
   const renderEntry = (entry: { kind: 'rx' | 'tx' | 'system'; timestamp: number; text: string; data?: number[]; bleMetadata?: { serviceUuid: string; charUuid: string }; sourceLabel?: string }): React.ReactNode => {
     const options = {
-      promptText,
+      promptText: selectedChannels.length > 1 ? '>' : promptText,
       showTimestamp: terminalSettings.showTimestamp,
       showInputPrefix: terminalSettings.showInputPrefix,
       sendFormat: terminalSettings.sendFormat,
       receiveFormat: terminalSettings.receiveFormat,
-      aggregate: activeTab?.channelId === null,
+      aggregate: selectedChannels.length > 1 || (activeTab && receiveChannelsFor(activeTab) === 'all'),
     };
     const parts = formatTerminalEntryParts(entry, options);
     if (!parts) {
@@ -632,7 +635,7 @@ export const DetachedTerminalWindow: React.FC = () => {
     ? visiblePrompt.slice(0, -1)
     : visiblePrompt;
 
-  const tabLabel = activeTab?.label || 'Terminal';
+  const tabLabel = activeTab ? terminalTabLabel(selectedChannels, channels.length) : 'Terminal';
 
   return (
     <div className="w-full h-screen bg-transparent">
@@ -647,7 +650,13 @@ export const DetachedTerminalWindow: React.FC = () => {
             >
               <DockIcon size={11} />
             </button>
-            <span className="text-[11px] font-mono text-text-muted truncate max-w-[300px]">{tabLabel}</span>
+            <button className="flex max-w-[300px] items-center justify-center gap-1.5 font-mono text-[11px] font-semibold" style={{ color: terminalTabColor(selectedChannels) }}
+              onContextMenu={event => { event.preventDefault(); setPicker({ x: event.clientX, y: event.clientY }); }}>
+              {activeTab && (selectedChannels.length !== 1 || channels.length === 1) && (
+                <ChannelSelectionCircle selected={selectedChannels.length} total={channels.length} className="size-2" />
+              )}
+              <span className="truncate">{tabLabel}</span>
+            </button>
             {linkedChannel && (
               <span className={`shrink-0 transition-colors duration-150 ${channelIconStateClass(linkedChannel.type, linkedChannel.state)}`}>
                 {channelIcon(linkedChannel.type)}
@@ -682,12 +691,12 @@ export const DetachedTerminalWindow: React.FC = () => {
               onClick={handleReceiveClick}
               onContextMenu={handleReceiveContextMenu}
             >
-              {pane && pane.entries.length === 0 ? (
+              {pane && visibleEntries.length === 0 ? (
                 <div className="text-text-muted italic px-1 select-none">
-                  {linkedChannel ? `Linked: ${linkedChannel.name} — waiting for data…` : 'No channel linked.'}
+                  {selectedChannels.length ? 'Waiting for channel data…' : 'Create a channel to receive data.'}
                 </div>
               ) : (
-                pane?.entries.map(entry => (
+                visibleEntries.map(entry => (
                   <div key={entry.id} className="whitespace-pre-wrap break-all">
                     {renderEntry(entry)}
                   </div>
@@ -726,6 +735,7 @@ export const DetachedTerminalWindow: React.FC = () => {
         </div>
       </div>
 
+      {picker && activeTab && focusedPaneId && <TerminalChannelPicker {...picker} paneId={focusedPaneId} tab={activeTab} channels={channels} onClose={() => setPicker(null)} />}
       {terminalContextMenu && (
         <TerminalContextMenu
           x={terminalContextMenu.x}

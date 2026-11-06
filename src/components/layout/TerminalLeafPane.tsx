@@ -2,14 +2,16 @@ import React, { Component, useCallback, useEffect, useRef, useState } from 'reac
 import type { ErrorInfo, ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { emit } from '@tauri-apps/api/event';
-import { useChannelStore, useProtocolStore, useBleStore, useSerialStore, useTcpStore, useUIStore, toast } from '../../stores';
-import { useTerminalStore, DropZone } from '../../stores/terminalStore';
-import { PlusIcon, BluetoothIcon, UsbIcon, WifiIcon, TerminalIcon, CloseIcon, SplitIcon, BookmarkIcon, PopOutIcon } from '../common/Icons';
+import { useChannelStore, useProtocolStore, useBleStore, useTcpStore, useUIStore, toast } from '../../stores';
+import { useTerminalStore, visibleTerminalEntries, receiveChannelsFor, DropZone } from '../../stores/terminalStore';
+import { PlusIcon, BluetoothIcon, UsbIcon, WifiIcon, CloseIcon, SplitIcon, BookmarkIcon, PopOutIcon } from '../common/Icons';
+import { ChannelSelectionCircle } from '../common/ChannelSelectionCircle';
 import { detachTabToWindow } from '../../lib/detachWindow';
-import { sendWithImmediateTxEcho } from '../../lib/terminalSend';
+import { prepareTerminalNetworkSend, sendWithImmediateTxEcho } from '../../lib/terminalSend';
 import { SavedCommandsPanel } from './SavedCommandsPanel';
 import { SavedCommandsDialog } from './SavedCommandsDialog';
 import { ResizeHandle } from './ResizeHandle';
+import { resolveTerminalLink, useValidTerminalChannels, TerminalChannelPicker, terminalChannels, terminalTabColor, terminalTabLabel } from './TerminalChannels';
 import { TerminalContextMenu } from './TerminalContextMenu';
 import { buildBleWriteSelectionMenu, formatBleUuid, formatInputTimestamp, formatTerminalEntryParts, formatTerminalEntryText, parseTerminalPayload, toHex } from './terminalUtils';
 
@@ -58,39 +60,15 @@ function channelIcon(type: string, size = 12) {
   return <WifiIcon size={size} />;
 }
 
-function channelIconStateClass(type: string, state?: string) {
+function channelIconStateClass(type: string, state: string, isActive: boolean) {
   if (state === 'connecting') return 'text-accent-yellow animate-pulse';
   if (state === 'error') return 'text-accent-red';
+  if (isActive) return 'text-inherit';
   if (state !== 'connected') return 'text-text-faint';
 
   if (type === 'ble') return 'text-accent-blue';
   if (type === 'serial') return 'text-accent-mauve';
   return 'text-accent-green';
-}
-
-function channelAccentClasses(type?: string) {
-  switch (type) {
-    case 'ble':
-      return {
-        line: 'bg-accent-blue',
-        tab: 'terminal-tab-accent-blue',
-      };
-    case 'serial':
-      return {
-        line: 'bg-accent-mauve',
-        tab: 'terminal-tab-accent-mauve',
-      };
-    case 'tcp':
-      return {
-        line: 'bg-accent-green',
-        tab: 'terminal-tab-accent-green',
-      };
-    default:
-      return {
-        line: 'bg-[var(--text-faint)]',
-        tab: 'bg-[var(--layer-hover)] shadow-[inset_0_-2px_0_0_var(--border-default)]',
-      };
-  }
 }
 
 function channelToneClasses(type?: string) {
@@ -160,7 +138,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     setUdpTargetAddr,
     setSelectedTcpClient,
     addTab,
-    renameTab,
+    configureTab,
     removeTab,
     selectPaneTab,
     splitPane,
@@ -172,7 +150,10 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
   const isFocused = focusedPaneId === paneId;
 
   const activeTab = pane?.tabs.find(t => t.id === pane.activeTabId);
-  const linkedChannel = channels.find(c => c.id === (activeTab?.channelId ?? null));
+  useValidTerminalChannels(paneId, pane?.tabs, channels);
+  const visibleEntries = visibleTerminalEntries(activeTab, pane?.entries ?? []);
+  const selectedChannels = activeTab ? terminalChannels(activeTab, channels) : [];
+  const linkedChannel = selectedChannels.find(c => c.id === activeTab?.channelId);
   const terminalSettingsKey = activeTab?.channelId ?? '__terminal__';
   const getTerminalSettingsForChannel = useCallback((channelId: string | null | undefined) => (
     terminalChannelSettings[channelId ?? '__terminal__'] ?? {
@@ -287,33 +268,12 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
 
     switch (cmd) {
       case '/link': {
-        const target = args.join(' ').toLowerCase();
-        if (!target) { addEntry('system', 'Usage: /link <channel-name-or-index>'); return; }
-        const ch = channels.find(c =>
-          c.name.toLowerCase() === target ||
-          c.id === target ||
-          channels.indexOf(c).toString() === target
-        );
-        if (!ch) {
-          addEntry('system', `Channel not found: ${target}. Available: ${channels.map(c => c.name).join(', ')}`);
-          return;
-        }
-        setLinkedChannel(ch.id);
-        const currentPane = useTerminalStore.getState().panes[paneId];
-        if (currentPane?.activeTabId) {
-          useTerminalStore.setState(state => ({
-            panes: {
-              ...state.panes,
-              [paneId]: {
-                ...state.panes[paneId],
-                tabs: state.panes[paneId].tabs.map(t =>
-                  t.id === currentPane.activeTabId ? { ...t, channelId: ch.id, label: ch.name } : t
-                ),
-              },
-            },
-          }));
-        }
-        addEntry('system', `Linked to channel: ${ch.name}`);
+        if (!activeTab) return;
+        const result = resolveTerminalLink(activeTab, channels, args.join(' '));
+        if (result.error) { appendEntry(paneId, 'system', result.error); return; }
+        configureTab(paneId, activeTab.id, result.receive, result.target.id);
+        setLinkedChannel(result.target.id);
+        appendEntry(paneId, 'system', `Send target: ${result.target.name}`);
         break;
       }
       case '/ts': {
@@ -400,7 +360,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
           break;
         }
         const tcpState = useTcpStore.getState();
-        const clients = tcpState.serverClients;
+        const clients = tcpState.serverClients.filter(c => tcpState.connectionMap[c.id] === linkedChannel.id);
         if (clients.length === 0) {
           addEntry('system', 'No TCP clients connected');
           break;
@@ -420,7 +380,8 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
           break;
         }
         const value = args[0]?.toLowerCase();
-        const clients = useTcpStore.getState().serverClients;
+        const tcp = useTcpStore.getState();
+        const clients = tcp.serverClients.filter(c => tcp.connectionMap[c.id] === linkedChannel.id);
         if (!value) {
           addEntry('system', 'Usage: /client <n|all>  (see /clients for the list)');
           break;
@@ -467,7 +428,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
       case '/help': {
         const helpLines = [
           '━━━ Available Commands ━━━',
-          '/link <name|index>    — link active tab to a channel',
+          '/link <name|index>    — choose one send target for this tab',
           '/select               — choose BLE write characteristic',
           '/clients              — list TCP server clients',
           '/client <n|all>       — choose TCP server send target',
@@ -491,7 +452,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
       default:
         addEntry('system', `Unknown command: ${cmd}  (type /help for help)`);
     }
-  }, [channels, linkedChannel, linkedServiceUuid, linkedCharUuid, connectedDeviceId, addEntry, paneId, setLinkedChannel, setLinkedService, setLinkedChar, updateTerminalSettings, setShowReceived, showSelectMenu, clearEntries, setUdpTargetAddr, setSelectedTcpClient]);
+  }, [activeTab, appendEntry, configureTab, channels, linkedChannel, linkedServiceUuid, linkedCharUuid, connectedDeviceId, addEntry, paneId, setLinkedChannel, setLinkedService, setLinkedChar, updateTerminalSettings, setShowReceived, showSelectMenu, clearEntries, setUdpTargetAddr, setSelectedTcpClient]);
 
   const handleSend = useCallback(async () => {
     const currentPane = useTerminalStore.getState().panes[paneId];
@@ -512,6 +473,10 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
       return;
     }
 
+    if (!linkedChannel && !raw.startsWith('/') && !currentPane.selectMode) {
+      appendEntry(paneId, 'system', 'Use /link <channel-name-or-index> to select a send target.');
+      return;
+    }
     pushCmdHistory(paneId, raw);
     setCmdInput(paneId, '');
 
@@ -551,72 +516,10 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     const txLine = `TX(${modeLabel}): ${hexStr}`;
 
     try {
-      if (linkedChannel.type === 'serial') {
-        // Route to the connection belonging to THIS channel, not just the
-        // first open port — multiple serial channels can be open at once.
-        const { connectionMap } = useSerialStore.getState();
-        const connectionId = Object.keys(connectionMap).find(
-          (id) => connectionMap[id] === linkedChannel.id,
-        );
-        if (!connectionId) { addEntry('system', 'No serial port open for this channel'); return; }
-        await invoke('send_serial_data', { connectionId, data: bytes });
-      } else if (linkedChannel.type === 'tcp') {
-        const tcpState = useTcpStore.getState();
-        // Use this channel's configured mode; the global store mode reflects
-        // whichever TCP panel was touched last, not this tab's channel.
-        const mode = tcpState.channelConfigs[linkedChannel.id]?.mode ?? tcpState.mode;
-        if (mode === 'client') {
-          const connection = tcpState.clientConnections.find(
-            (c) => tcpState.connectionMap[c.id] === linkedChannel.id,
-          );
-          if (!connection) { addEntry('system', 'No active TCP connection for this channel'); return; }
-          await invoke('tcp_send', { connectionId: connection.id, data: bytes });
-        } else if (mode === 'server') {
-          const channelClients = tcpState.serverClients.filter(
-            (c) => tcpState.connectionMap[c.id] === linkedChannel.id,
-          );
-          const candidates = channelClients.length > 0 ? channelClients : tcpState.serverClients;
-          if (candidates.length === 0) { addEntry('system', 'No TCP client connected'); return; }
-
-          const selectedTcpClientId = currentPane.selectedTcpClientId;
-          if (selectedTcpClientId === 'all') {
-            const results = await Promise.allSettled(
-              candidates.map((c) => invoke('tcp_server_send', { clientId: c.id, data: bytes })),
-            );
-            const failed = results.filter((r) => r.status === 'rejected').length;
-            if (failed === candidates.length) {
-              addEntry('system', 'Broadcast failed for every client');
-              return;
-            }
-            if (failed > 0) {
-              addEntry('system', `Broadcast: ${candidates.length - failed}/${candidates.length} clients reached`);
-            }
-          } else {
-            const selected = selectedTcpClientId
-              ? candidates.find((c) => c.id === selectedTcpClientId)
-              : undefined;
-            if (selectedTcpClientId && !selected) {
-              addEntry('system', 'Selected client disconnected — use /clients to pick a new target');
-              return;
-            }
-            const target = selected ?? candidates[0];
-            if (!selectedTcpClientId && candidates.length > 1) {
-              addEntry('system', `Multiple clients connected; sending to ${target.addr} (use /client <n|all> to change)`);
-            }
-            await invoke('tcp_server_send', { clientId: target.id, data: bytes });
-          }
-        } else if (mode === 'udp' && tcpState.udpBound) {
-          const udpAddr = useTerminalStore.getState().panes[paneId]?.udpTargetAddr;
-          if (!udpAddr) {
-            addEntry('system', 'No UDP target set — use /udptarget <ip:port> first');
-            return;
-          }
-          await invoke('udp_send', { addr: udpAddr, data: bytes });
-        } else {
-          addEntry('system', 'No active TCP connection');
-          return;
-        }
-      } else if (linkedChannel.type === 'ble') {
+      if (linkedChannel.type !== 'ble') {
+        const send = prepareTerminalNetworkSend(linkedChannel, currentPane, bytes, message => addEntry('system', message));
+        await send();
+      } else {
         if (!connectedDeviceId) { addEntry('system', 'BLE not connected'); return; }
         const writeTarget = useTerminalStore.getState().panes[paneId]?.selectedWriteTarget;
         if (!writeTarget) {
@@ -641,7 +544,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     } catch (error) {
       addEntry('system', `Send error: ${error}`);
     }
-  }, [paneId, linkedChannel, connectedDeviceId, addEntry, processCommand, pushCmdHistory, setCmdInput, setSelectedWriteTarget, setSelectMode, showSelectMenu]);
+  }, [appendEntry, paneId, linkedChannel, connectedDeviceId, addEntry, processCommand, pushCmdHistory, setCmdInput, setSelectedWriteTarget, setSelectMode, showSelectMenu]);
 
   const historyIndexRef = useRef(-1);
 
@@ -673,12 +576,12 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
 
   const renderEntryContent = (entry: { kind: 'rx' | 'tx' | 'system'; timestamp: number; text: string; data?: number[]; bleMetadata?: { serviceUuid: string; charUuid: string } }): React.ReactNode => {
     const options = {
-      promptText,
+      promptText: selectedChannels.length > 1 ? '>' : promptText,
       showTimestamp: terminalSettings.showTimestamp,
       showInputPrefix: terminalSettings.showInputPrefix,
       sendFormat: terminalSettings.sendFormat,
       receiveFormat: terminalSettings.receiveFormat,
-      aggregate: activeTab?.channelId === null,
+      aggregate: selectedChannels.length > 1 || (activeTab && receiveChannelsFor(activeTab) === 'all'),
     };
     const parts = formatTerminalEntryParts(entry, options);
     if (!parts) {
@@ -709,19 +612,16 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     ? visiblePromptText.slice(0, -1)
     : visiblePromptText;
 
-  const [editingTabId, setEditingTabId] = useState<string | null>(null);
-  const [editingLabel, setEditingLabel] = useState('');
-  const [showCommandsDialog, setShowCommandsDialog] = useState(false);
-  const [commandsDialogAnchor, setCommandsDialogAnchor] = useState<{ top: number; left: number } | null>(null);
+  const [channelPicker, setChannelPicker] = useState<{ tabId: string; x: number; y: number } | null>(null);
+  const pickerTab = pane?.tabs.find(tab => tab.id === channelPicker?.tabId);
+  const [commandsDialogAnchor, setCommandsDialogAnchor] = useState<HTMLButtonElement | null>(null);
   const [commandsPanelWidth, setCommandsPanelWidth] = useState(280);
   const [terminalContextMenu, setTerminalContextMenu] = useState<{ x: number; y: number } | null>(null);
-  const editInputRef = useRef<HTMLInputElement>(null);
   const tabBarRef = useRef<HTMLDivElement>(null);
 
   const commandsTagId = activeTab?.channelId ?? activeChannelId ?? '__global_saved_commands__';
 
   const closeCommandsDialog = useCallback(() => {
-    setShowCommandsDialog(false);
     setCommandsDialogAnchor(null);
   }, []);
 
@@ -774,31 +674,6 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     removeTab(paneId, tabId);
   }, [paneId, removeTab]);
 
-  const startEditing = useCallback((tabId: string, label: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditingTabId(tabId);
-    setEditingLabel(label);
-    setTimeout(() => editInputRef.current?.select(), 0);
-  }, []);
-
-  const confirmEditing = useCallback(() => {
-    if (!editingTabId) return;
-    const trimmed = editingLabel.trim();
-    if (trimmed) renameTab(paneId, editingTabId, trimmed);
-    setEditingTabId(null);
-    setEditingLabel('');
-  }, [editingTabId, editingLabel, paneId, renameTab]);
-
-  const cancelEditing = useCallback(() => {
-    setEditingTabId(null);
-    setEditingLabel('');
-  }, []);
-
-  const handleEditKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') { e.preventDefault(); confirmEditing(); }
-    else if (e.key === 'Escape') { e.preventDefault(); cancelEditing(); }
-  }, [confirmEditing, cancelEditing]);
-
   const handleSplit = useCallback(() => {
     splitPane(paneId);
   }, [paneId, splitPane]);
@@ -848,7 +723,8 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
 
     const label = await detachTabToWindow(
       {
-        tab,
+        tab: { ...tab, label: terminalTabLabel(terminalChannels(tab, channels), channels.length) },
+        writeTarget: pane?.tabWriteTargets[tab.id], udpTargetAddr: pane?.udpTargetAddr,
         entries,
         channelType: ch?.type,
         terminalSettings: getTerminalSettingsForChannel(tab.channelId),
@@ -872,7 +748,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     const entries = pane?.tabEntries[activeTab.id] ?? pane?.entries ?? [];
 
     const label = await detachTabToWindow(
-      { tab: activeTab, entries, channelType: ch?.type, terminalSettings },
+      { tab: { ...activeTab, label: terminalTabLabel(terminalChannels(activeTab, channels), channels.length) }, writeTarget: pane?.selectedWriteTarget, udpTargetAddr: pane?.udpTargetAddr, entries, channelType: ch?.type, terminalSettings },
     );
 
     if (label) {
@@ -1001,8 +877,6 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
       className="flex flex-col h-full min-h-0 relative"
       onMouseDown={() => setFocusedPane(paneId)}
     >
-      {isFocused && <div className="absolute inset-x-0 top-0 h-px bg-border z-10 pointer-events-none" />}
-
       <div
         ref={tabBarRef}
         className="flex items-stretch shrink-0 bg-surface border-b border-border overflow-x-auto min-h-[28px]"
@@ -1012,58 +886,48 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
         onDragLeave={handleTabBarDragLeave}
       >
         {pane.tabs.map((tab, idx) => {
-          const ch = channels.find(c => c.id === tab.channelId);
           const isActive = isFocused && tab.id === pane.activeTabId;
-          const isEditing = tab.id === editingTabId;
+          const selected = terminalChannels(tab, channels);
+          const label = terminalTabLabel(selected, channels.length);
+          const ch = selected.length === 1 ? selected[0] : undefined;
           const isDragInsert = tabDropIndex === idx;
-          const isFloatingTerminal = !tab.isPinned && tab.channelId === null;
+          const isGroupTab = !ch || selected.length === channels.length;
           return (
             <button
               key={tab.id}
               data-terminal-tab
-              draggable={!tab.isPinned && !isEditing}
+              aria-pressed={isActive}
+              draggable={!tab.isPinned}
               onDragStart={e => handleTabDragStart(tab.id, e)}
               onDragEnd={e => handleTabDragEnd(tab.id, e)}
               onDragOver={e => handleTabBarDragOver(e, idx)}
               onClick={() => handleSelectTab(tab.id)}
+              onContextMenu={event => {
+                event.preventDefault();
+                event.stopPropagation();
+                setChannelPicker({ tabId: tab.id, x: event.clientX, y: event.clientY });
+              }}
+              style={isActive ? { color: terminalTabColor(selected) } : undefined}
               className={[
-                'flex w-[84px] items-center justify-start px-2 relative text-[11px] font-mono shrink-0 border-r border-border transition-colors select-none group/tab',
-                isActive
-                  ? `bg-surface text-text-primary ${channelAccentClasses(ch?.type).tab}`
-                  : 'text-text-muted hover:bg-[var(--layer-hover)] hover:text-text-primary',
+                'flex w-[84px] items-center relative text-[11px] font-mono shrink-0 border-r border-border transition-colors select-none group/tab',
+                'bg-surface',
+                isActive ? 'font-semibold text-text-primary' : 'text-text-muted hover:text-text-primary',
                 isDragInsert ? 'ring-1 ring-inset ring-accent-blue/50' : '',
               ].join(' ')}
             >
-              <div className="flex items-center justify-start gap-1.5 min-w-0 max-w-[62px] w-full translate-y-[1px]">
-                {!tab.isPinned && !isFloatingTerminal && (
-                  <span className={`shrink-0 transition-colors duration-150 ${channelIconStateClass(ch?.type ?? '', ch?.state)}`}>
-                    {ch ? channelIcon(ch.type) : <TerminalIcon size={12} />}
-                  </span>
-                )}
-                
-                {isEditing ? (
-                  <input
-                    ref={editInputRef}
-                    type="text"
-                    value={editingLabel}
-                    onChange={e => setEditingLabel(e.target.value)}
-                    onKeyDown={handleEditKeyDown}
-                    onBlur={confirmEditing}
-                    onClick={e => e.stopPropagation()}
-                    spellCheck={false}
-                    className="w-full bg-surface border border-accent-blue/50 rounded-sm px-1 text-[11px] font-mono text-text-primary outline-none"
-                    autoFocus
-                  />
-                ) : (
-                  <span
-                    className={`truncate text-left max-w-full ${tab.isPinned || isFloatingTerminal ? 'text-[10px] font-bold text-text-secondary tracking-wider text-center w-full terminal-tag-text' : 'channel-tag-text-offset'}`}
-                    onDoubleClick={e => startEditing(tab.id, tab.label, e)}
-                    title="Double-click to rename"
-                  >
-                    {tab.label}
-                  </span>
-                )}
-              </div>
+              {isGroupTab ? (
+                <ChannelSelectionCircle selected={selected.length} total={channels.length} className="ml-2.5 size-2 translate-y-px" />
+              ) : !tab.isPinned && ch && (
+                <span className={`ml-2 shrink-0 translate-y-px transition-colors duration-150 ${channelIconStateClass(ch.type, ch.state, isActive)}`}>
+                  {channelIcon(ch.type)}
+                </span>
+              )}
+              <span
+                className={`ml-[1.5ch] min-w-0 flex-1 translate-y-[2px] truncate pr-0.5 text-left ${isGroupTab || tab.isPinned ? 'text-[10px] tracking-wider' : ''}`}
+                title={label}
+              >
+                {label}
+              </span>
 
               <div className="absolute right-0.5 top-1/2 -translate-y-1/2 flex items-center pr-0.5">
                 {!tab.isPinned && (
@@ -1071,7 +935,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
                     role="button"
                     tabIndex={-1}
                     onClick={e => handleRemoveTab(tab.id, e)}
-                    className="flex items-center justify-center w-4 h-4 rounded opacity-0 group-hover/tab:opacity-60 hover:!opacity-100 hover:bg-[var(--layer-active)] transition-all text-text-muted hover:text-text-primary"
+                    className="flex items-center justify-center w-4 h-4 rounded opacity-0 bg-surface group-hover/tab:opacity-100 hover:bg-[var(--layer-active)] transition-all text-text-muted hover:text-text-primary"
                   >
                     <CloseIcon size={10} />
                   </span>
@@ -1115,9 +979,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
               }}
               onContextMenu={(e) => {
                 e.preventDefault();
-                const rect = e.currentTarget.getBoundingClientRect();
-                setCommandsDialogAnchor({ top: rect.top, left: rect.right });
-                setShowCommandsDialog(true);
+                setCommandsDialogAnchor(e.currentTarget);
               }}
               className={[
                 'flex items-center justify-center w-7 shrink-0 hover:bg-[var(--layer-hover)] transition-colors border-l border-border',
@@ -1150,14 +1012,12 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
             onClick={handleReceiveClick}
             onContextMenu={handleReceiveContextMenu}
           >
-          {pane.entries.length === 0 ? (
+          {visibleEntries.length === 0 ? (
             <div className="text-text-muted italic px-1 select-none">
-              {linkedChannel
-                ? `Linked: ${linkedChannel.name} — waiting for data…`
-                : 'No channel linked. Type /link <name> or click + to add a tab.'}
+              {selectedChannels.length ? 'Waiting for channel data…' : 'Create a channel to receive data.'}
             </div>
           ) : (
-            pane.entries.map(entry => (
+            visibleEntries.map(entry => (
               <div key={entry.id} className="whitespace-pre-wrap break-all">
                 {renderEntryContent(entry)}
               </div>
@@ -1191,7 +1051,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
                 ? 'Enter number to select characteristic…'
                 : linkedChannel
                   ? "hex: 01 02 FF   'ASCII'   \"ASCII+NUL\"   /help"
-                  : '/link <channel-name>'}
+                  : '/link <channel-name-or-index>'}
               className={`flex-1 bg-transparent font-mono text-[12px] leading-relaxed text-text-primary outline-none placeholder:text-text-muted/40 ${toneClasses.caret}`}
             />
           </div>
@@ -1210,6 +1070,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
         )}
       </div>
 
+      {channelPicker && pickerTab && <TerminalChannelPicker {...channelPicker} paneId={paneId} tab={pickerTab} channels={channels} onClose={() => setChannelPicker(null)} />}
       {terminalContextMenu && (
         <TerminalContextMenu
           x={terminalContextMenu.x}
@@ -1229,12 +1090,13 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
         />
       )}
 
-      <SavedCommandsDialog
-        open={showCommandsDialog}
-        onClose={closeCommandsDialog}
-        anchorPosition={commandsDialogAnchor}
-        tagId={commandsTagId}
-      />
+      {commandsDialogAnchor && (
+        <SavedCommandsDialog
+          onClose={closeCommandsDialog}
+          anchor={commandsDialogAnchor}
+          tagId={commandsTagId}
+        />
+      )}
     </div>
   );
 };

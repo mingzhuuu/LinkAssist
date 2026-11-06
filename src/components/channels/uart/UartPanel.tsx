@@ -90,7 +90,7 @@ export const UartPanel = React.memo(function UartPanel({ channelId }: { channelI
       </div>
 
       {/* Content area — rounded bordered container */}
-      <div className="bg-surface border border-border rounded-lg flex min-h-0 flex-col overflow-y-auto scrollbar-stable">
+      <div className="channel-panel-card bg-surface border border-border rounded-lg flex min-h-0 flex-col overflow-y-auto scrollbar-stable">
         <div>
           <div className="channel-config-row">
             <label className={uartLabelClassName}>Port</label>

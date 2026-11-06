@@ -2,16 +2,15 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { DEFAULT_SERIAL_CONFIG, DEFAULT_TCP_CONFIG, useBleStore, useChannelStore, useSerialStore, useTcpStore, useUIStore } from '../../stores';
 import { useBle, useSerial, useTcp } from '../../hooks';
+import { ChannelSelectionCircle } from '../common/ChannelSelectionCircle';
 import {
   MinimizeIcon,
   MaximizeIcon,
   RestoreIcon,
   CloseIcon,
-  SidebarIcon,
-  RightPanelIcon,
 } from '../common/Icons';
 
-const CHANNEL_BUTTON_IDLE_BORDER_COLOR = 'var(--text-muted)';
+const CHANNEL_BUTTON_UNSELECTED_COLOR = 'rgb(var(--text-muted) / 35%)';
 const CHANNEL_TYPE_COLORS = {
   ble: { r: 91, g: 155, b: 245 },
   serial: { r: 167, g: 139, b: 250 },
@@ -106,7 +105,7 @@ export const ChannelQuickOpenButton: React.FC = () => {
     if (rect) {
       setChannelPickerPos({
         top: rect.bottom + 8,
-        left: Math.min(Math.max(rect.left, 8), window.innerWidth - 248),
+        left: Math.max(rect.left, 8),
       });
     }
     setChannelPickerOpen(true);
@@ -212,7 +211,6 @@ export const ChannelQuickOpenButton: React.FC = () => {
     });
   }, [selectedChannelIds]);
 
-  const hasSelectedChannels = selectedChannelIds.length > 0;
   const selectedChannelTypes = selectedChannelIds.flatMap((channelId) => {
     const channel = channels.find((item) => item.id === channelId);
     return channel ? [channel.type] : [];
@@ -224,10 +222,6 @@ export const ChannelQuickOpenButton: React.FC = () => {
   });
   const mixedOpenColor = toMixedChannelColor(openSelectedChannelTypes);
   const mixedSelectedColor = toMixedChannelColor(selectedChannelTypes);
-  const channelButtonColor = mixedOpenColor ?? 'transparent';
-  const channelButtonBorderColor = hasSelectedChannels
-    ? mixedOpenColor ?? mixedSelectedColor ?? CHANNEL_BUTTON_IDLE_BORDER_COLOR
-    : CHANNEL_BUTTON_IDLE_BORDER_COLOR;
   const channelButtonShadow = mixedOpenColor
     ? `0 0 14px ${mixedOpenColor}55`
     : '0 1px 4px rgba(0, 0, 0, 0.2)';
@@ -267,8 +261,9 @@ export const ChannelQuickOpenButton: React.FC = () => {
     <>
       <button
         ref={channelPickerButtonRef}
-        className="h-3.5 w-3.5 translate-y-0.5 rounded-full border transition-all duration-150 hover:brightness-125"
-        style={{ backgroundColor: channelButtonColor, borderColor: channelButtonBorderColor ?? 'transparent', boxShadow: channelButtonShadow }}
+        className="h-3.5 w-3.5 translate-y-0.5 rounded-full transition-all duration-150 hover:brightness-125"
+        style={{ color: mixedOpenColor ?? mixedSelectedColor ?? undefined, boxShadow: channelButtonShadow }}
+        aria-label="Open channels"
         onClick={toggleSelectedChannels}
         onContextMenu={(event) => {
           event.preventDefault();
@@ -284,7 +279,10 @@ export const ChannelQuickOpenButton: React.FC = () => {
           setChannelButtonTooltip({ x: rect.right + 10, y: rect.top + rect.height / 2 });
         }}
         onMouseLeave={() => setChannelButtonTooltip(null)}
-      />
+      >
+        <ChannelSelectionCircle selected={selectedChannelTypes.length} total={channels.length} filled={!!mixedOpenColor}
+          unselectedColor={CHANNEL_BUTTON_UNSELECTED_COLOR} className="size-full" />
+      </button>
 
       {channelButtonTooltip && !channelPickerOpen && (
         <div
@@ -298,17 +296,15 @@ export const ChannelQuickOpenButton: React.FC = () => {
       {channelPickerOpen && channelPickerPos && (
         <div
           ref={channelPickerRef}
+          role="group"
+          aria-label="Open channels"
           data-no-drag
           onMouseDown={(event) => event.stopPropagation()}
           onDoubleClick={(event) => event.stopPropagation()}
           onContextMenu={(event) => event.stopPropagation()}
-          className="animate-fade-in fixed z-[70] w-60 overflow-hidden rounded-xl border border-border bg-surface-overlay shadow-xl shadow-black/30 backdrop-blur-sm"
-          style={{ top: channelPickerPos.top, left: channelPickerPos.left }}
+          className="animate-fade-in fixed z-[70] w-max overflow-hidden rounded-xl border border-border bg-surface-overlay shadow-xl shadow-black/30 backdrop-blur-sm"
+          style={{ ...channelPickerPos, maxWidth: `calc(100vw - ${channelPickerPos.left + 8}px)` }}
         >
-          <div className="border-b border-border px-3 py-2">
-            <div className="text-xs font-semibold text-text-secondary">Open channels</div>
-            <div className="mt-0.5 text-[10px] text-text-muted">Left-click the round button to open or close them.</div>
-          </div>
           <div className="max-h-72 overflow-y-auto p-1.5">
             {channels.length === 0 ? (
               <div className="px-3 py-4 text-center text-xs text-text-muted">No channels created</div>
@@ -333,7 +329,7 @@ export const ChannelQuickOpenButton: React.FC = () => {
                     {selected && <span className="h-1.5 w-1.5 rounded-full bg-current" />}
                   </span>
                   <span className="shrink-0 text-text-muted">{channel.type.toUpperCase()}</span>
-                  <span className="min-w-0 flex-1 truncate">{channel.name}</span>
+                  <span className="min-w-0 truncate" title={channel.name}>{channel.name}</span>
                 </button>
               );
             })}
@@ -341,33 +337,6 @@ export const ChannelQuickOpenButton: React.FC = () => {
         </div>
       )}
     </>
-  );
-};
-
-/** Combined center-panel toggle using the former channel-toggle appearance. */
-export const TitleBarCenterToggle: React.FC = () => {
-  const {
-    centerTopVisible,
-    centerBottomVisible,
-    setCenterTopVisible,
-    setCenterBottomVisible,
-  } = useUIStore();
-  const centerPanelsVisible = centerTopVisible || centerBottomVisible;
-
-  const handleToggleCenterPanels = useCallback(() => {
-    const nextVisible = !centerPanelsVisible;
-    setCenterTopVisible(nextVisible);
-    setCenterBottomVisible(nextVisible);
-  }, [centerPanelsVisible, setCenterBottomVisible, setCenterTopVisible]);
-
-  return (
-    <button
-      className="window-control main-window-control w-6 hover:bg-[var(--layer-selected)]"
-      onClick={handleToggleCenterPanels}
-      title={centerPanelsVisible ? 'Hide center panels' : 'Show center panels'}
-    >
-      <SidebarIcon size={14} />
-    </button>
   );
 };
 
@@ -381,11 +350,6 @@ export const TitleBarContent: React.FC<TitleBarContentProps> = ({
   isMaximized,
   onToggleMaximize,
 }) => {
-  const {
-    rightPanelVisible,
-    toggleRightPanelVisible,
-    simpleMode,
-  } = useUIStore();
   const appWindow = getCurrentWindow();
 
   const handleMinimize = useCallback(() => {
@@ -403,18 +367,6 @@ export const TitleBarContent: React.FC<TitleBarContentProps> = ({
 
       {/* Right: Window controls */}
       <div className="flex items-center h-full shrink-0">
-        {!simpleMode && (
-          <>
-            <TitleBarCenterToggle />
-            <button
-              className="window-control main-window-control w-6 hover:bg-[var(--layer-selected)]"
-              onClick={toggleRightPanelVisible}
-              title={rightPanelVisible ? 'Hide right panel' : 'Show right panel'}
-            >
-              <RightPanelIcon size={14} className={rightPanelVisible ? '' : 'opacity-55'} />
-            </button>
-          </>
-        )}
         <button className="window-control main-window-control ml-2 w-10 hover:bg-[var(--layer-selected)]" onClick={handleMinimize}>
           <MinimizeIcon size={14} />
         </button>

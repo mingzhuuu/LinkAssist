@@ -37,7 +37,7 @@ Detailed documentation is maintained in Chinese, with source links for each subs
 | Test runner | External pytest bridge catalog/profile/case selection, execution, logs and cancellation through Script Canvas |
 | MCP | stdio bridge, authenticated localhost Core, built-in and configured Lua tools, asynchronous execution lookup |
 | Persistence | Preferences, layouts, commands, script references and portable single-EXE configuration snapshots |
-| Shell | Themes, simple mode, adjustable panels, tray and window restoration |
+| Shell | Themes, independent panel visibility via the title-bar context menu, tray and window restoration |
 
 Implemented paths do not imply verified hardware support or cross-platform certification. Network receive compatibility commands may return empty data; the live UI consumes events.
 

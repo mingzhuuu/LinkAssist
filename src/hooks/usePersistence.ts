@@ -128,15 +128,11 @@ export function usePersistence() {
           }
           if (typeof config.ui.right_panel_width === 'number') ui.setRightPanelWidth(config.ui.right_panel_width);
           if (typeof config.ui.center_split_ratio === 'number') ui.setCenterSplitRatio(config.ui.center_split_ratio);
-          if (typeof config.ui.center_top_visible === 'boolean') ui.setCenterTopVisible(config.ui.center_top_visible);
-          if (typeof config.ui.center_bottom_visible === 'boolean') ui.setCenterBottomVisible(config.ui.center_bottom_visible);
-          if (typeof config.ui.right_panel_visible === 'boolean') ui.setRightPanelVisible(config.ui.right_panel_visible);
-          if (typeof config.ui.simple_mode === 'boolean') ui.setSimpleMode(config.ui.simple_mode);
+          ui.restorePanelVisibility(config.ui);
           if (isDataViewMode(config.ui.data_view_mode)) ui.setDataViewMode(config.ui.data_view_mode);
           if (config.ui.theme_mode) ui.setThemeMode(config.ui.theme_mode as ThemeMode);
           if (config.ui.send_format && isTerminalDataFormat(config.ui.send_format)) ui.setSendFormat(config.ui.send_format);
           if (config.ui.receive_format && isTerminalDataFormat(config.ui.receive_format)) ui.setReceiveFormat(config.ui.receive_format);
-          if (typeof config.ui.channel_panel_visible === 'boolean') ui.setChannelPanelVisible(config.ui.channel_panel_visible);
           if (typeof config.ui.show_input_prefix === 'boolean') ui.setShowInputPrefix(config.ui.show_input_prefix);
           if (typeof config.ui.show_timestamp === 'boolean') ui.setShowTimestamp(config.ui.show_timestamp);
           if (typeof config.ui.show_received === 'boolean') ui.setShowReceived(config.ui.show_received);
@@ -144,11 +140,12 @@ export function usePersistence() {
           if (channelSettings) {
             ui.replaceTerminalChannelSettings(channelSettings);
           } else {
+            const restoredUi = useUIStore.getState();
             const legacySettings: TerminalChannelSettings = {
-              sendFormat: ui.sendFormat,
-              receiveFormat: ui.receiveFormat,
-              showInputPrefix: ui.showInputPrefix,
-              showTimestamp: ui.showTimestamp,
+              sendFormat: restoredUi.sendFormat,
+              receiveFormat: restoredUi.receiveFormat,
+              showInputPrefix: restoredUi.showInputPrefix,
+              showTimestamp: restoredUi.showTimestamp,
             };
             ui.replaceTerminalChannelSettings(Object.fromEntries(
               useChannelStore.getState().channels.map((channel) => [channel.id, { ...legacySettings }])
@@ -353,7 +350,6 @@ export function usePersistence() {
         center_top_visible: ui.centerTopVisible,
         center_bottom_visible: ui.centerBottomVisible,
         right_panel_visible: ui.rightPanelVisible,
-        simple_mode: ui.simpleMode,
         active_channel_id: useChannelStore.getState().activeChannelId,
         data_view_mode: ui.dataViewMode,
         theme_mode: ui.themeMode,

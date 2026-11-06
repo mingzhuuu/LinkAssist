@@ -13,6 +13,8 @@ import { ingestScriptPacket } from '../display/scriptRuntime';
 import { hasCanvasLifecycleScript, ingestCanvasLifecyclePacket } from '../display/canvasLifecycleRuntime';
 import { useTerminalStore } from '../../stores/terminalStore';
 import { PaneTreeRenderer } from './PaneTreeRenderer';
+import { ChannelConfigDrawer } from './ChannelConfigDrawer';
+import type { ChannelCardAccent } from './ChannelConfigDrawer';
 import { toHex } from './terminalUtils';
 import {
   activityMatchesActiveChannel,
@@ -619,11 +621,8 @@ export const CenterPanel: React.FC = () => {
     events.listen('channel-activity', (event) => {
       const activity = event.payload;
       const sourceLabel = channelActivitySourceLabel(activity);
-      const activeChannelId = useChannelStore.getState().activeChannelId;
-      const mappedChannelId = mappedActivityChannelId(activity);
-      const channelId = mappedChannelId && mappedChannelId === activeChannelId
-        ? mappedChannelId
-        : exactActiveActivityChannelId(activity);
+      const explicitId = useChannelStore.getState().channels.find(channel => channel.id === activity.channelId)?.id;
+      const channelId = mappedActivityChannelId(activity) ?? explicitId ?? exactActiveActivityChannelId(activity);
 
       if (channelId && (activity.kind === 'connected' || activity.kind === 'disconnected')) {
         syncActivityConnection(activity, channelId);
@@ -695,6 +694,9 @@ export const CenterPanel: React.FC = () => {
   const root = useTerminalStore(s => s.root);
   const showTop = centerTopVisible;
   const showBottom = centerBottomVisible;
+  const cardAccent: ChannelCardAccent = activeChannel?.type === 'ble'
+    ? 'blue'
+    : activeChannel?.type === 'tcp' ? 'green' : 'mauve';
 
   const topPanelContent = !activeChannel ? (
     <div className="flex-1 flex flex-col items-center justify-center">
@@ -704,7 +706,7 @@ export const CenterPanel: React.FC = () => {
       </div>
     </div>
   ) : (
-    <div className="animate-fade-in w-full h-full flex flex-col items-stretch overflow-hidden">
+    <div key={activeChannel.id} className="animate-fade-in w-full h-full flex flex-col items-stretch overflow-hidden">
       {activeChannel.type === 'ble' && <BlePanel channelId={activeChannel.id} />}
       {activeChannel.type === 'serial' && <UartPanel channelId={activeChannel.id} />}
       {activeChannel.type === 'tcp' && <TcpPanel channelId={activeChannel.id} />}
@@ -712,27 +714,28 @@ export const CenterPanel: React.FC = () => {
   );
 
   return (
-    <div ref={containerRef} className="relative h-full bg-surface overflow-hidden">
-      {showTop && (
-        <div
-          className={`${showBottom ? 'absolute top-0 left-0 right-0' : 'h-full'} overflow-hidden p-3 flex flex-col`}
-          style={showBottom ? { bottom: `calc(${(1 - centerSplitRatio) * 100}% - 18px)` } : undefined}
-        >
-          {topPanelContent}
-        </div>
-      )}
+    <div ref={containerRef} data-channel-card-container className="relative h-full rounded-[inherit]">
+      <ChannelConfigDrawer
+        accent={cardAccent}
+        splitRatio={centerSplitRatio}
+        showBottom={showBottom}
+        isResizing={isDragging}
+      >
+        {topPanelContent}
+      </ChannelConfigDrawer>
 
       {showBottom && (
         <div
-          className={`${showTop ? 'absolute left-0 right-0 bottom-0 pt-px' : 'h-full'} flex flex-col bg-surface`}
-          style={showTop ? { height: `${(1 - centerSplitRatio) * 100}%` } : undefined}
+          data-terminal-area
+          className={`channel-terminal-area absolute inset-x-0 bottom-0 flex flex-col bg-surface ${showTop ? 'border-t border-border' : 'overflow-hidden rounded-[inherit]'} ${isDragging ? 'is-resizing' : ''}`}
+          style={{ top: showTop ? `${centerSplitRatio * 100}%` : '0%' }}
         >
           {showTop && (
             <div
-              className="relative h-0 cursor-row-resize shrink-0 group"
+              className="relative z-30 h-0 cursor-row-resize shrink-0 group"
               onMouseDown={handleMouseDown}
             >
-              <div className={`absolute inset-x-0 -top-px h-px origin-bottom scale-y-50 transition-colors ${isDragging ? 'bg-accent-mauve/50' : 'bg-[var(--divider-default)] group-hover:bg-[var(--layer-active)]'}`} />
+              <div className={`absolute inset-x-0 -top-px h-px transition-colors ${isDragging ? 'bg-accent-mauve/50' : 'bg-transparent group-hover:bg-[var(--layer-active)]'}`} />
               <div className="absolute inset-x-0 -top-2 h-4" />
             </div>
           )}
@@ -743,11 +746,6 @@ export const CenterPanel: React.FC = () => {
         </div>
       )}
 
-      {!showTop && !showBottom && (
-        <div className="h-full flex items-center justify-center text-text-muted text-sm">
-          Center panels hidden
-        </div>
-      )}
     </div>
   );
 };

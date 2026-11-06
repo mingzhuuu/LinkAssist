@@ -1086,7 +1086,7 @@ export const DisplayPanel: React.FC<DisplayPanelProps> = ({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full bg-surface overflow-hidden select-none"
+      className="relative w-full min-w-0 h-full bg-surface overflow-clip select-none"
       onMouseEnter={handleContainerMouseEnter}
       onMouseMove={handleContainerMouseMove}
       onMouseLeave={handleContainerMouseLeave}
@@ -1096,7 +1096,7 @@ export const DisplayPanel: React.FC<DisplayPanelProps> = ({
     >
       {canvases.length === 0 && dragState.mode === 'idle' && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <p className="text-text-faint text-xs">Right-click to add a canvas</p>
+          <p className="max-w-full truncate text-text-faint text-xs">Right-click to add a canvas</p>
         </div>
       )}
 

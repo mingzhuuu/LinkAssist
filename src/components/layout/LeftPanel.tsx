@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useChannelStore, useUIStore } from '../../stores';
 import { useTerminalStore } from '../../stores/terminalStore';
 import { PlusIcon, BluetoothIcon, UsbIcon, WifiIcon, SignalIcon, TrashIcon, SettingsIcon, EditIcon } from '../common/Icons';
+import { CHANNEL_LIST_VIEWPORT_ATTR, useChannelCardGeometry } from './useChannelCardGeometry';
 
 const LEFT_PANEL_ICON_RAIL = 40;
 
@@ -47,9 +48,12 @@ const getChannelIconClass = (type: string, state: string) => {
 interface ChannelListItemProps {
   channel: { id: string; name: string; type: string; state: string };
   isActive: boolean;
+  connected: boolean;
   collapsed: boolean;
   expansionProgress: number;
   onSelect: (id: string) => void;
+  onPreview: (id: string) => void;
+  configExpanded: boolean;
   onContextMenu: (e: React.MouseEvent, id: string, rect: DOMRect) => void;
   onTooltipShow: (name: string, rect: DOMRect) => void;
   onTooltipHide: () => void;
@@ -61,24 +65,39 @@ interface ChannelListItemProps {
   isDragTarget: boolean;
 }
 
-const ChannelListItem = React.memo(({ channel, isActive, collapsed, expansionProgress, onSelect, onContextMenu, onTooltipShow, onTooltipHide, onDragStart, onDragOver, onDrop, onDragEnd, isDragging, isDragTarget }: ChannelListItemProps) => {
+const ChannelListItem = React.memo(({ channel, isActive, connected, collapsed, expansionProgress, onSelect, onPreview, configExpanded, onContextMenu, onTooltipShow, onTooltipHide, onDragStart, onDragOver, onDrop, onDragEnd, isDragging, isDragTarget }: ChannelListItemProps) => {
   const horizontalMargin = 4 * expansionProgress;
   const leftPadding = 12 - horizontalMargin;
   const itemStyle = {
     '--channel-active-left-inset': `${2 - horizontalMargin}px`,
     columnGap: `${8 * expansionProgress}px`,
     marginLeft: `${horizontalMargin}px`,
-    marginRight: `${horizontalMargin}px`,
+    marginRight: connected ? '0px' : `${horizontalMargin}px`,
     paddingLeft: `${leftPadding}px`,
-    paddingRight: '8px',
+    paddingRight: connected ? `${8 + horizontalMargin}px` : '8px',
   } as React.CSSProperties;
 
   return (
     <div
-      className={`animate-slide-in channel-item isolate box-border h-8 rounded-sm ${isActive ? getChannelActiveClasses(channel.type) : ''} ${isDragTarget ? 'ring-1 ring-accent-mauve/50 bg-[var(--layer-selected)]' : ''} ${isDragging ? 'opacity-45' : ''} flex items-center cursor-grab active:cursor-grabbing transition-colors py-0`}
+      className={`animate-slide-in channel-item isolate box-border h-8 rounded-md ${isActive ? getChannelActiveClasses(channel.type) : ''} ${connected ? 'channel-item-connected rounded-r-none' : ''} ${isDragTarget ? 'ring-1 ring-accent-mauve/50 bg-[var(--layer-selected)]' : ''} ${isDragging ? 'opacity-45' : ''} flex items-center cursor-grab active:cursor-grabbing transition-[margin,padding,background-color,color] duration-200 py-0`}
       style={itemStyle}
+      role="button"
+      tabIndex={0}
+      aria-label={`${channel.name} channel settings`}
+      aria-expanded={isActive && configExpanded}
+      aria-controls="channel-config-drawer"
+      data-channel-config-trigger
+      data-active={isActive ? 'true' : undefined}
       draggable
-      onClick={() => onSelect(channel.id)}
+      onClick={(event) => { if (event.detail < 2) onSelect(channel.id); }}
+      onDoubleClick={() => onPreview(channel.id)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          if (event.shiftKey) onPreview(channel.id);
+          else onSelect(channel.id);
+        }
+      }}
       onContextMenu={(e) => onContextMenu(e, channel.id, e.currentTarget.getBoundingClientRect())}
       onDragStart={(event) => {
         event.dataTransfer.effectAllowed = 'move';
@@ -121,7 +140,13 @@ interface LeftPanelProps {
 
 export const LeftPanel: React.FC<LeftPanelProps> = ({ collapsed, expansionProgress, showSettings, onToggleSettings }) => {
   const { channels, activeChannelId, setActiveChannel, addChannel, removeChannel, renameChannel, reorderChannel } = useChannelStore();
-  const { showAddChannelMenu, setShowAddChannelMenu } = useUIStore();
+  const {
+    showAddChannelMenu,
+    setShowAddChannelMenu,
+    openChannelConfig,
+    centerTopVisible,
+    channelConfigPreview,
+  } = useUIStore();
   
   const menuRef = useRef<HTMLDivElement>(null);
   const addBtnRef = useRef<HTMLButtonElement>(null);
@@ -136,10 +161,16 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ collapsed, expansionProgre
   const [dragOverChannelId, setDragOverChannelId] = useState<string | null>(null);
 
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const configExpanded = centerTopVisible || channelConfigPreview;
+  // Preview only: the floating card is attached to the selected row. A docked
+  // (pinned) card is a separate surface, so the row keeps its normal highlight.
+  const cardGeometry = useChannelCardGeometry();
+  const cardAttached = channelConfigPreview && !centerTopVisible && !!cardGeometry?.tab;
 
-  const handleSelectChannel = useCallback((channelId: string) => {
+  const handlePreviewChannel = useCallback((channelId: string) => {
     setActiveChannel(channelId);
-  }, [setActiveChannel]);
+    openChannelConfig();
+  }, [setActiveChannel, openChannelConfig]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -205,8 +236,9 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ collapsed, expansionProgre
     const newChannel = useChannelStore.getState().channels.find(c => c.name === name);
     if (newChannel) {
       setActiveChannel(newChannel.id);
+      openChannelConfig();
     }
-  }, [channels, addChannel, setShowAddChannelMenu, setActiveChannel]);
+  }, [channels, addChannel, setShowAddChannelMenu, setActiveChannel, openChannelConfig]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent, id: string, rect: DOMRect) => {
     e.preventDefault();
@@ -354,7 +386,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ collapsed, expansionProgre
 
   return (
     <div className="flex flex-col h-full relative">
-      <div className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto py-1">
+      <div {...{ [CHANNEL_LIST_VIEWPORT_ATTR]: '' }} className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto pt-2.5 pb-1">
         {channels.length === 0 ? (
           <div
             className="flex h-full flex-col"
@@ -380,25 +412,31 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ collapsed, expansionProgre
           <div
             style={{ width: '100%' }}
           >
-            {channels.map((channel) => (
-              <ChannelListItem
-                key={channel.id}
-                channel={channel}
-                isActive={activeChannelId === channel.id}
-                collapsed={collapsed}
-                expansionProgress={expansionProgress}
-                onSelect={handleSelectChannel}
-                onContextMenu={handleContextMenu}
-                onTooltipShow={handleTooltipShow}
-                onTooltipHide={handleTooltipHide}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onDragEnd={handleDragEnd}
-                isDragging={draggingChannelId === channel.id}
-                isDragTarget={dragOverChannelId === channel.id && draggingChannelId !== channel.id}
-              />
-            ))}
+            {channels.map((channel) => {
+              const isActive = activeChannelId === channel.id;
+              return (
+                <ChannelListItem
+                  key={channel.id}
+                  channel={channel}
+                  isActive={isActive}
+                  connected={isActive && cardAttached}
+                  collapsed={collapsed}
+                  expansionProgress={expansionProgress}
+                  onSelect={setActiveChannel}
+                  onPreview={handlePreviewChannel}
+                  configExpanded={configExpanded}
+                  onContextMenu={handleContextMenu}
+                  onTooltipShow={handleTooltipShow}
+                  onTooltipHide={handleTooltipHide}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                  isDragging={draggingChannelId === channel.id}
+                  isDragTarget={dragOverChannelId === channel.id && draggingChannelId !== channel.id}
+                />
+              );
+            })}
             {AddButton}
           </div>
         )}

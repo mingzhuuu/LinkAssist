@@ -84,7 +84,7 @@ export const CanvasTable: React.FC<CanvasTableProps> = ({ canvasId }) => {
               <tr>
                 <td
                   colSpan={columns.length || 1}
-                  className="text-center py-8 text-text-muted text-xs font-mono"
+                  className="[overflow-wrap:anywhere] text-center py-8 text-text-muted text-xs font-mono"
                 >
                   Waiting for data...
                 </td>

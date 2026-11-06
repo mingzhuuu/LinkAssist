@@ -8,6 +8,7 @@ import { ChannelQuickOpenButton, TitleBarContent } from './TitleBar';
 import { LeftPanel } from './LeftPanel';
 import { CenterPanel } from './CenterPanel';
 import { RightPanel } from './RightPanel';
+import { CHANNEL_CARD_JOIN_WIDTH } from './channelCardGeometry';
 import { ResizeHandle } from './ResizeHandle';
 const SettingsDialog = lazy(() => import('./SettingsDialog').then(module => ({ default: module.SettingsDialog })));
 
@@ -42,9 +43,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
     channelPanelVisible,
     rightPanelVisible,
     centerTopVisible,
+    channelConfigPreview,
     centerBottomVisible,
-    simpleMode,
-    setSimpleMode,
+    toggleRightPanelVisible,
+    toggleCenterTopVisible,
+    toggleCenterBottomVisible,
+    toggleChannelPanel,
   } = useUIStore();
   const mcpToolsEnabled = useMcpStore((state) => state.enabled);
   const setMcpToolsEnabled = useMcpStore((state) => state.setEnabled);
@@ -150,11 +154,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
     if ((event.target as HTMLElement).closest('button, [data-no-drag]')) return;
     event.preventDefault();
 
-    const menuWidth = 144;
-    const menuHeight = 36;
+    const menuWidth = 184;
+    const menuHeight = 154;
     setTitleBarContextMenu({
-      x: Math.min(event.clientX, window.innerWidth - menuWidth),
-      y: Math.min(event.clientY, window.innerHeight - menuHeight),
+      x: Math.max(0, Math.min(event.clientX, window.innerWidth - menuWidth)),
+      y: Math.max(0, Math.min(event.clientY, window.innerHeight - menuHeight)),
     });
   }, []);
 
@@ -184,17 +188,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
     event.preventDefault();
     window.getSelection()?.removeAllRanges();
   }, []);
-
-  const handleToggleSimpleMode = useCallback(() => {
-    setSimpleMode(!simpleMode);
-    setTitleBarContextMenu(null);
-  }, [setSimpleMode, simpleMode]);
-
-  useEffect(() => {
-    if (!persistenceReady) return;
-    void invoke('set_tray_visible', { visible: !simpleMode })
-      .catch((error) => console.warn('Failed to update tray visibility:', error));
-  }, [persistenceReady, simpleMode]);
 
   useEffect(() => {
     if (!persistenceReady) return;
@@ -311,19 +304,19 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
   const leftPanelExpansionProgress = clampPanelRatio(
     (leftPanelWidth - LEFT_PANEL_MIN_WIDTH) / (LEFT_PANEL_COLLAPSED_THRESHOLD - LEFT_PANEL_MIN_WIDTH)
   );
-  const effectiveChannelPanelVisible = channelPanelVisible && !simpleMode;
-  const centerFullyHidden = simpleMode || (!centerTopVisible && !centerBottomVisible);
-  const effectiveRightPanelVisible = simpleMode || rightPanelVisible;
-  const roundContentBottomRight = effectiveRightPanelVisible && !frameOverscanned;
+  const centerHidden = !centerTopVisible && !centerBottomVisible;
+  const previewOverlay = centerHidden && channelConfigPreview;
+  const roundContentBottomRight = rightPanelVisible && !frameOverscanned;
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-transparent">
       <div
+        data-windowed-frame={!frameOverscanned}
         className="absolute overflow-hidden rounded-[14px] border border-border bg-road text-text-primary"
         style={{ inset: frameOverscanned ? '-14px' : '0' }}
       >
         <div
-          className={`absolute flex flex-col min-h-0 pt-0.5 pb-0.5 ${simpleMode ? 'pl-0 pr-0' : 'pl-0.5 pr-0.5'}`}
+          className="absolute flex flex-col min-h-0 p-0.5"
           style={{ inset: frameOverscanned ? '14px' : '0' }}
         >
           {/* ── Title bar row: road portion + content portion ── */}
@@ -335,7 +328,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
             onContextMenu={handleTitleBarContextMenu}
           >
             {/* Title bar road section (above channel panel) — no bottom border */}
-            {effectiveChannelPanelVisible && (
+            {channelPanelVisible && (
               <div
                 className="h-full bg-road shrink-0"
                 style={{ width: leftPanelWidth }}
@@ -360,10 +353,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
           {/* ── Main content area ── */}
           <div className="relative flex flex-1 min-h-0">
             {/* ── Left channel panel: part of the "road" ── */}
-            {effectiveChannelPanelVisible && (
+            {channelPanelVisible && (
               <>
                 <div
-                  className="h-full bg-road shrink-0 flex flex-col"
+                  className="relative z-30 h-full bg-road shrink-0 flex flex-col"
                   style={{ width: leftPanelWidth }}
                 >
                   <LeftPanel
@@ -381,33 +374,43 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
             <div
               ref={contentAreaRef}
               data-content-area
-              className={`relative isolate flex flex-1 min-w-0 overflow-hidden rounded-tr-xl bg-surface before:rounded-tr-xl before:pointer-events-none before:absolute before:inset-0 before:z-[2147483647] before:border-t-[0.5px] before:border-b-[0.5px] before:border-[color:var(--divider-default)] before:content-[''] ${effectiveChannelPanelVisible ? 'rounded-l-xl before:rounded-l-xl before:border-l-[0.5px]' : ''} ${roundContentBottomRight ? 'rounded-br-xl before:rounded-br-xl before:border-r-[0.5px]' : ''}`}>
-              {!centerFullyHidden && (
-                <>
-                  {/* Center panel */}
-                  <div
-                    className={`h-full min-w-[300px] shrink-0 ${effectiveRightPanelVisible ? 'border-r border-transparent' : 'flex-1'}`}
-                    style={effectiveRightPanelVisible ? { width: centerPanelWidth } : undefined}
-                  >
-                    <CenterPanel />
-                  </div>
-
-                  {effectiveRightPanelVisible && <ResizeHandle onResize={handleCenterResize} hairline />}
-                </>
+              className={`relative isolate flex flex-1 min-w-0 bg-road ${channelConfigPreview ? 'z-40' : 'overflow-hidden'}`}
+              style={channelConfigPreview ? { clipPath: `inset(0 0 0 -${CHANNEL_CARD_JOIN_WIDTH}px)` } : undefined}
+            >
+              {/* CenterPanel also routes incoming data while its UI is hidden. */}
+              <div
+                data-center-panel-region
+                hidden={centerHidden && !previewOverlay}
+                className={[
+                  'h-full shrink-0',
+                  previewOverlay ? 'pointer-events-none absolute inset-y-0 left-0 max-w-full' : 'relative rounded-xl border border-[color:var(--divider-default)] bg-surface',
+                  channelConfigPreview ? 'z-50' : 'overflow-hidden',
+                  rightPanelVisible ? '' : 'flex-1',
+                ].join(' ')}
+                style={rightPanelVisible || previewOverlay ? { width: centerPanelWidth } : undefined}
+              >
+                <CenterPanel />
+              </div>
+              {!centerHidden && rightPanelVisible && (
+                <div data-panel-separator className="relative mx-0.5 flex h-full shrink-0 items-stretch">
+                  <ResizeHandle onResize={handleCenterResize} showLine={false} />
+                </div>
               )}
 
-              {/* Right panel */}
-              {effectiveRightPanelVisible ? (
-                <div className="relative z-0 h-full min-w-0 flex-1">
+              {rightPanelVisible ? (
+                <div
+                  data-right-panel-region
+                  className="relative z-0 h-full min-w-0 flex-1 overflow-hidden rounded-xl border border-[color:var(--divider-default)] bg-surface"
+                >
                   <RightPanel
                     layoutReady={persistenceReady}
-                    roundMaximizedCanvasTopLeft={simpleMode || (centerFullyHidden && effectiveChannelPanelVisible)}
+                    roundMaximizedCanvasTopLeft={centerHidden}
                     roundMaximizedCanvasBottomRight={roundContentBottomRight}
                     seamlessMaximizedCanvas
                   />
                 </div>
-              ) : centerFullyHidden ? (
-                <div className="flex-1 h-full bg-surface" />
+              ) : centerHidden ? (
+                <div className="flex-1 h-full rounded-xl border border-[color:var(--divider-default)] bg-surface" />
               ) : null}
             </div>
 
@@ -429,14 +432,24 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
           className="fixed z-[10000] w-max overflow-hidden rounded-xl border border-border bg-surface p-1 shadow-xl shadow-black/30 backdrop-blur-sm"
           style={{ left: titleBarContextMenu.x, top: titleBarContextMenu.y }}
         >
-          <button
-            type="button"
-            role="menuitem"
-            className="block whitespace-nowrap rounded-lg px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-[var(--layer-hover)]"
-            onClick={handleToggleSimpleMode}
-          >
-            {simpleMode ? 'Exit simple mode' : 'Simple mode'}
-          </button>
+          {[
+            { label: 'Channels', visible: channelPanelVisible, toggle: toggleChannelPanel },
+            { label: 'Channel Configuration', visible: centerTopVisible, toggle: toggleCenterTopVisible },
+            { label: 'Commands', visible: centerBottomVisible, toggle: toggleCenterBottomVisible },
+            { label: 'Canvas', visible: rightPanelVisible, toggle: toggleRightPanelVisible },
+          ].map(({ label, visible, toggle }) => (
+            <button
+              key={label}
+              type="button"
+              role="menuitemcheckbox"
+              aria-checked={visible}
+              className="flex w-full items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-left text-[13px] text-text-primary hover:bg-[var(--layer-hover)]"
+              onClick={() => { toggle(); setTitleBarContextMenu(null); }}
+            >
+              <span aria-hidden="true" className="w-3 text-accent-mauve">{visible ? '✓' : ''}</span>
+              {label}
+            </button>
+          ))}
         </div>
       )}
     </div>

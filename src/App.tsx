@@ -112,7 +112,7 @@ function App() {
       if (!targetPaneId) return;
 
       // Add the tab back to the focused pane
-      const newTabId = state.addTab(targetPaneId, tab.channelId ?? '', tab.label);
+      const newTabId = state.addTab(targetPaneId, tab.channelId, tab.label, tab.receiveChannels);
 
       // Populate the tab's entries if there are any
       if (entries.length > 0) {

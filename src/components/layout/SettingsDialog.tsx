@@ -185,8 +185,6 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
     setShowReceived,
     restoreCanvasLayout,
     setRestoreCanvasLayout,
-    simpleMode,
-    setSimpleMode,
     fileDialogDirs,
     setFileDialogDir,
   } = useUIStore();
@@ -358,7 +356,6 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
           center_top_visible: ui.centerTopVisible,
           center_bottom_visible: ui.centerBottomVisible,
           right_panel_visible: ui.rightPanelVisible,
-          simple_mode: ui.simpleMode,
           active_channel_id: useChannelStore.getState().activeChannelId,
           data_view_mode: ui.dataViewMode,
           theme_mode: ui.themeMode,
@@ -408,10 +405,9 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
       ui.setLeftPanelWidth(LEFT_PANEL_MIN_WIDTH);
       ui.setRightPanelWidth(360);
       ui.setCenterSplitRatio(0.5);
-      ui.setCenterTopVisible(true);
+      ui.setCenterTopVisible(false);
       ui.setCenterBottomVisible(true);
       ui.setRightPanelVisible(true);
-      ui.setSimpleMode(false);
       ui.setDataViewMode('text' as 'text');
       ui.setThemeMode('dark' as ThemeMode);
       ui.setSendFormat('ascii');
@@ -505,7 +501,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9000] flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+      className="main-dialog-backdrop fixed inset-0 z-[9000] flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -635,15 +631,6 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
                       { label: 'High Contrast (Light)', value: 'high-contrast-light' },
                     ]}
                     onChange={(v) => setThemeMode(v as 'system'|'light'|'dark'|'high-contrast'|'high-contrast-light')}
-                  />
-                </SettingGroup>
-
-                <SettingGroup title="Layout Mode">
-                  <ToggleSetting
-                    title="Simple mode"
-                    description="Show only the canvas and hide the channel and center panels"
-                    checked={simpleMode}
-                    onChange={setSimpleMode}
                   />
                 </SettingGroup>
 

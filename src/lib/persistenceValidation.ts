@@ -91,6 +91,10 @@ export function isTerminalLayoutSnapshot(value: unknown): value is TerminalLayou
       const tabCandidate = tab as Record<string, unknown>;
       if (typeof tabCandidate.id !== 'string' || tabIds.has(tabCandidate.id)) return false;
       tabIds.add(tabCandidate.id);
+      const receive = tabCandidate.receiveChannels;
+      if (receive !== undefined && receive !== 'all' && (!Array.isArray(receive) || !receive.length
+        || !receive.every(id => typeof id === 'string' && id.length > 0) || new Set(receive).size !== receive.length
+        || (tabCandidate.channelId !== null && !receive.includes(tabCandidate.channelId)))) return false;
       return tabCandidate.id.length > 0
         && typeof tabCandidate.label === 'string'
         && (typeof tabCandidate.channelId === 'string' || tabCandidate.channelId === null)

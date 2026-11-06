@@ -17,7 +17,6 @@ describe('panelWidthInvariance', () => {
       rightPanelVisible: true,
       centerTopVisible: true,
       centerBottomVisible: true,
-      simpleMode: false,
     });
   });
 

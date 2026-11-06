@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { invoke } from '@tauri-apps/api/core';
 import { save } from '@tauri-apps/plugin-dialog';
@@ -6,9 +6,8 @@ import { useCommandStore, toast } from '../../stores';
 import { SaveIcon, DownloadIcon, TrashIcon } from '../common/Icons';
 
 interface Props {
-  open: boolean;
   onClose: () => void;
-  anchorPosition: { top: number; left: number } | null;
+  anchor: HTMLButtonElement;
   tagId: string;
 }
 
@@ -24,19 +23,36 @@ function ExportIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-export const SavedCommandsDialog: React.FC<Props> = ({ open, onClose, anchorPosition, tagId }) => {
+export const SavedCommandsDialog: React.FC<Props> = ({ onClose, anchor, tagId }) => {
   const allSavedConfigs = useCommandStore(state => state.savedConfigs);
   const savedConfigs = useMemo(() => allSavedConfigs[tagId] ?? EMPTY_CONFIGS, [allSavedConfigs, tagId]);
   const [saveName, setSaveName] = useState('');
   const [showSaveInput, setShowSaveInput] = useState(false);
   const saveInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const menu = menuRef.current;
+    if (!menu) return;
+    const positionMenu = () => {
+      const rect = anchor.getBoundingClientRect();
+      const margin = 8;
+      const below = Math.max(0, window.innerHeight - rect.bottom - 2 * margin);
+      const above = Math.max(0, rect.top - 2 * margin);
+      const contentHeight = menu.scrollHeight + menu.offsetHeight - menu.clientHeight;
+      const openBelow = contentHeight <= below || below >= above;
+      const height = Math.min(contentHeight, openBelow ? below : above);
+      menu.style.maxHeight = `${openBelow ? below : above}px`;
+      menu.style.top = `${openBelow ? rect.bottom + margin : rect.top - margin - height}px`;
+      menu.style.left = `${Math.max(margin, Math.min(rect.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - margin))}px`;
+    };
+    positionMenu();
+    window.addEventListener('resize', positionMenu);
+    return () => window.removeEventListener('resize', positionMenu);
+  }, [anchor, showSaveInput, savedConfigs]);
 
   useEffect(() => {
-    if (!open) return;
-    setSaveName('');
-    setShowSaveInput(false);
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -46,7 +62,7 @@ export const SavedCommandsDialog: React.FC<Props> = ({ open, onClose, anchorPosi
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, onClose]);
+  }, [onClose]);
 
   useEffect(() => {
     if (showSaveInput) {
@@ -113,27 +129,16 @@ export const SavedCommandsDialog: React.FC<Props> = ({ open, onClose, anchorPosi
     event.target.value = '';
   }, [tagId, onClose]);
 
-  if (!open || !anchorPosition) return null;
-
   const formatTime = (timestamp: number) => {
     const d = new Date(timestamp);
     return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
   };
 
-  const availableHeightAboveAnchor = Math.max(anchorPosition.top - 12, 0);
-
   return createPortal(
-    <div className="fixed inset-0 bg-black/40 dark:bg-black/60 z-[9000]" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-[9000]" onMouseDown={onClose}>
       <div
-        className="bg-surface-overlay border border-border rounded-2xl shadow-2xl w-[180px] max-w-[90vw] flex flex-col overflow-hidden"
-        style={{
-          position: 'fixed',
-          top: anchorPosition.top,
-          left: anchorPosition.left,
-          transform: 'translate(-100%, calc(-100% - 8px))',
-          transformOrigin: 'bottom right',
-          maxHeight: availableHeightAboveAnchor || undefined,
-        }}
+        ref={menuRef}
+        className="fixed bg-surface-overlay border border-border rounded-2xl shadow-xl w-max max-w-[calc(100vw-16px)] flex flex-col overflow-y-auto overscroll-contain [&>*]:shrink-0"
         onMouseDown={event => event.stopPropagation()}
       >
         <input

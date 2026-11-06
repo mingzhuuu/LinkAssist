@@ -1,11 +1,39 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { emitTo, listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import type { ChannelTab, TerminalEntry } from '../stores/terminalStore';
+import type { BleWriteTarget, ChannelTab, TerminalEntry } from '../stores/terminalStore';
 import type { TerminalChannelSettings } from '../stores/uiStore';
 import { useUIStore } from '../stores/uiStore';
+import { useChannelStore, useBleStore, useSerialStore, useTcpStore } from '../stores';
+
+function detachedConnections() {
+  const serial = useSerialStore.getState();
+  const tcp = useTcpStore.getState();
+  const ble = useBleStore.getState();
+  return {
+    channels: useChannelStore.getState().channels,
+    serial: { connectionMap: serial.connectionMap },
+    tcp: { connectionMap: tcp.connectionMap, mode: tcp.mode, channelConfigs: tcp.channelConfigs,
+      clientConnections: tcp.clientConnections, serverClients: tcp.serverClients, udpBound: tcp.udpBound, udpAddr: tcp.udpAddr },
+    ble: { deviceChannelMap: ble.deviceChannelMap, channelStates: Object.fromEntries(
+      Object.entries(ble.channelStates).map(([id, state]) => [id, { ...state, devices: [] }]),
+    ) },
+  };
+}
+
+export type DetachedConnections = ReturnType<typeof detachedConnections>;
+
+export function applyDetachedConnections(context: DetachedConnections) {
+  useChannelStore.setState({ channels: context.channels });
+  useSerialStore.setState(context.serial);
+  useTcpStore.setState(context.tcp);
+  useBleStore.setState(context.ble);
+}
 
 export interface DetachPayload {
+  connections?: DetachedConnections;
+  writeTarget?: BleWriteTarget | null;
+  udpTargetAddr?: string | null;
   tab: ChannelTab;
   entries: TerminalEntry[];
   channelType?: string;
@@ -77,15 +105,25 @@ export async function detachTabToWindow(
     };
 
     const deliverInit = async () => {
-      await emitTo(label, 'detach-init', {
-        tab: payload.tab,
-        entries: payload.entries,
-        channelType: payload.channelType,
-        terminalSettings: payload.terminalSettings,
-      });
+      await emitTo(label, 'detach-init', { ...payload, connections: detachedConnections() });
 
       if (initSent) return;
       initSent = true;
+      // Detached windows own separate stores. Keep channel identities and live routes current.
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const sync = () => {
+        if (timer !== undefined) return;
+        timer = setTimeout(() => {
+          timer = undefined;
+          void emitTo(label, 'terminal-connections', detachedConnections()).catch(() => {});
+        }, 0);
+      };
+      const subscriptions = [useChannelStore, useSerialStore, useTcpStore, useBleStore].map(store => store.subscribe(sync));
+      void webview.once('tauri://destroyed', () => {
+        subscriptions.forEach(unsubscribe => unsubscribe());
+        clearTimeout(timer);
+      });
+      sync();
 
       // Reveal the window only once its initial state has been delivered.
       try {

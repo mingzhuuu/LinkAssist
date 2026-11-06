@@ -4,13 +4,11 @@ import {
   useBleStore,
   useChannelStore,
   useCommandStore,
-  useSerialStore,
-  useTcpStore,
   useTerminalStore,
   toast,
 } from '../../stores';
 import { ChevronDownIcon, EditIcon, SendIcon, TrashIcon } from '../common/Icons';
-import { sendWithImmediateTxEcho } from '../../lib/terminalSend';
+import { prepareTerminalNetworkSend, sendWithImmediateTxEcho } from '../../lib/terminalSend';
 import { parseTerminalPayload, toHex } from './terminalUtils';
 
 interface Props {
@@ -48,19 +46,14 @@ function MenuDivider() {
   return <div className="mx-2 border-t border-border/80" />;
 }
 
-function resolveTagIdFromPane(paneId: string): string {
-  const terminalStore = useTerminalStore.getState();
-  const pane = terminalStore.panes[paneId];
-  const activeTab = pane?.tabs.find(tab => tab.id === pane.activeTabId);
-  return activeTab?.channelId ?? useChannelStore.getState().activeChannelId ?? '__global_saved_commands__';
-}
-
 export const SavedCommandsPanel: React.FC<Props> = ({ paneId }) => {
   const selectedCommandId = useCommandStore(state => state.selectedCommandId);
   const selectedGroupId = useCommandStore(state => state.selectedGroupId);
   const terminalPane = useTerminalStore(state => state.panes[paneId]);
 
-  const tagId = useMemo(() => resolveTagIdFromPane(paneId), [paneId, terminalPane?.activeTabId]);
+  const activeChannelId = useChannelStore(state => state.activeChannelId);
+  const activeTab = terminalPane?.tabs.find(tab => tab.id === terminalPane.activeTabId);
+  const tagId = activeTab?.channelId ?? activeChannelId ?? '__global_saved_commands__';
   const commandSet = useCommandStore(state => state.commandSets[tagId]) ?? EMPTY_COMMAND_SET;
   const expandedGroups = useCommandStore(state => state.expandedGroups);
 
@@ -181,9 +174,10 @@ export const SavedCommandsPanel: React.FC<Props> = ({ paneId }) => {
   const appendEntryToChannel = useTerminalStore.getState().appendEntryToChannel;
 
   const handleSendCommand = useCallback(async (rawCommand: string, name?: string) => {
-    const targetChannelId = resolveTagIdFromPane(paneId);
+    const pane = useTerminalStore.getState().panes[paneId];
+    const targetChannelId = pane?.tabs.find(tab => tab.id === pane.activeTabId)?.channelId;
     const channel = useChannelStore.getState().channels.find(item => item.id === targetChannelId);
-    if (!channel) {
+    if (!pane || !channel) {
       toast.error('No linked channel available for saved command');
       return;
     }
@@ -199,31 +193,9 @@ export const SavedCommandsPanel: React.FC<Props> = ({ paneId }) => {
     try {
       let send: (() => Promise<unknown>) | undefined;
 
-      if (channel.type === 'serial') {
-        const { openConnections } = useSerialStore.getState();
-        if (openConnections.length === 0) {
-          toast.error('No serial port open');
-          return;
-        }
-        send = () => invoke('send_serial_data', { connectionId: openConnections[0], data: parsed.bytes });
-      } else if (channel.type === 'tcp') {
-        const tcpState = useTcpStore.getState();
-        if (tcpState.mode === 'client' && tcpState.clientConnections.length > 0) {
-          send = () => invoke('tcp_send', { connectionId: tcpState.clientConnections[0].id, data: parsed.bytes });
-        } else if (tcpState.mode === 'server' && tcpState.serverClients.length > 0) {
-          send = () => invoke('tcp_server_send', { clientId: tcpState.serverClients[0].id, data: parsed.bytes });
-        } else if (tcpState.mode === 'udp' && tcpState.udpBound) {
-          const udpAddr = useTerminalStore.getState().panes[paneId]?.udpTargetAddr;
-          if (!udpAddr) {
-            toast.error('No UDP target set on linked terminal');
-            return;
-          }
-          send = () => invoke('udp_send', { addr: udpAddr, data: parsed.bytes });
-        } else {
-          toast.error('No active TCP connection');
-          return;
-        }
-      } else if (channel.type === 'ble') {
+      if (channel.type !== 'ble') {
+        send = prepareTerminalNetworkSend(channel, pane, parsed.bytes, message => appendEntryToChannel(channel.id, 'system', message));
+      } else {
         const connectedDeviceId = useBleStore.getState().getConnectedDeviceIdForChannel(channel.id);
         if (!connectedDeviceId) {
           toast.error('BLE not connected');

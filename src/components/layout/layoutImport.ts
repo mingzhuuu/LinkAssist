@@ -60,10 +60,7 @@ export function importLayout(content: string, layoutFile?: string): void {
         }
         if (typeof uiData.right_panel_width === 'number') ui.setRightPanelWidth(uiData.right_panel_width);
         if (typeof uiData.center_split_ratio === 'number') ui.setCenterSplitRatio(uiData.center_split_ratio);
-        if (typeof uiData.center_top_visible === 'boolean') ui.setCenterTopVisible(uiData.center_top_visible);
-        if (typeof uiData.center_bottom_visible === 'boolean') ui.setCenterBottomVisible(uiData.center_bottom_visible);
-        if (typeof uiData.right_panel_visible === 'boolean') ui.setRightPanelVisible(uiData.right_panel_visible);
-        if (typeof uiData.simple_mode === 'boolean') ui.setSimpleMode(uiData.simple_mode);
+        ui.restorePanelVisibility(uiData);
         const dvm = uiData.data_view_mode;
         if (dvm === 'text' || dvm === 'table' || dvm === 'image') ui.setDataViewMode(dvm);
         if (typeof uiData.theme_mode === 'string') ui.setThemeMode(uiData.theme_mode as ThemeMode);
@@ -71,7 +68,6 @@ export function importLayout(content: string, layoutFile?: string): void {
         if (sf === 'ascii' || sf === 'hex') ui.setSendFormat(sf);
         const rf = uiData.receive_format;
         if (rf === 'ascii' || rf === 'hex') ui.setReceiveFormat(rf);
-        if (typeof uiData.channel_panel_visible === 'boolean') ui.setChannelPanelVisible(uiData.channel_panel_visible);
         if (typeof uiData.show_input_prefix === 'boolean') ui.setShowInputPrefix(uiData.show_input_prefix);
         if (typeof uiData.show_timestamp === 'boolean') ui.setShowTimestamp(uiData.show_timestamp);
         if (typeof uiData.show_received === 'boolean') ui.setShowReceived(uiData.show_received);

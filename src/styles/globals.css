@@ -3,6 +3,169 @@
 @source "../";
 @source not "../__tests__";
 
+body:has([data-windowed-frame="true"]) .main-dialog-backdrop {
+  clip-path: inset(0 round 14px);
+}
+
+/* The same card slides out from the channel bar in preview, then docks when pinned. */
+.channel-card-accent-blue {
+  --card-accent: var(--accent-blue);
+}
+
+.channel-card-accent-mauve {
+  --card-accent: var(--accent-mauve);
+}
+
+.channel-card-accent-green {
+  --card-accent: var(--accent-green);
+}
+
+.channel-config-drawer {
+  --card-preview-bg: color-mix(in srgb, rgb(var(--road)) 82%, rgb(var(--surface)));
+  --card-border-color: rgb(var(--card-accent, var(--accent-mauve)) / 0.58);
+  --card-shadow: drop-shadow(0 16px 28px rgb(0 0 0 / 0.16)) drop-shadow(0 4px 10px rgb(0 0 0 / 0.06));
+  visibility: hidden;
+  pointer-events: none;
+  transition: visibility 0s 320ms;
+}
+
+.dark .channel-config-drawer {
+  --card-shadow: drop-shadow(0 18px 32px rgb(0 0 0 / 0.56)) drop-shadow(0 4px 12px rgb(0 0 0 / 0.34));
+}
+
+.high-contrast .channel-config-drawer,
+.high-contrast-light .channel-config-drawer {
+  --card-preview-bg: color-mix(in srgb, rgb(var(--road)) 92%, rgb(var(--surface)));
+  --card-border-color: rgb(var(--card-accent, var(--accent-mauve)) / 0.9);
+}
+
+.channel-config-drawer[data-state="preview"],
+.channel-config-drawer[data-state="pinned"] {
+  visibility: visible;
+  transition: visibility 0s 0s;
+}
+
+.channel-card-slide {
+  opacity: 0;
+  transform: translateX(calc(-100% - 16px));
+  will-change: transform, opacity;
+  transition:
+    transform 300ms cubic-bezier(0.32, 0, 0.2, 1),
+    opacity 200ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.channel-config-drawer[data-state="preview"] .channel-card-slide,
+.channel-config-drawer[data-state="pinned"] .channel-card-slide {
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    transform 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.channel-card-blur {
+  pointer-events: none;
+  backdrop-filter: blur(20px) saturate(1.12);
+  -webkit-backdrop-filter: blur(20px) saturate(1.12);
+  transition: opacity 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.channel-card-outline {
+  pointer-events: none;
+  filter: var(--card-shadow);
+  transition: opacity 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The joined edge crosses the rail. A clipped drop shadow leaves a vertical seam there. */
+.channel-config-drawer[data-attached="true"] .channel-card-outline {
+  filter: none;
+}
+
+.channel-card-outline path {
+  fill: var(--card-preview-bg);
+  stroke: var(--card-border-color);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  transition:
+    fill 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    stroke 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.channel-card-body {
+  background-color: transparent;
+  transition:
+    background-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.channel-config-drawer.is-morphing .channel-card-body {
+  transition:
+    left 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    top 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    width 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    height 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.channel-config-drawer[data-state="preview"] .channel-card-body.is-self-framed {
+  background-color: var(--card-preview-bg);
+  border: 1px solid var(--card-border-color);
+  backdrop-filter: blur(20px) saturate(1.12);
+  -webkit-backdrop-filter: blur(20px) saturate(1.12);
+  box-shadow: 0 16px 36px -14px rgb(0 0 0 / 0.18), 0 4px 12px -4px rgb(0 0 0 / 0.06);
+}
+
+.channel-config-drawer[data-state="pinned"] .channel-card-blur,
+.channel-config-drawer[data-state="pinned"] .channel-card-outline {
+  opacity: 0;
+}
+
+.channel-config-drawer[data-state="pinned"] .channel-card-body {
+  background-color: rgb(var(--surface));
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.channel-panel-card {
+  background-color: rgb(var(--surface));
+  transition: background-color 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.channel-config-drawer[data-state="preview"] .channel-panel-card {
+  background-color: rgb(var(--surface) / 0.58);
+}
+
+.channel-terminal-area {
+  transition: top 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.channel-config-drawer[data-state="pinned"] + .channel-terminal-area {
+  transition: top 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.channel-config-drawer.is-resizing,
+.channel-config-drawer.is-resizing .channel-card-slide,
+.channel-config-drawer.is-resizing .channel-card-body,
+.channel-terminal-area.is-resizing,
+.channel-config-drawer + .channel-terminal-area.is-resizing {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .channel-config-drawer,
+  .channel-card-slide,
+  .channel-card-blur,
+  .channel-card-outline,
+  .channel-card-body,
+  .channel-config-drawer.is-morphing .channel-card-body,
+  .channel-config-drawer[data-state] + .channel-terminal-area,
+  .channel-terminal-area,
+  .channel-panel-card {
+    transition: none;
+  }
+}
+
 /* Preserve v3's visual scale while using the maintained compiler. */
 @theme {
   --radius-sm: 0.125rem;
@@ -12,7 +175,8 @@
 }
 
 @layer base {
-  :root {
+  :root,
+  .light-surface {
     color-scheme: light;
 
     --surface: 238 242 247;
@@ -193,18 +357,6 @@
            text-text-muted hover:text-text-primary hover:bg-[var(--layer-hover)]
            transition-colors duration-100 cursor-pointer;
   }
-  .terminal-tab-accent-mauve {
-    @apply bg-accent-mauve/10;
-    box-shadow: inset 0 -2px 0 0 rgb(var(--accent-mauve) / 0.55);
-  }
-  .terminal-tab-accent-green {
-    @apply bg-accent-green/10;
-    box-shadow: inset 0 -2px 0 0 rgb(var(--accent-green) / 0.55);
-  }
-  .terminal-tab-accent-blue {
-    @apply bg-accent-blue/10;
-    box-shadow: inset 0 -2px 0 0 rgb(var(--accent-blue) / 0.55);
-  }
   .btn-channel-action {
     @apply inline-flex min-w-[88px] h-8 items-center justify-center rounded-lg px-2.5
            text-sm font-medium font-sans transition-all duration-150;
@@ -272,20 +424,57 @@
   }
   .channel-item-active::before {
     content: '';
-    bottom: 3px;
+    bottom: 2px;
     left: var(--channel-active-left-inset, 2px);
     right: 3px;
-    top: 3px;
-    @apply pointer-events-none absolute z-0 rounded-sm border-l-2 ring-1 ring-inset;
+    top: 2px;
+    border-radius: 6px;
+    transition:
+      right 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-radius 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 180ms ease,
+      background-color 220ms ease;
+    @apply pointer-events-none absolute z-0 border-l-2 ring-1 ring-inset;
+  }
+  .channel-item-active-blue {
+    --channel-accent: var(--accent-blue);
   }
   .channel-item-active-blue::before {
     @apply border-l-accent-blue bg-accent-blue/10 ring-accent-blue/20;
   }
+  .channel-item-active-mauve {
+    --channel-accent: var(--accent-mauve);
+  }
   .channel-item-active-mauve::before {
     @apply border-l-accent-mauve bg-accent-mauve/10 ring-accent-mauve/20;
   }
+  .channel-item-active-green {
+    --channel-accent: var(--accent-green);
+  }
   .channel-item-active-green::before {
     @apply border-l-accent-green bg-accent-green/10 ring-accent-green/20;
+  }
+  .channel-item-active.channel-item-connected {
+    --channel-connected-bg: color-mix(in srgb, rgb(var(--road)) 82%, rgb(var(--surface)));
+  }
+  .high-contrast .channel-item-active.channel-item-connected,
+  .high-contrast-light .channel-item-active.channel-item-connected {
+    --channel-connected-bg: color-mix(in srgb, rgb(var(--road)) 92%, rgb(var(--surface)));
+  }
+  .channel-item-active.channel-item-connected::before {
+    right: 0;
+    border-radius: 6px 0 0 6px;
+    border-top: 1px solid rgb(var(--channel-accent, var(--accent-mauve)) / 0.58);
+    border-bottom: 1px solid rgb(var(--channel-accent, var(--accent-mauve)) / 0.58);
+    border-right: 0;
+    border-left: 2px solid rgb(var(--channel-accent, var(--accent-mauve)));
+    box-shadow: none;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, rgb(var(--channel-accent, var(--accent-mauve))) 14%, var(--channel-connected-bg)) 0%,
+      var(--channel-connected-bg) 82%,
+      var(--channel-connected-bg) 100%
+    );
   }
   .channel-selector {
     @apply relative inline-grid h-4 w-4 shrink-0 place-items-center rounded-full border border-border bg-surface text-accent-mauve transition-colors duration-100;
@@ -301,15 +490,6 @@
   }
   .channel-selector:focus-visible {
     @apply ring-2 ring-accent-mauve/40 ring-offset-2 ring-offset-[var(--ring-offset)] outline-none;
-  }
-  .terminal-tag-text {
-    position: relative;
-    top: 1px;
-  }
-  .channel-tag-text-offset {
-    position: relative;
-    top: 1px;
-    left: 4px;
   }
   /* Input base */
   .input-base {
