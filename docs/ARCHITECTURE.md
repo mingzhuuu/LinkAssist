@@ -43,7 +43,7 @@ Core 不是一个独立无 Tauri 的网络守护程序：隐藏 Core 仍基于 T
 | `src/lib/persistenceValidation.ts` | 纯校验 | 可独立测试；不修改 store、不调用 IPC |
 | `src/lib/` 其他文件 | 命令发送、通道注册、测试 API、纯工具 | 避免成为聚合全部业务的入口 |
 | `src-tauri/src/commands/` | Tauri 接口适配 | 注册到 lib.rs；错误类型保持兼容 |
-| `src-tauri/src/{ble,serial,tcp,protocol}/` | 设备 I/O 与协议管理 | 长时间读取在任务中，不阻塞命令读循环 |
+| `src-tauri/src/{ble,serial,tcp,protocol}/` | 设备 I/O 与协议管理 | 长时间读取在任务中，不阻塞命令读循环；Windows COM 读写及句柄释放由专用线程承载，通过有界接收队列/写入确认连接异步层，驱动挂起不能阻塞共用 IOCP；非 Windows 串口继续使用 tokio-serial |
 | `channel_registry.rs` / `channel_activity.rs` | 连接寻址、工具活动 | 逻辑 channelId 不等于 connectionId |
 | `mcp_tools.rs` / `mcp_tool_script.rs` | 工具定义、调度、Lua 执行 | 定义和执行分支同步；业务编码应留在协议/脚本 |
 | `core_http.rs` / `discovery.rs` | 本机 HTTP、鉴权、租约、发现 | 不暴露到外网；不将 token 写入公开文档 |

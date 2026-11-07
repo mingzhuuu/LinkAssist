@@ -147,6 +147,12 @@ describe('Store Tests', () => {
     expect(useUIStore.getState().canvasViewportResetVersion).toBe(previousVersion + 1);
   });
 
+  it('uiStore: defaults channel configuration to visible and terminal timestamps to hidden', () => {
+    const initial = useUIStore.getInitialState();
+    expect(initial.centerTopVisible).toBe(true);
+    expect(initial.showTimestamp).toBe(false);
+  });
+
   it('uiStore: keeps terminal display settings isolated per channel', () => {
     const store = useUIStore.getState();
     store.setTerminalChannelSettings('serial-a', {

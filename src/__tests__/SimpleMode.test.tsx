@@ -92,7 +92,7 @@ describe('Title-bar panel visibility', () => {
     };
     expect(screen.queryByTitle('Hide center panels')).toBeNull();
     expect(screen.queryByTitle('Hide right panel')).toBeNull();
-    toggle('Channel Configuration', true);
+    expect(useUIStore.getState().centerTopVisible).toBe(true);
     toggle('Commands', false);
     expect(useUIStore.getState().centerTopVisible).toBe(true);
     toggle('Channel Configuration', false);
@@ -103,10 +103,23 @@ describe('Title-bar panel visibility', () => {
     toggle('Channels', false);
     expect(screen.queryByTestId('left-panel')).toBeNull();
     expect(titleBar.querySelector('button.rounded-full')).toBeNull();
-    toggle('Channels', true);
+    expect(titleBar.querySelectorAll('button')).toHaveLength(3);
+    const mainContentArea = document.querySelector<HTMLElement>('[data-main-content-area]')!;
+    const outerFrame = document.querySelector<HTMLElement>('[data-windowed-frame]')!;
+    expect(mainContentArea.hidden).toBe(true);
+    expect(mainContentArea.className.split(' ')).toContain('hidden');
+    expect(outerFrame.style.inset).toBe('0px');
+    // Right-clicking the main window frame itself opens the visibility control menu when all panels are hidden
+    fireEvent.contextMenu(outerFrame);
+    const channelsItem = screen.getByRole('menuitemcheckbox', { name: 'Channels' });
+    expect(channelsItem.getAttribute('aria-checked')).toBe('false');
+    fireEvent.click(channelsItem);
+    expect(mainContentArea.hidden).toBe(false);
+    expect(outerFrame.style.inset).toBe('0px');
     expect(screen.getByTestId('left-panel')).toBeTruthy();
     expect(titleBar.querySelector('button.rounded-full')).toBeTruthy();
     toggle('Canvas', true);
+    toggle('Channel Configuration', true);
     toggle('Commands', true);
     expect(screen.getByTestId('center-panel').parentElement?.hidden).toBe(false);
     expect(screen.getByTestId('canvas-panel')).toBeTruthy();
@@ -134,5 +147,76 @@ describe('Title-bar panel visibility', () => {
     });
     ui.restorePanelVisibility({ simple_mode: false, center_bottom_visible: true });
     expect(useUIStore.getState()).toMatchObject({ centerBottomVisible: true, channelPanelVisible: false });
+  });
+
+  it('extends the active panel to the main frame border with a straight top border when channels are hidden and only canvas or only center is visible', async () => {
+    await act(async () => { render(<MainLayout />); });
+    const titleBar = document.querySelector<HTMLElement>('[data-window-titlebar]')!;
+    const frameContent = titleBar.parentElement!;
+    const centerRegion = () => document.querySelector<HTMLElement>('[data-center-panel-region]')!;
+    const rightRegion = () => document.querySelector<HTMLElement>('[data-right-panel-region]');
+
+    // Default: all visible -> inset frame with rounded-xl panels
+    expect(frameContent.className.split(' ')).toContain('p-0.5');
+    expect(centerRegion().className.split(' ')).toContain('rounded-xl');
+    expect(rightRegion()?.className.split(' ')).toContain('rounded-xl');
+
+    // Hide channels while both center and canvas are visible -> still inset and rounded
+    act(() => {
+      useUIStore.setState({
+        channelPanelVisible: false,
+        centerTopVisible: true,
+        centerBottomVisible: true,
+        rightPanelVisible: true,
+      });
+    });
+    expect(frameContent.className.split(' ')).toContain('p-0.5');
+    expect(centerRegion().className.split(' ')).toContain('rounded-xl');
+    expect(rightRegion()?.className.split(' ')).toContain('rounded-xl');
+
+    // Only canvas visible with channels hidden -> extends left/right/bottom to frame, straight top border
+    act(() => {
+      useUIStore.setState({
+        channelPanelVisible: false,
+        centerTopVisible: false,
+        centerBottomVisible: false,
+        rightPanelVisible: true,
+      });
+    });
+    expect(frameContent.className.split(' ')).toContain('pt-0.5');
+    expect(frameContent.className.split(' ')).not.toContain('p-0.5');
+    expect(titleBar.className.split(' ')).toContain('px-0.5');
+    expect(rightRegion()?.className.split(' ')).toContain('border-t');
+    expect(rightRegion()?.className.split(' ')).not.toContain('rounded-xl');
+    expect(rightRegion()?.className.split(' ')).not.toContain('border');
+
+    // Only center (commands only) visible with channels hidden -> extends left/right/bottom to frame, straight top border
+    act(() => {
+      useUIStore.setState({
+        channelPanelVisible: false,
+        centerTopVisible: false,
+        centerBottomVisible: true,
+        rightPanelVisible: false,
+      });
+    });
+    expect(frameContent.className.split(' ')).toContain('pt-0.5');
+    expect(frameContent.className.split(' ')).not.toContain('p-0.5');
+    expect(titleBar.className.split(' ')).toContain('px-0.5');
+    expect(centerRegion().className.split(' ')).toContain('border-t');
+    expect(centerRegion().className.split(' ')).not.toContain('rounded-xl');
+    expect(centerRegion().className.split(' ')).not.toContain('border');
+
+    // Only center (channel configuration only) visible with channels hidden -> extends left/right/bottom to frame, straight top border
+    act(() => {
+      useUIStore.setState({
+        channelPanelVisible: false,
+        centerTopVisible: true,
+        centerBottomVisible: false,
+        rightPanelVisible: false,
+      });
+    });
+    expect(frameContent.className.split(' ')).toContain('pt-0.5');
+    expect(centerRegion().className.split(' ')).toContain('border-t');
+    expect(centerRegion().className.split(' ')).not.toContain('rounded-xl');
   });
 });

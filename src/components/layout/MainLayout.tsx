@@ -54,6 +54,22 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
   const setMcpToolsEnabled = useMcpStore((state) => state.setEnabled);
   const [isMaximized, setIsMaximized] = useState(false);
   const [frameOverscanned, setFrameOverscanned] = useState(false);
+  const [windowFrameSize, setWindowFrameSize] = useState<{ width: number; height: number } | null>(null);
+
+  const applyPhysicalWindowSize = useCallback((size: { width: number; height: number } | null | undefined) => {
+    if (!size || typeof size.width !== 'number' || typeof size.height !== 'number' || size.width <= 0 || size.height <= 0) {
+      return;
+    }
+    const dpr = window.devicePixelRatio || 1;
+    const width = size.width / dpr;
+    const height = size.height / dpr;
+    setWindowFrameSize((current) => {
+      if (current && current.width === width && current.height === height) {
+        return current;
+      }
+      return { width, height };
+    });
+  }, []);
 
   const applyMaximizedState = useCallback((maximized: boolean) => {
     isMaximizedRef.current = maximized;
@@ -63,10 +79,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
   const syncMaximizedState = useCallback(async () => {
     const requestId = ++maximizeSyncRequestRef.current;
     try {
-      const maximized = await appWindow.isMaximized();
+      const [maximized, innerSize] = await Promise.all([
+        appWindow.isMaximized(),
+        typeof appWindow.innerSize === 'function' ? appWindow.innerSize().catch(() => null) : Promise.resolve(null),
+      ]);
       if (requestId === maximizeSyncRequestRef.current && !maximizeTransitionRef.current) {
         applyMaximizedState(maximized);
         setFrameOverscanned(maximized);
+        applyPhysicalWindowSize(innerSize);
       }
     } catch {
       if (requestId === maximizeSyncRequestRef.current && !maximizeTransitionRef.current) {
@@ -74,12 +94,22 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
         setFrameOverscanned(false);
       }
     }
-  }, [appWindow, applyMaximizedState]);
+  }, [appWindow, applyMaximizedState, applyPhysicalWindowSize]);
 
   useEffect(() => {
     void syncMaximizedState();
 
-    const unlistenPromise = appWindow.onResized(() => {
+    const handleViewportResize = () => {
+      if (!maximizeTransitionRef.current) {
+        void syncMaximizedState();
+      }
+    };
+    window.addEventListener('resize', handleViewportResize);
+
+    const unlistenPromise = appWindow.onResized((event?: { payload?: { width: number; height: number } }) => {
+      if (event?.payload) {
+        applyPhysicalWindowSize(event.payload);
+      }
       if (maximizeTransitionRef.current) return;
 
       // If the window was previously maximized and resizes, it is being restored
@@ -106,13 +136,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
 
     return () => {
       maximizeSyncRequestRef.current += 1;
+      window.removeEventListener('resize', handleViewportResize);
       if (resizeSettleTimerRef.current !== null) {
         window.clearTimeout(resizeSettleTimerRef.current);
         resizeSettleTimerRef.current = null;
       }
       void unlistenPromise.then((unlisten) => unlisten());
     };
-  }, [appWindow, syncMaximizedState]);
+  }, [appWindow, applyPhysicalWindowSize, persistenceReady, syncMaximizedState]);
 
   const handleToggleMaximize = useCallback(async () => {
     if (maximizeTransitionRef.current) return;
@@ -306,22 +337,33 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
   );
   const centerHidden = !centerTopVisible && !centerBottomVisible;
   const previewOverlay = centerHidden && channelConfigPreview;
+  const allPanelsHidden = !channelPanelVisible && centerHidden && !rightPanelVisible && !previewOverlay;
+  const singlePanelFullBleed = !channelPanelVisible && (!centerHidden !== rightPanelVisible);
   const roundContentBottomRight = rightPanelVisible && !frameOverscanned;
+  const rootFrameStyle = !frameOverscanned && windowFrameSize
+    ? { width: `${windowFrameSize.width}px`, height: `${windowFrameSize.height}px` }
+    : undefined;
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-transparent">
+    <div
+      className="relative w-full h-screen overflow-hidden bg-transparent"
+      style={rootFrameStyle}
+    >
       <div
         data-windowed-frame={!frameOverscanned}
-        className="absolute overflow-hidden rounded-[14px] border border-border bg-road text-text-primary"
+        className={`absolute overflow-hidden rounded-[14px] border border-border bg-road text-text-primary ${allPanelsHidden ? 'select-none' : ''}`}
         style={{ inset: frameOverscanned ? '-14px' : '0' }}
+        onMouseDown={allPanelsHidden ? handleTitleBarMouseDown : undefined}
+        onDoubleClick={allPanelsHidden ? handleTitleBarDoubleClick : undefined}
+        onContextMenu={allPanelsHidden ? handleTitleBarContextMenu : undefined}
       >
         <div
-          className="absolute flex flex-col min-h-0 p-0.5"
+          className={`absolute flex flex-col min-h-0 ${singlePanelFullBleed ? 'pt-0.5' : 'p-0.5'}`}
           style={{ inset: frameOverscanned ? '14px' : '0' }}
         >
           {/* ── Title bar row: road portion + content portion ── */}
           <div
-            className="flex shrink-0 h-8 select-none"
+            className={`flex shrink-0 h-8 select-none ${singlePanelFullBleed ? 'px-0.5' : ''}`}
             data-window-titlebar
             onMouseDown={handleTitleBarMouseDown}
             onDoubleClick={handleTitleBarDoubleClick}
@@ -351,7 +393,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
           </div>
 
           {/* ── Main content area ── */}
-          <div className="relative flex flex-1 min-h-0">
+          <div
+            data-main-content-area
+            hidden={allPanelsHidden}
+            className={allPanelsHidden ? 'hidden' : 'relative flex flex-1 min-h-0'}
+          >
             {/* ── Left channel panel: part of the "road" ── */}
             {channelPanelVisible && (
               <>
@@ -383,7 +429,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
                 hidden={centerHidden && !previewOverlay}
                 className={[
                   'h-full shrink-0',
-                  previewOverlay ? 'pointer-events-none absolute inset-y-0 left-0 max-w-full' : 'relative rounded-xl border border-[color:var(--divider-default)] bg-surface',
+                  previewOverlay
+                    ? 'pointer-events-none absolute inset-y-0 left-0 max-w-full'
+                    : singlePanelFullBleed
+                      ? 'relative border-t border-[color:var(--divider-default)] bg-surface'
+                      : 'relative rounded-xl border border-[color:var(--divider-default)] bg-surface',
                   channelConfigPreview ? 'z-50' : 'overflow-hidden',
                   rightPanelVisible ? '' : 'flex-1',
                 ].join(' ')}
@@ -400,7 +450,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
               {rightPanelVisible ? (
                 <div
                   data-right-panel-region
-                  className="relative z-0 h-full min-w-0 flex-1 overflow-hidden rounded-xl border border-[color:var(--divider-default)] bg-surface"
+                  className={`relative z-0 h-full min-w-0 flex-1 overflow-hidden bg-surface ${
+                    singlePanelFullBleed
+                      ? 'border-t border-[color:var(--divider-default)]'
+                      : 'rounded-xl border border-[color:var(--divider-default)]'
+                  }`}
                 >
                   <RightPanel
                     layoutReady={persistenceReady}
@@ -409,22 +463,15 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
                     seamlessMaximizedCanvas
                   />
                 </div>
-              ) : centerHidden ? (
+              ) : centerHidden && !allPanelsHidden ? (
                 <div className="flex-1 h-full rounded-xl border border-[color:var(--divider-default)] bg-surface" />
               ) : null}
             </div>
-
-            {showSettingsDialog && <Suspense fallback={null}><SettingsDialog open onClose={() => setShowSettingsDialog(false)} /></Suspense>}
           </div>
+
+          {showSettingsDialog && <Suspense fallback={null}><SettingsDialog open onClose={() => setShowSettingsDialog(false)} /></Suspense>}
         </div>
       </div>
-      {/* Paint the bottom frame edge above the content without changing its spacing. */}
-      {!frameOverscanned && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-[2147483647] rounded-[14px] shadow-[inset_0_-1px_0_var(--border-default)]"
-        />
-      )}
       {titleBarContextMenu && (
         <div
           ref={titleBarContextMenuRef}

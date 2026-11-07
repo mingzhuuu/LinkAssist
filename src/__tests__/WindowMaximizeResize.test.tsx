@@ -3,12 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MainLayout } from '../components/layout/MainLayout';
 import { useUIStore } from '../stores';
 
-let resizeCallback: (() => void) | null = null;
+let resizeCallback: ((event?: { payload?: { width: number; height: number } }) => void) | null = null;
 
 const { appWindowMock, invokeMock } = vi.hoisted(() => ({
   appWindowMock: {
     isMaximized: vi.fn().mockResolvedValue(false),
-    onResized: vi.fn().mockImplementation((cb: () => void) => {
+    innerSize: vi.fn().mockResolvedValue(null),
+    onResized: vi.fn().mockImplementation((cb: (event?: { payload?: { width: number; height: number } }) => void) => {
       resizeCallback = cb;
       return Promise.resolve(() => {});
     }),
@@ -152,5 +153,31 @@ describe('Window resize and maximize transitions', () => {
 
     // Inset must IMMEDIATELY switch to '0px' synchronously
     expect(outerFrame.style.inset).toBe('0px');
+  });
+
+  it('aligns the windowed root container to fractional-DPI physical bounds without duplicate bottom border overlays', async () => {
+    vi.stubGlobal('devicePixelRatio', 1.5);
+    appWindowMock.isMaximized.mockResolvedValue(false);
+    appWindowMock.innerSize.mockResolvedValue({ width: 1812, height: 1220 });
+
+    let renderResult: ReturnType<typeof render> | undefined;
+    await act(async () => {
+      renderResult = render(<MainLayout />);
+    });
+    expect(renderResult).toBeDefined();
+
+    const roundedFrames = document.querySelectorAll('.rounded-\\[14px\\]');
+    expect(roundedFrames).toHaveLength(1);
+
+    const outerFrame = roundedFrames[0] as HTMLElement;
+    const rootViewport = outerFrame.parentElement as HTMLElement;
+    expect(rootViewport).toBeTruthy();
+    expect(parseFloat(rootViewport.style.width)).toBeCloseTo(1812 / 1.5, 4);
+    expect(parseFloat(rootViewport.style.height)).toBeCloseTo(1220 / 1.5, 4);
+
+    act(() => {
+      resizeCallback?.({ payload: { width: 1812, height: 1219 } });
+    });
+    expect(parseFloat(rootViewport.style.height)).toBeCloseTo(1219 / 1.5, 4);
   });
 });

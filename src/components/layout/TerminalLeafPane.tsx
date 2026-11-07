@@ -1,4 +1,4 @@
-import React, { Component, useCallback, useEffect, useRef, useState } from 'react';
+import React, { Component, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { emit } from '@tauri-apps/api/event';
@@ -13,7 +13,10 @@ import { SavedCommandsDialog } from './SavedCommandsDialog';
 import { ResizeHandle } from './ResizeHandle';
 import { resolveTerminalLink, useValidTerminalChannels, TerminalChannelPicker, terminalChannels, terminalTabColor, terminalTabLabel } from './TerminalChannels';
 import { TerminalContextMenu } from './TerminalContextMenu';
-import { buildBleWriteSelectionMenu, formatBleUuid, formatInputTimestamp, formatTerminalEntryParts, formatTerminalEntryText, parseTerminalPayload, toHex } from './terminalUtils';
+import type { TerminalChannelSettings } from '../../stores/uiStore';
+import { TerminalTabMenu } from './TerminalTabMenu';
+import { buildBleWriteSelectionMenu, coalesceTerminalEntries, entryEndsWithLineBreak, formatBleUuid, formatInputTimestamp, formatTerminalEntryParts, formatTerminalEntryText, parseTerminalPayload, toHex } from './terminalUtils';
+import { useInteractiveTerminalInput } from './InteractiveTerminal';
 
 class PanelErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { error: Error | null }> {
   state: { error: Error | null } = { error: null };
@@ -151,27 +154,39 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
 
   const activeTab = pane?.tabs.find(t => t.id === pane.activeTabId);
   useValidTerminalChannels(paneId, pane?.tabs, channels);
-  const visibleEntries = visibleTerminalEntries(activeTab, pane?.entries ?? []);
   const selectedChannels = activeTab ? terminalChannels(activeTab, channels) : [];
-  const linkedChannel = selectedChannels.find(c => c.id === activeTab?.channelId);
-  const terminalSettingsKey = activeTab?.channelId ?? '__terminal__';
-  const getTerminalSettingsForChannel = useCallback((channelId: string | null | undefined) => (
-    terminalChannelSettings[channelId ?? '__terminal__'] ?? {
+  const connectedSelectedChannels = selectedChannels.filter(c => c.state === 'connected');
+  const linkedChannel = selectedChannels.find(c => c.id === activeTab?.channelId)
+    ?? (connectedSelectedChannels.length === 1 ? connectedSelectedChannels[0] : undefined);
+  const terminalSettingsKey = activeTab?.id
+    ? `tab:${activeTab.id}`
+    : (activeTab?.channelId ?? '__terminal__');
+  const getTerminalSettingsForTab = useCallback((tab: typeof activeTab): TerminalChannelSettings => {
+    const byTab = tab?.id ? terminalChannelSettings[`tab:${tab.id}`] : undefined;
+    const byChannel = terminalChannelSettings[tab?.channelId ?? '__terminal__'];
+    return byTab ?? byChannel ?? {
       sendFormat,
       receiveFormat,
       showInputPrefix,
       showTimestamp,
-    }
-  ), [receiveFormat, sendFormat, showInputPrefix, showTimestamp, terminalChannelSettings]);
-  const terminalSettings = getTerminalSettingsForChannel(activeTab?.channelId);
+    };
+  }, [receiveFormat, sendFormat, showInputPrefix, showTimestamp, terminalChannelSettings]);
+  const terminalSettings = getTerminalSettingsForTab(activeTab);
+  const visibleEntries = useMemo(
+    () => coalesceTerminalEntries(
+      visibleTerminalEntries(activeTab, pane?.entries ?? []),
+      terminalSettings.receiveFormat,
+    ),
+    [activeTab, pane?.entries, terminalSettings.receiveFormat],
+  );
   const updateTerminalSettings = useCallback((changes: Partial<typeof terminalSettings>) => {
     const nextSettings = { ...terminalSettings, ...changes };
     setTerminalChannelSettings(terminalSettingsKey, nextSettings);
     void emit('terminal-channel-settings-changed', {
-      channelId: activeTab?.channelId ?? null,
+      channelId: terminalSettingsKey,
       settings: nextSettings,
     });
-  }, [activeTab?.channelId, setTerminalChannelSettings, terminalSettings, terminalSettingsKey]);
+  }, [setTerminalChannelSettings, terminalSettings, terminalSettingsKey]);
   const connectedDeviceId = linkedChannel?.type === 'ble'
     ? (channelStates[linkedChannel.id]?.connectedDeviceId ?? null)
     : null;
@@ -228,6 +243,14 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     if (!pane?.autoScroll || !receiveRef.current) return;
     receiveRef.current.scrollTop = receiveRef.current.scrollHeight;
   }, [pane?.entries, pane?.autoScroll]);
+
+  const prevChannelStateRef = useRef(linkedChannel?.state);
+  useEffect(() => {
+    if (prevChannelStateRef.current !== 'connected' && linkedChannel?.state === 'connected') {
+      inputRef.current?.focus();
+    }
+    prevChannelStateRef.current = linkedChannel?.state;
+  }, [linkedChannel?.state]);
 
   const handleReceiveScroll = useCallback(() => {
     if (!receiveRef.current) return;
@@ -468,6 +491,20 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
         showSelectMenu('No write characteristic selected — opening selection…');
         return;
       }
+      if (
+        linkedChannel?.type === 'serial'
+        && linkedChannel.state === 'connected'
+        && !currentPane.selectMode
+      ) {
+        try {
+          const send = prepareTerminalNetworkSend(linkedChannel, currentPane, [0x0d], message => addEntry('system', message));
+          await send();
+        } catch (error) {
+          addEntry('system', `Send error: ${error}`);
+        }
+        setCmdInput(paneId, '');
+        return;
+      }
       addEntry('system', ' ');
       setCmdInput(paneId, '');
       return;
@@ -547,8 +584,22 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
   }, [appendEntry, paneId, linkedChannel, connectedDeviceId, addEntry, processCommand, pushCmdHistory, setCmdInput, setSelectedWriteTarget, setSelectMode, showSelectMenu]);
 
   const historyIndexRef = useRef(-1);
+  const {
+    handleInteractiveKeyDown,
+    handleInteractivePaste,
+    handleInteractiveCompositionStart,
+    handleInteractiveCompositionEnd,
+    handleInteractiveBlur,
+  } = useInteractiveTerminalInput({
+    paneId,
+    channelId: linkedChannel?.id ?? null,
+    enabled: Boolean(terminalSettings.interactiveMode),
+  });
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (handleInteractiveKeyDown(e)) {
+      return;
+    }
     if (e.key === 'Enter') {
       e.preventDefault();
       historyIndexRef.current = -1;
@@ -572,9 +623,20 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
       if (history[next] !== undefined) setCmdInput(paneId, history[next]);
       return;
     }
-  }, [handleSend, paneId, setCmdInput]);
+  }, [handleInteractiveKeyDown, handleSend, paneId, setCmdInput]);
 
-  const renderEntryContent = (entry: { kind: 'rx' | 'tx' | 'system'; timestamp: number; text: string; data?: number[]; bleMetadata?: { serviceUuid: string; charUuid: string } }): React.ReactNode => {
+  const renderInteractiveInputCursor = () => (
+    <span
+      data-testid="terminal-inline-cursor"
+      className="inline-block w-[7px] h-[14px] translate-y-[2px] bg-accent-green animate-pulse select-none"
+      aria-hidden="true"
+    />
+  );
+
+  const renderEntryContent = (
+    entry: { kind: 'rx' | 'tx' | 'system'; timestamp: number; text: string; data?: number[]; bleMetadata?: { serviceUuid: string; charUuid: string } },
+    isLastEntry = false,
+  ): React.ReactNode => {
     const options = {
       promptText: selectedChannels.length > 1 ? '>' : promptText,
       showTimestamp: terminalSettings.showTimestamp,
@@ -585,27 +647,56 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     };
     const parts = formatTerminalEntryParts(entry, options);
     if (!parts) {
-      return <span className="text-text-muted italic">{formatTerminalEntryText(entry, options)}</span>;
+      return (
+        <span className="text-text-muted italic">
+          {formatTerminalEntryText(entry, options)}
+          {terminalSettings.interactiveMode && isLastEntry ? renderInteractiveInputCursor() : null}
+        </span>
+      );
     }
     const payloadClass = entry.kind === 'rx' ? toneClasses.rx : toneClasses.tx;
+    if (terminalSettings.interactiveMode) {
+      const trailingBreak = isLastEntry && entryEndsWithLineBreak(entry, terminalSettings.receiveFormat) ? '\n' : '';
+      return (
+        <span className={payloadClass}>
+          {parts.leadingText ? <span className="text-text-muted">{parts.leadingText} </span> : null}
+          {parts.metadata ? (
+            <>
+              <span className="text-text-secondary">{parts.metadata}</span>
+              {'\n'}
+            </>
+          ) : null}
+          {parts.rawPayload}
+          {trailingBreak}
+          {isLastEntry ? renderInteractiveInputCursor() : null}
+        </span>
+      );
+    }
     if (parts.metadata) {
       return (
-        <>
-          <span className="text-text-muted">{parts.leadingText}</span>
-          <span className="font-semibold text-text-secondary">{parts.marker}</span>
-          <span className="text-text-secondary">{` ${parts.metadata}`}</span>
-          {'\n'}
-          <span className="text-text-muted">{parts.continuationIndent}</span>
-          <span className={payloadClass}>{parts.payload}</span>
-        </>
+        <div className="flex items-start">
+          <span className="shrink-0 whitespace-pre">
+            <span className="text-text-muted">{parts.leadingText}</span>
+            <span className="font-semibold text-text-secondary">{parts.marker}</span>
+            {' '}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="text-text-secondary">{parts.metadata}</span>
+            {'\n'}
+            <span className={payloadClass}>{parts.rawPayload}</span>
+          </span>
+        </div>
       );
     }
     return (
-      <>
-        <span className="text-text-muted">{parts.leadingText}</span>
-        <span className="font-semibold text-text-secondary">{parts.marker}</span>
-        <span className={payloadClass}>{` ${parts.payload}`}</span>
-      </>
+      <div className="flex items-start">
+        <span className="shrink-0 whitespace-pre">
+          <span className="text-text-muted">{parts.leadingText}</span>
+          <span className="font-semibold text-text-secondary">{parts.marker}</span>
+          {' '}
+        </span>
+        <span className={`min-w-0 flex-1 ${payloadClass}`}>{parts.rawPayload}</span>
+      </div>
     );
   };
   const inputPromptBase = visiblePromptText.endsWith('>')
@@ -618,6 +709,36 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
   const [commandsPanelWidth, setCommandsPanelWidth] = useState(280);
   const [terminalContextMenu, setTerminalContextMenu] = useState<{ x: number; y: number } | null>(null);
   const tabBarRef = useRef<HTMLDivElement>(null);
+  const [hiddenTabIds, setHiddenTabIds] = useState<string[]>([]);
+  const [tabMenuAnchor, setTabMenuAnchor] = useState<HTMLButtonElement | null>(null);
+  const closeTabMenu = useCallback(() => setTabMenuAnchor(null), []);
+
+  useLayoutEffect(() => {
+    const strip = tabBarRef.current;
+    if (!strip || !pane) return;
+    const tabs = Array.from(strip.querySelectorAll<HTMLButtonElement>('[data-terminal-tab]'));
+    const measure = () => {
+      // Reserve 28px for the trailing action button (+ when all tabs fit, or ⋯ when tabs overflow).
+      let remaining = strip.clientWidth - 28;
+      const visible = new Set<string>();
+      // Keep the selected tab visible, then fill the remaining space in tab order.
+      const active = tabs.find(tab => tab.dataset.terminalTab === pane.activeTabId);
+      for (const tab of active ? [active, ...tabs.filter(tab => tab !== active)] : tabs) {
+        const width = tab.getBoundingClientRect().width;
+        if (width <= remaining && width > 0) {
+          visible.add(tab.dataset.terminalTab!);
+          remaining -= width;
+        }
+      }
+      const hidden = tabs.map(tab => tab.dataset.terminalTab!).filter(id => !visible.has(id));
+      setHiddenTabIds(previous => previous.length === hidden.length && previous.every((id, index) => id === hidden[index]) ? previous : hidden);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(strip);
+    tabs.forEach(tab => observer.observe(tab));
+    return () => observer.disconnect();
+  }, [pane?.tabs, pane?.activeTabId, channels]);
 
   const commandsTagId = activeTab?.channelId ?? activeChannelId ?? '__global_saved_commands__';
 
@@ -653,21 +774,23 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
   const handleSelectTab = useCallback((tabId: string) => {
     setFocusedPane(paneId);
     selectPaneTab(paneId, tabId);
+    inputRef.current?.focus();
   }, [paneId, selectPaneTab, setFocusedPane]);
 
   const handleAddTab = useCallback(() => {
-    const { activeChannelId, channels: currentChannels } = useChannelStore.getState();
-    if (!activeChannelId) {
+    const { activeChannelId: selectedId, channels: currentChannels } = useChannelStore.getState();
+    if (!selectedId) {
       toast.error('No active channel selected — select a channel in the left panel first');
       return;
     }
-    const ch = currentChannels.find(c => c.id === activeChannelId);
-    if (!ch) {
+    const channel = currentChannels.find(item => item.id === selectedId);
+    if (!channel) {
       toast.error('Active channel not found');
       return;
     }
-    addTab(paneId, ch.id, ch.name);
-  }, [paneId, addTab]);
+    setFocusedPane(paneId);
+    addTab(paneId, channel.id, channel.name);
+  }, [paneId, addTab, setFocusedPane]);
 
   const handleRemoveTab = useCallback((tabId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -727,7 +850,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
         writeTarget: pane?.tabWriteTargets[tab.id], udpTargetAddr: pane?.udpTargetAddr,
         entries,
         channelType: ch?.type,
-        terminalSettings: getTerminalSettingsForChannel(tab.channelId),
+        terminalSettings: getTerminalSettingsForTab(tab),
       },
       e.screenX,
       e.screenY,
@@ -736,7 +859,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     if (label) {
       removeTab(paneId, tabId);
     }
-  }, [paneId, pane, channels, removeTab, getTerminalSettingsForChannel]);
+  }, [paneId, pane, channels, removeTab, getTerminalSettingsForTab]);
 
   const handlePopOut = useCallback(async () => {
     if (!activeTab || activeTab.isPinned) {
@@ -839,23 +962,6 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     setTabDropIndex(null);
   }, []);
 
-  const handleTabBarWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement;
-    if (!target.closest('[data-terminal-tab]')) return;
-
-    const tabBar = tabBarRef.current ?? e.currentTarget;
-    const maxScrollLeft = tabBar.scrollWidth - tabBar.clientWidth;
-    if (maxScrollLeft <= 0) return;
-
-    const wheelDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    if (wheelDelta === 0) return;
-
-    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? tabBar.clientWidth : 1;
-    e.preventDefault();
-    e.stopPropagation();
-    tabBar.scrollLeft += wheelDelta * unit;
-  }, []);
-
   // Drop zone overlay style
   const dropOverlayStyle = (): React.CSSProperties | undefined => {
     if (!dropZone) return undefined;
@@ -874,123 +980,135 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
 
   return (
     <div
-      className="flex flex-col h-full min-h-0 relative"
+      className="flex flex-col h-full min-h-0 min-w-0 relative"
       onMouseDown={() => setFocusedPane(paneId)}
     >
       <div
-        ref={tabBarRef}
-        className="flex items-stretch shrink-0 bg-surface border-b border-border overflow-x-auto min-h-[28px]"
-        onWheel={handleTabBarWheel}
+        className="flex items-stretch shrink-0 min-w-0 bg-surface border-b border-border h-7"
         onDragOver={e => { if (hasDragMime(e)) { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; } }}
         onDrop={handleTabBarDrop}
         onDragLeave={handleTabBarDragLeave}
       >
-        {pane.tabs.map((tab, idx) => {
-          const isActive = isFocused && tab.id === pane.activeTabId;
-          const selected = terminalChannels(tab, channels);
-          const label = terminalTabLabel(selected, channels.length);
-          const ch = selected.length === 1 ? selected[0] : undefined;
-          const isDragInsert = tabDropIndex === idx;
-          const isGroupTab = !ch || selected.length === channels.length;
-          return (
-            <button
-              key={tab.id}
-              data-terminal-tab
-              aria-pressed={isActive}
-              draggable={!tab.isPinned}
-              onDragStart={e => handleTabDragStart(tab.id, e)}
-              onDragEnd={e => handleTabDragEnd(tab.id, e)}
-              onDragOver={e => handleTabBarDragOver(e, idx)}
-              onClick={() => handleSelectTab(tab.id)}
-              onContextMenu={event => {
-                event.preventDefault();
-                event.stopPropagation();
-                setChannelPicker({ tabId: tab.id, x: event.clientX, y: event.clientY });
-              }}
-              style={isActive ? { color: terminalTabColor(selected) } : undefined}
-              className={[
-                'flex w-[84px] items-center relative text-[11px] font-mono shrink-0 border-r border-border transition-colors select-none group/tab',
-                'bg-surface',
-                isActive ? 'font-semibold text-text-primary' : 'text-text-muted hover:text-text-primary',
-                isDragInsert ? 'ring-1 ring-inset ring-accent-blue/50' : '',
-              ].join(' ')}
-            >
-              {isGroupTab ? (
-                <ChannelSelectionCircle selected={selected.length} total={channels.length} className="ml-2.5 size-2 translate-y-px" />
-              ) : !tab.isPinned && ch && (
-                <span className={`ml-2 shrink-0 translate-y-px transition-colors duration-150 ${channelIconStateClass(ch.type, ch.state, isActive)}`}>
-                  {channelIcon(ch.type)}
-                </span>
-              )}
-              <span
-                className={`ml-[1.5ch] min-w-0 flex-1 translate-y-[2px] truncate pr-0.5 text-left ${isGroupTab || tab.isPinned ? 'text-[10px] tracking-wider' : ''}`}
-                title={label}
+        <div ref={tabBarRef} className="relative flex flex-1 min-w-0 overflow-hidden">
+          {pane.tabs.map((tab, idx) => {
+            const isActive = isFocused && tab.id === pane.activeTabId;
+            const selected = terminalChannels(tab, channels);
+            const label = terminalTabLabel(selected, channels.length);
+            const ch = selected.length === 1 ? selected[0] : undefined;
+            const isDragInsert = tabDropIndex === idx;
+            const isGroupTab = !ch || selected.length === channels.length;
+            return (
+              <button
+                key={tab.id}
+                data-terminal-tab={tab.id}
+                aria-hidden={hiddenTabIds.includes(tab.id) || undefined}
+                tabIndex={hiddenTabIds.includes(tab.id) ? -1 : 0}
+                aria-pressed={isActive}
+                draggable={!tab.isPinned}
+                onDragStart={e => handleTabDragStart(tab.id, e)}
+                onDragEnd={e => handleTabDragEnd(tab.id, e)}
+                onDragOver={e => handleTabBarDragOver(e, idx)}
+                onClick={() => handleSelectTab(tab.id)}
+                onContextMenu={event => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setChannelPicker({ tabId: tab.id, x: event.clientX, y: event.clientY });
+                }}
+                style={{
+                  color: isActive ? terminalTabColor(selected) : undefined,
+                  ...(hiddenTabIds.includes(tab.id) ? { position: 'absolute', visibility: 'hidden', pointerEvents: 'none' } as const : {}),
+                }}
+                className={[
+                  'flex w-max min-w-[64px] max-w-[min(240px,calc(100%_-_28px))] h-full gap-1.5 items-center relative text-[11px] font-mono shrink-0 border-r border-border transition-colors select-none group/tab',
+                  tab.isPinned ? 'px-2.5' : 'pl-2.5 pr-0.5',
+                  'bg-surface',
+                  isActive ? 'font-semibold text-text-primary' : 'text-text-muted hover:text-text-primary',
+                  isDragInsert ? 'ring-1 ring-inset ring-accent-blue/50' : '',
+                ].join(' ')}
               >
-                {label}
-              </span>
+                {isGroupTab ? (
+                  <ChannelSelectionCircle selected={selected.length} total={channels.length} className="size-2 shrink-0 translate-y-px" />
+                ) : !tab.isPinned && ch && (
+                  <span className={`shrink-0 translate-y-px transition-colors duration-150 ${channelIconStateClass(ch.type, ch.state, isActive)}`}>
+                    {channelIcon(ch.type)}
+                  </span>
+                )}
+                <span
+                  className={`min-w-0 translate-y-[2px] truncate text-left ${isGroupTab || tab.isPinned ? 'text-[10px] tracking-wider' : ''}`}
+                  title={label}
+                >
+                  {label}
+                </span>
 
-              <div className="absolute right-0.5 top-1/2 -translate-y-1/2 flex items-center pr-0.5">
                 {!tab.isPinned && (
                   <span
                     role="button"
+                    aria-label={`Close ${label}`}
                     tabIndex={-1}
                     onClick={e => handleRemoveTab(tab.id, e)}
-                    className="flex items-center justify-center w-4 h-4 rounded opacity-0 bg-surface group-hover/tab:opacity-100 hover:bg-[var(--layer-active)] transition-all text-text-muted hover:text-text-primary"
+                    className="ml-auto flex shrink-0 translate-y-px items-center justify-center w-4 h-4 rounded opacity-0 group-hover/tab:opacity-100 group-focus-within/tab:opacity-100 hover:bg-[var(--layer-active)] transition-opacity text-text-muted hover:text-text-primary"
                   >
                     <CloseIcon size={10} />
                   </span>
                 )}
-              </div>
+              </button>
+            );
+          })}
+          {hiddenTabIds.length === 0 ? (
+            <button
+              onClick={handleAddTab}
+              className="flex items-center justify-center w-7 shrink-0 text-text-muted hover:text-text-primary hover:bg-[var(--layer-hover)] transition-colors"
+              title="Add tab for active channel"
+              aria-label="Add tab for active channel"
+            >
+              <PlusIcon size={11} />
             </button>
-          );
-        })}
+          ) : (
+            <button
+              onClick={event => setTabMenuAnchor(tabMenuAnchor ? null : event.currentTarget)}
+              className="flex items-center justify-center w-7 shrink-0 text-text-muted hover:text-text-primary hover:bg-[var(--layer-hover)] transition-colors"
+              title="More channels"
+              aria-label="More channels"
+              aria-haspopup="dialog"
+              aria-expanded={!!tabMenuAnchor}
+            >
+              <span className="text-base leading-none" aria-hidden="true">⋯</span>
+            </button>
+          )}
+        </div>
 
         <button
-          onClick={handleAddTab}
-          className="flex items-center justify-center w-7 shrink-0 text-text-muted hover:text-text-primary hover:bg-[var(--layer-hover)] transition-colors"
-          title="Add tab for active channel"
+          onClick={handlePopOut}
+          className="flex items-center justify-center w-7 shrink-0 text-text-muted hover:text-text-primary hover:bg-[var(--layer-hover)] transition-colors border-l border-border"
+          title="Pop out to separate window"
         >
-          <PlusIcon size={11} />
+          <PopOutIcon size={11} />
         </button>
 
-        <div className="flex-1" />
+        <button
+          onClick={handleSplit}
+          className="flex items-center justify-center w-7 shrink-0 text-text-muted hover:text-text-primary hover:bg-[var(--layer-hover)] transition-colors border-l border-border"
+          title="Split pane"
+        >
+          <SplitIcon size={11} />
+        </button>
 
-        {isFocused && (
-          <>
-            <button
-              onClick={handlePopOut}
-              className="flex items-center justify-center w-7 shrink-0 text-text-muted hover:text-text-primary hover:bg-[var(--layer-hover)] transition-colors border-l border-border"
-              title="Pop out to separate window"
-            >
-              <PopOutIcon size={11} />
-            </button>
-
-            <button
-              onClick={handleSplit}
-              className="flex items-center justify-center w-7 shrink-0 text-text-muted hover:text-text-primary hover:bg-[var(--layer-hover)] transition-colors border-l border-border"
-              title="Split pane"
-            >
-              <SplitIcon size={11} />
-            </button>
-
-            <button
-              onClick={() => {
-                toggleCommandsPanel(paneId);
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                setCommandsDialogAnchor(e.currentTarget);
-              }}
-              className={[
-                'flex items-center justify-center w-7 shrink-0 hover:bg-[var(--layer-hover)] transition-colors border-l border-border',
-                pane.showCommandsPanel ? `${toneClasses.prompt}` : 'text-text-muted hover:text-text-primary',
-              ].join(' ')}
-              title="Saved commands"
-            >
-              <BookmarkIcon size={11} />
-            </button>
-          </>
-        )}
+        <button
+          onClick={() => {
+            toggleCommandsPanel(paneId);
+          }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setCommandsDialogAnchor(e.currentTarget);
+          }}
+          className={[
+            'flex items-center justify-center w-7 shrink-0 hover:bg-[var(--layer-hover)] transition-colors border-l border-border',
+            pane.showCommandsPanel ? `${toneClasses.prompt}` : 'text-text-muted hover:text-text-primary',
+          ].join(' ')}
+          title="Saved commands"
+        >
+          <BookmarkIcon size={11} />
+        </button>
       </div>
 
       <div className="flex-1 flex min-h-0">
@@ -1013,37 +1131,55 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
             onContextMenu={handleReceiveContextMenu}
           >
           {visibleEntries.length === 0 ? (
-            <div className="text-text-muted italic px-1 select-none">
-              {selectedChannels.length ? 'Waiting for channel data…' : 'Create a channel to receive data.'}
-            </div>
+            terminalSettings.interactiveMode ? (
+              <div className="whitespace-pre-wrap break-all">
+                {renderInteractiveInputCursor()}
+              </div>
+            ) : (
+              <div className="text-text-muted italic px-1 select-none">
+                {selectedChannels.length ? 'Waiting for channel data…' : 'Create a channel to receive data.'}
+              </div>
+            )
           ) : (
-            visibleEntries.map(entry => (
+            visibleEntries.map((entry, index) => (
               <div key={entry.id} className="whitespace-pre-wrap break-all">
-                {renderEntryContent(entry)}
+                {renderEntryContent(entry, index === visibleEntries.length - 1)}
               </div>
             ))
           )}
 
-          <div className="h-3 shrink-0" />
+          {!terminalSettings.interactiveMode && <div className="h-3 shrink-0" />}
 
-          <div className="flex items-center">
-            {terminalSettings.showTimestamp && (
+          <div className={terminalSettings.interactiveMode ? 'h-0 overflow-hidden opacity-0 pointer-events-none' : 'flex items-center'}>
+            {!terminalSettings.interactiveMode && terminalSettings.showTimestamp && (
               <span className={`shrink-0 select-none font-mono text-[12px] leading-relaxed text-text-muted ${terminalSettings.showInputPrefix ? 'mr-1.5' : ''}`}>
                 {inputTimestamp}
               </span>
             )}
-            <span className="shrink-0 select-none font-mono text-[12px] leading-relaxed text-text-muted">
-              {inputPromptBase}
-            </span>
-            <span className="mr-1.5 shrink-0 select-none font-mono text-[12px] font-semibold leading-relaxed text-text-secondary">
-              &gt;
-            </span>
+            {!terminalSettings.interactiveMode && (
+              <>
+                <span className="shrink-0 select-none font-mono text-[12px] leading-relaxed text-text-muted">
+                  {inputPromptBase}
+                </span>
+                <span className="mr-1.5 shrink-0 select-none font-mono text-[12px] font-semibold leading-relaxed text-text-secondary">
+                  &gt;
+                </span>
+              </>
+            )}
             <input
               ref={inputRef}
               type="text"
               value={pane.cmdInput}
-              onChange={e => setCmdInput(paneId, e.target.value)}
+              onChange={e => {
+                if (!terminalSettings.interactiveMode) {
+                  setCmdInput(paneId, e.target.value);
+                }
+              }}
               onKeyDown={handleKeyDown}
+              onPaste={handleInteractivePaste}
+              onCompositionStart={handleInteractiveCompositionStart}
+              onCompositionEnd={handleInteractiveCompositionEnd}
+              onBlur={handleInteractiveBlur}
               spellCheck={false}
               autoCorrect="off"
               autoCapitalize="off"
@@ -1052,7 +1188,9 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
                 : linkedChannel
                   ? "hex: 01 02 FF   'ASCII'   \"ASCII+NUL\"   /help"
                   : '/link <channel-name-or-index>'}
-              className={`flex-1 bg-transparent font-mono text-[12px] leading-relaxed text-text-primary outline-none placeholder:text-text-muted/40 ${toneClasses.caret}`}
+              className={terminalSettings.interactiveMode
+                ? 'w-0 h-0 opacity-0 outline-none border-0 p-0 m-0'
+                : `flex-1 bg-transparent font-mono text-[12px] leading-relaxed text-text-primary outline-none placeholder:text-text-muted/40 ${toneClasses.caret}`}
             />
           </div>
           </div>
@@ -1070,6 +1208,14 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
         )}
       </div>
 
+      {tabMenuAnchor && hiddenTabIds.length > 0 && <TerminalTabMenu
+        anchor={tabMenuAnchor}
+        hiddenTabs={pane.tabs.filter(tab => hiddenTabIds.includes(tab.id))}
+        channels={channels}
+        onSelectTab={handleSelectTab}
+        onAddTab={handleAddTab}
+        onClose={closeTabMenu}
+      />}
       {channelPicker && pickerTab && <TerminalChannelPicker {...channelPicker} paneId={paneId} tab={pickerTab} channels={channels} onClose={() => setChannelPicker(null)} />}
       {terminalContextMenu && (
         <TerminalContextMenu
@@ -1080,6 +1226,11 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
           receiveFormat={terminalSettings.receiveFormat}
           showInputPrefix={terminalSettings.showInputPrefix}
           showTimestamp={terminalSettings.showTimestamp}
+          interactiveMode={terminalSettings.interactiveMode ?? false}
+          onToggleInteractiveMode={() => {
+            updateTerminalSettings({ interactiveMode: !terminalSettings.interactiveMode });
+            inputRef.current?.focus();
+          }}
           onClear={handleClearTerminal}
           onToggleReceived={handleToggleReceived}
           onSetSendFormat={(format) => updateTerminalSettings({ sendFormat: format })}

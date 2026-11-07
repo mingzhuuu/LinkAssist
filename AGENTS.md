@@ -6,6 +6,8 @@
 
 **Architecture review:** 2026-10-19. Maintained feature/architecture docs live in `docs/`; run `npm run docs:generate` after interface or owned-file changes and `npm run check:architecture` to detect drift.
 
+**UI design standard:** Read [docs/UI-DESIGN-STANDARD.md](docs/UI-DESIGN-STANDARD.md) before adding or changing UI. It defines layout, borders/joins, tokens, density, terminal tabs, overlays and validation; update it when a shared design rule changes. Existing inconsistencies are listed separately and are not templates for new UI.
+
 ## OVERVIEW
 
 LinkAssist is a Tauri v2 desktop app for BLE, UART/serial, TCP server/client, UDP, protocol parsing, real-time canvases, automation scripts, detachable terminal panes, and MCP-accessible local tooling. Frontend: React 19 + TypeScript + Zustand + Tailwind + uPlot. Backend: Rust/Tauri + Tokio + btleplug + tokio-serial + mlua + Axum core HTTP.

@@ -75,6 +75,7 @@ Frontend main listeners live in `src/components/layout/CenterPanel.tsx`; detache
 - `AppError` serializes as a string; structured errors require frontend changes.
 - IPC structs should have explicit serde naming. TS mirrors JSON output, not Rust spelling.
 - Long-running I/O should spawn tasks and emit events, not block command handlers.
+- Windows COM ports use `serial/windows_stream.rs`: the dedicated driver thread owns open/read/write/drop, and async callers communicate through bounded receive delivery and write acknowledgements. Never release a Windows serial handle on Tokio's shared IOCP reactor. Clone `SerialIoManager` under the outer manager lock, then release that lock before awaiting device I/O or close.
 - Discovery file/token grants local tool access; treat path and token as sensitive local IPC plumbing.
 
 ## ANTI-PATTERNS

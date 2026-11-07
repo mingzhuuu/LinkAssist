@@ -20,6 +20,7 @@ Detailed documentation is maintained in Chinese, with source links for each subs
 - [Architecture](docs/ARCHITECTURE.md): module boundaries, event routing and persistence.
 - [Generated API and file index](docs/REFERENCE.md): Tauri commands, built-in MCP tools and owned files.
 - [Development and validation](docs/DEVELOPMENT.md): reproducible commands and manual checks.
+- [UI design standard](docs/UI-DESIGN-STANDARD.md): layout, borders, colors, controls, overlays and UI acceptance criteria.
 - [Audit and changes](docs/AUDIT.md): findings, implemented fixes and validation evidence.
 - [MCP configuration](config/mcp/mcp-configuration-guide.md) and [Lua tool guide](config/mcp/mcp-tool-lua-guide.md).
 - [Protocol guide](config/protocol/protocol-configuration-guide.md), [automation](config/script/script-configuration-guide.md) and [canvas lifecycle](config/script/canvas-lifecycle-guide.md).

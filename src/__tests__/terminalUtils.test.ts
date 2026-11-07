@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildBleWriteSelectionMenu, formatInputTimestamp, formatTerminalBytes, formatTerminalEntryParts, formatTerminalEntryText } from '../components/layout/terminalUtils';
+import { buildBleWriteSelectionMenu, coalesceTerminalEntries, formatInputTimestamp, formatTerminalBytes, formatTerminalEntryParts, formatTerminalEntryText } from '../components/layout/terminalUtils';
 import { sendWithImmediateTxEcho } from '../lib/terminalSend';
 
 const sampleTimestamp = new Date(2000, 0, 1, 13, 27, 52, 484).getTime();
@@ -254,5 +254,163 @@ describe('buildBleWriteSelectionMenu', () => {
       '180D/2A39',
       '12345678-1234-5678-1234-56789abcdef0/abcdefab-1234-5678-1234-56789abcdef0',
     ]);
+  });
+});
+
+describe('coalesceTerminalEntries', () => {
+  const encode = (text: string): number[] => Array.from(new TextEncoder().encode(text));
+  const asciiOptions = {
+    promptText: '>',
+    showTimestamp: false,
+    showInputPrefix: false,
+    sendFormat: 'ascii' as const,
+    receiveFormat: 'ascii' as const,
+  };
+
+  it('merges mid-line chunk splits, interactive echoes, backspaces, and CRLF responses in ASCII mode', () => {
+    const rawEntries = [
+      {
+        id: 1,
+        kind: 'rx' as const,
+        timestamp: 1000,
+        text: 'RX: 01',
+        data: encode('on   : VER.B\r\nBootROM       Version  : 0214.0000\r\nBootLoad'),
+        sourceChannelId: 'serial-1',
+      },
+      {
+        id: 2,
+        kind: 'rx' as const,
+        timestamp: 1010,
+        text: 'RX: 02',
+        data: encode('   Version    : 0214.0000\r\nCPLD          Version  : 0105\r\nSof'),
+        sourceChannelId: 'serial-1',
+      },
+      {
+        id: 3,
+        kind: 'rx' as const,
+        timestamp: 1020,
+        text: 'RX: 03',
+        data: encode('tware      Version    : VRP (R) Software, Version 5.170 (V200R0'),
+        sourceChannelId: 'serial-1',
+      },
+      {
+        id: 4,
+        kind: 'rx' as const,
+        timestamp: 1030,
+        text: 'RX: 04',
+        data: encode('20C00SPC500)\r\nFLASH         Version  : 020b.0a06\r\n<FutureMatrix>'),
+        sourceChannelId: 'serial-1',
+      },
+      {
+        id: 5,
+        kind: 'rx' as const,
+        timestamp: 1100,
+        text: 'RX: 05',
+        data: encode('display'),
+        sourceChannelId: 'serial-1',
+      },
+      {
+        id: 6,
+        kind: 'rx' as const,
+        timestamp: 1150,
+        text: 'RX: 06',
+        data: [
+          0x08, 0x20, 0x08,
+          0x08, 0x20, 0x08,
+          0x08, 0x20, 0x08,
+          0x08, 0x20, 0x08,
+          0x08, 0x20, 0x08,
+          0x08, 0x20, 0x08,
+          0x08, 0x20, 0x08,
+        ],
+        sourceChannelId: 'serial-1',
+      },
+      {
+        id: 7,
+        kind: 'rx' as const,
+        timestamp: 1200,
+        text: 'RX: 07',
+        data: encode('displa'),
+        sourceChannelId: 'serial-1',
+      },
+      {
+        id: 8,
+        kind: 'rx' as const,
+        timestamp: 1250,
+        text: 'RX: 08',
+        data: encode('y clock'),
+        sourceChannelId: 'serial-1',
+      },
+      {
+        id: 9,
+        kind: 'rx' as const,
+        timestamp: 1300,
+        text: 'RX: 09',
+        data: encode("\r\n                        ^\r\nError: Unrecognized command found at '^' position.\r\n<FutureMatrix>"),
+        sourceChannelId: 'serial-1',
+      },
+      {
+        id: 10,
+        kind: 'rx' as const,
+        timestamp: 1400,
+        text: 'RX: 10',
+        data: encode('\r\n<FutureMatrix>'),
+        sourceChannelId: 'serial-1',
+      },
+    ];
+
+    const coalesced = coalesceTerminalEntries(rawEntries, 'ascii');
+    expect(coalesced).toHaveLength(3);
+
+    expect(formatTerminalEntryParts(coalesced[0], asciiOptions)?.rawPayload).toBe(
+      [
+        'on   : VER.B',
+        'BootROM       Version  : 0214.0000',
+        'BootLoad   Version    : 0214.0000',
+        'CPLD          Version  : 0105',
+        'Software      Version    : VRP (R) Software, Version 5.170 (V200R020C00SPC500)',
+        'FLASH         Version  : 020b.0a06',
+        '<FutureMatrix>display clock',
+      ].join('\n')
+    );
+
+    expect(formatTerminalEntryParts(coalesced[1], asciiOptions)?.rawPayload).toBe(
+      [
+        '                        ^',
+        "Error: Unrecognized command found at '^' position.",
+        '<FutureMatrix>',
+      ].join('\n')
+    );
+
+    expect(formatTerminalEntryParts(coalesced[2], asciiOptions)?.rawPayload).toBe('<FutureMatrix>');
+
+    // HEX mode preserves all raw packet entries unchanged
+    expect(coalesceTerminalEntries(rawEntries, 'hex')).toHaveLength(rawEntries.length);
+  });
+
+  it('handles CRLF split across packet boundaries without adding extra blank lines', () => {
+    const rawEntries = [
+      {
+        id: 1,
+        kind: 'rx' as const,
+        timestamp: 1000,
+        text: 'RX: 01',
+        data: [0x4f, 0x4b, 0x0d],
+        sourceChannelId: 'serial-1',
+      },
+      {
+        id: 2,
+        kind: 'rx' as const,
+        timestamp: 1005,
+        text: 'RX: 02',
+        data: [0x0a, 0x52, 0x45, 0x41, 0x44, 0x59, 0x0d, 0x0a],
+        sourceChannelId: 'serial-1',
+      },
+    ];
+
+    const coalesced = coalesceTerminalEntries(rawEntries, 'ascii');
+    expect(coalesced).toHaveLength(2);
+    expect(formatTerminalEntryText(coalesced[0], asciiOptions)).toBe('< OK');
+    expect(formatTerminalEntryText(coalesced[1], asciiOptions)).toBe('< READY');
   });
 });

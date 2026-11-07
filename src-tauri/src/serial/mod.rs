@@ -1,5 +1,7 @@
 pub mod io;
 pub mod port;
+#[cfg(windows)]
+mod windows_stream;
 
 pub use io::SerialIoManager;
 pub use port::{list_ports, PortInfo, SerialConfig};

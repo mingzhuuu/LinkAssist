@@ -727,7 +727,7 @@ export const CenterPanel: React.FC = () => {
       {showBottom && (
         <div
           data-terminal-area
-          className={`channel-terminal-area absolute inset-x-0 bottom-0 flex flex-col bg-surface ${showTop ? 'border-t border-border' : 'overflow-hidden rounded-[inherit]'} ${isDragging ? 'is-resizing' : ''}`}
+          className={`channel-terminal-area absolute inset-x-0 bottom-0 flex flex-col bg-surface ${showTop ? 'z-10 border-t border-border' : 'overflow-hidden rounded-[inherit]'} ${isDragging ? 'is-resizing' : ''}`}
           style={{ top: showTop ? `${centerSplitRatio * 100}%` : '0%' }}
         >
           {showTop && (

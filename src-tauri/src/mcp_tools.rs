@@ -780,8 +780,8 @@ pub async fn call_tool(
         "serial_open_port" => {
             let config: SerialConfig = required_value(&arguments, "config")?;
             let channel_id = required_string(&arguments, "channelId")?;
-            let manager = state.serial_manager.lock().await;
-            let connection_id = manager.io.open(&config, app_handle.clone()).await?;
+            let manager = state.serial_manager.lock().await.io.clone();
+            let connection_id = manager.open(&config, app_handle.clone()).await?;
             drop(manager);
             state
                 .channel_registry
@@ -805,8 +805,8 @@ pub async fn call_tool(
         }
         "serial_close_port" => {
             let connection_id = required_string(&arguments, "connectionId")?;
-            let manager = state.serial_manager.lock().await;
-            manager.io.close(&connection_id).await?;
+            let manager = state.serial_manager.lock().await.io.clone();
+            manager.close(&connection_id).await?;
             drop(manager);
             state
                 .channel_registry
@@ -828,14 +828,14 @@ pub async fn call_tool(
                     .connection(connection_id.clone())
                     .data(&data),
             );
-            let manager = state.serial_manager.lock().await;
-            let bytes_written = manager.io.send(&connection_id, &data).await?;
+            let manager = state.serial_manager.lock().await.io.clone();
+            let bytes_written = manager.send(&connection_id, &data).await?;
             Ok(json!({ "bytesWritten": bytes_written }))
         }
         "serial_receive_data" => {
             let connection_id = required_string(&arguments, "connectionId")?;
-            let manager = state.serial_manager.lock().await;
-            let data = manager.io.receive(&connection_id, 4096).await?;
+            let manager = state.serial_manager.lock().await.io.clone();
+            let data = manager.receive(&connection_id, 4096).await?;
             emit_channel_activity(
                 &app_handle,
                 ChannelActivityEvent::new(context.as_ref(), "rx", "serial")
@@ -845,8 +845,8 @@ pub async fn call_tool(
             Ok(json!({ "data": data }))
         }
         "serial_get_connections" => {
-            let manager = state.serial_manager.lock().await;
-            let connections = manager.io.list_open().await;
+            let manager = state.serial_manager.lock().await.io.clone();
+            let connections = manager.list_open().await;
             Ok(json!({ "connections": connections }))
         }
         "tcp_connect" => {

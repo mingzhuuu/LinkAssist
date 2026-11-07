@@ -153,7 +153,7 @@
 | `import_from_file` | Import content from a file path. The default 'utf8' encoding fails on binary files; pass encoding 'base64' to read any file, including firmware images. |
 | `get_recent_events` | Return recent Core events/logs buffered by the headless core. |
 
-## 应用文件（257）
+## 应用文件（261）
 
 目录职责见 [架构说明](ARCHITECTURE.md)。根目录构建入口另见 [开发与验证](DEVELOPMENT.md)。
 
@@ -231,6 +231,7 @@
 - [src-tauri/src/serial/io.rs](../src-tauri/src/serial/io.rs)
 - [src-tauri/src/serial/mod.rs](../src-tauri/src/serial/mod.rs)
 - [src-tauri/src/serial/port.rs](../src-tauri/src/serial/port.rs)
+- [src-tauri/src/serial/windows_stream.rs](../src-tauri/src/serial/windows_stream.rs)
 - [src-tauri/src/snapshot.rs](../src-tauri/src/snapshot.rs)
 - [src-tauri/src/tcp/client.rs](../src-tauri/src/tcp/client.rs)
 - [src-tauri/src/tcp/mod.rs](../src-tauri/src/tcp/mod.rs)
@@ -247,6 +248,7 @@
 - [src/__tests__/DisplayPanelViewportReset.test.tsx](../src/__tests__/DisplayPanelViewportReset.test.tsx)
 - [src/__tests__/GattExplorer.test.tsx](../src/__tests__/GattExplorer.test.tsx)
 - [src/__tests__/GlobalTooltip.test.tsx](../src/__tests__/GlobalTooltip.test.tsx)
+- [src/__tests__/InteractiveTerminal.test.tsx](../src/__tests__/InteractiveTerminal.test.tsx)
 - [src/__tests__/LeftPanelRename.test.tsx](../src/__tests__/LeftPanelRename.test.tsx)
 - [src/__tests__/RoundedSelect.test.tsx](../src/__tests__/RoundedSelect.test.tsx)
 - [src/__tests__/ScriptCanvasUi.test.tsx](../src/__tests__/ScriptCanvasUi.test.tsx)
@@ -341,6 +343,7 @@
 - [src/components/layout/CenterPanel.tsx](../src/components/layout/CenterPanel.tsx)
 - [src/components/layout/ChannelConfigDrawer.tsx](../src/components/layout/ChannelConfigDrawer.tsx)
 - [src/components/layout/DetachedTerminalWindow.tsx](../src/components/layout/DetachedTerminalWindow.tsx)
+- [src/components/layout/InteractiveTerminal.tsx](../src/components/layout/InteractiveTerminal.tsx)
 - [src/components/layout/LeftPanel.tsx](../src/components/layout/LeftPanel.tsx)
 - [src/components/layout/MainLayout.tsx](../src/components/layout/MainLayout.tsx)
 - [src/components/layout/PaneTreeRenderer.tsx](../src/components/layout/PaneTreeRenderer.tsx)
@@ -352,6 +355,7 @@
 - [src/components/layout/TerminalChannels.tsx](../src/components/layout/TerminalChannels.tsx)
 - [src/components/layout/TerminalContextMenu.tsx](../src/components/layout/TerminalContextMenu.tsx)
 - [src/components/layout/TerminalLeafPane.tsx](../src/components/layout/TerminalLeafPane.tsx)
+- [src/components/layout/TerminalTabMenu.tsx](../src/components/layout/TerminalTabMenu.tsx)
 - [src/components/layout/TitleBar.tsx](../src/components/layout/TitleBar.tsx)
 - [src/components/layout/channelCardGeometry.ts](../src/components/layout/channelCardGeometry.ts)
 - [src/components/layout/eventSubscriptions.ts](../src/components/layout/eventSubscriptions.ts)

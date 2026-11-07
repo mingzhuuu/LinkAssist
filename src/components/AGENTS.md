@@ -30,6 +30,7 @@ components/
 
 ## CONVENTIONS
 
+- Read and follow [UI design standard](../../docs/UI-DESIGN-STANDARD.md) for UI changes; preserve established interaction contracts and distinguish current implementation from documented follow-up requirements.
 - Use component folder barrels where present (`layout/index.ts`, `display/index.ts`, channel subfolder `index.ts`).
 - Use Tailwind project tokens and existing component classes; avoid arbitrary color drift.
 - UI components consume Zustand stores and hooks; stores do not import components except known runtime-disposal coupling in `canvasStore.ts`.

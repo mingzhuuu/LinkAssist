@@ -49,7 +49,8 @@ describe('channel settings interaction', () => {
   });
   afterEach(cleanup);
 
-  it('starts closed, previews on double-click connected to the channel item with top alignment and concave arc, and dismisses outside', () => {
+  it('previews on double-click when unpinned, connected to the channel item with top alignment and concave arc, and dismisses outside', () => {
+    useUIStore.setState({ centerTopVisible: false });
     renderWorkspace();
     expect(drawer().getAttribute('data-state')).toBe('hidden');
     expect(drawer().className).toContain('channel-card-accent-mauve');
@@ -78,9 +79,15 @@ describe('channel settings interaction', () => {
     expect(drawer().getAttribute('data-state')).toBe('hidden');
   });
 
-  it('pins the drawer disconnected from the channel bar and keeps the terminal split when selecting channels', () => {
-    useUIStore.setState({ centerTopVisible: true });
+  it('starts pinned by default disconnected from the channel bar and keeps the terminal top divider and split when selecting channels', () => {
     renderWorkspace();
+    expect(drawer().getAttribute('data-state')).toBe('pinned');
+    expect(drawer().className).toContain('z-10');
+    expect(terminal().className).toContain('z-10');
+    expect(terminal().className).toContain('border-t');
+    expect(terminal().className).toContain('border-border');
+    expect(cardBody().style.height).toBe('50%');
+
     fireEvent.click(channel(), { detail: 1 });
     fireEvent.click(channel(), { detail: 2 });
     fireEvent.doubleClick(channel());
@@ -115,6 +122,7 @@ describe('channel settings interaction', () => {
   });
 
   it('keeps controls mounted when pinning and hiding with the layout controls', () => {
+    useUIStore.setState({ centerTopVisible: false });
     renderWorkspace();
     fireEvent.doubleClick(channel());
     fireEvent.change(screen.getByLabelText('Baud rate'), { target: { value: '9600' } });
@@ -127,6 +135,7 @@ describe('channel settings interaction', () => {
   });
 
   it('tracks independent edge drags outside the card and stops on pointer release', () => {
+    useUIStore.setState({ centerTopVisible: false });
     renderWorkspace();
     fireEvent.doubleClick(channel());
     const width = parseFloat(cardBody().style.width);
@@ -149,6 +158,7 @@ describe('channel settings interaction', () => {
   });
 
   it('allows interaction with portalled menus without dismissing the preview', () => {
+    useUIStore.setState({ centerTopVisible: false });
     renderWorkspace();
     fireEvent.doubleClick(channel());
     fireEvent.click(screen.getByRole('button', { name: /Port one/ }));
@@ -160,6 +170,7 @@ describe('channel settings interaction', () => {
   });
 
   it('switches channels in preview and supports keyboard selection, preview and Escape', () => {
+    useUIStore.setState({ centerTopVisible: false });
     renderWorkspace();
     fireEvent.doubleClick(channel());
     expect(drawer().getAttribute('data-state')).toBe('preview');
@@ -185,7 +196,7 @@ describe('channel settings interaction', () => {
   });
 
   it('can preview a channel while the command window stays hidden', () => {
-    useUIStore.setState({ centerBottomVisible: false, rightPanelVisible: false });
+    useUIStore.setState({ centerTopVisible: false, centerBottomVisible: false, rightPanelVisible: false });
     renderWorkspace();
     expect(cardBody().style.height).toBe('288px');
 

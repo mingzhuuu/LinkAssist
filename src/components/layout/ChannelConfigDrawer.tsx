@@ -81,7 +81,7 @@ export function ChannelConfigDrawer({
   const innerRadius = `${CHANNEL_CARD_RADIUS - 1}px`;
   let bodyStyle: CSSProperties;
   if (pinned) {
-    bodyStyle = geometry
+    bodyStyle = geometry && morphing
       ? { ...geometry.docked, borderRadius: 0 }
       : { left: 0, top: 0, width: '100%', height: ratioPercent, borderRadius: 0 };
   } else if (geometry) {
@@ -99,7 +99,7 @@ export function ChannelConfigDrawer({
   const outline = geometry?.outline ?? null;
   const attached = !pinned && !!geometry?.tab;
   const className = [
-    `channel-config-drawer channel-card-accent-${accent} pointer-events-none absolute inset-0 z-20 text-text-primary`,
+    `channel-config-drawer channel-card-accent-${accent} pointer-events-none absolute inset-0 ${pinned ? 'z-10' : 'z-20'} text-text-primary`,
     morphing ? 'is-morphing' : '',
     isResizing ? 'is-resizing' : '',
   ].filter(Boolean).join(' ');

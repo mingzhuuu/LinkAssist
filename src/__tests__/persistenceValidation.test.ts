@@ -116,7 +116,7 @@ describe('persisted terminal channel settings', () => {
   it('preserves values, drops unknown fields and does not alias the input', () => {
     const input = { serial: { ...settings, obsolete: true } };
     const result = normalizeTerminalChannelSettings(input);
-    expect(result).toEqual({ serial: settings });
+    expect(result).toEqual({ serial: { ...settings, interactiveMode: false } });
     expect(result?.serial).not.toBe(input.serial);
     expect(input.serial.obsolete).toBe(true);
     expect(normalizeTerminalChannelSettings({})).toEqual({});
@@ -131,10 +131,15 @@ describe('persisted terminal channel settings', () => {
   it.each([
     { sendFormat: 'HEX' }, { receiveFormat: 'utf8' },
     { showInputPrefix: 0 }, { showTimestamp: undefined },
+    { interactiveMode: 'ON' },
   ])('rejects the entire map when one channel is invalid: %j', invalid => {
     expect(normalizeTerminalChannelSettings({
       valid: settings, invalid: { ...settings, ...invalid },
     })).toBeNull();
+  });
+
+  it('restores an explicitly enabled interaction mode', () => {
+    expect(normalizeTerminalChannelSettings({ serial: { ...settings, interactiveMode: true } })?.serial.interactiveMode).toBe(true);
   });
 });
 

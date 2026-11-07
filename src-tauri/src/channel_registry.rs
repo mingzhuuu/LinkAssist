@@ -88,8 +88,8 @@ pub async fn send_to_channel_binding(
 ) -> AppResult<Value> {
     match binding.channel_type.as_str() {
         "serial" => {
-            let manager = state.serial_manager.lock().await;
-            if !manager.io.is_open(&binding.connection_id).await {
+            let manager = state.serial_manager.lock().await.io.clone();
+            if !manager.is_open(&binding.connection_id).await {
                 drop(manager);
                 state.channel_registry.unregister(channel_id).await;
                 return Err(AppError::Serial(format!(
@@ -97,7 +97,7 @@ pub async fn send_to_channel_binding(
                     channel_id
                 )));
             }
-            let bytes_written = manager.io.send(&binding.connection_id, data).await?;
+            let bytes_written = manager.send(&binding.connection_id, data).await?;
             Ok(json!({ "ok": true, "bytesWritten": bytes_written }))
         }
         "tcp-client" => {
@@ -273,8 +273,8 @@ pub async fn open_channel_from_config(
                     channel_id
                 )));
             }
-            let manager = state.serial_manager.lock().await;
-            let connection_id = manager.io.open(&serial_config, app_handle.clone()).await?;
+            let manager = state.serial_manager.lock().await.io.clone();
+            let connection_id = manager.open(&serial_config, app_handle.clone()).await?;
             drop(manager);
             let binding = ChannelBinding {
                 channel_type: "serial".to_string(),

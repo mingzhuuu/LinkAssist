@@ -113,6 +113,10 @@ function App() {
 
       // Add the tab back to the focused pane
       const newTabId = state.addTab(targetPaneId, tab.channelId, tab.label, tab.receiveChannels);
+      useUIStore.getState().setTerminalChannelSettings(
+        `tab:${newTabId}`,
+        terminalSettings,
+      );
 
       // Populate the tab's entries if there are any
       if (entries.length > 0) {

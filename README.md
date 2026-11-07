@@ -20,6 +20,7 @@ Windows 10/11 x64 预览版需要近期的 Microsoft Edge WebView2 Runtime。请
 | [架构与模块边界](docs/ARCHITECTURE.md) | 分层、事件/命令/持久化数据流、扩展规则 |
 | [源码接口与文件索引](docs/REFERENCE.md) | 自动生成的 Tauri 命令、MCP 工具和应用文件清单 |
 | [开发与验证](docs/DEVELOPMENT.md) | 环境、命令、验证范围和手动联调清单 |
+| [UI 设计标准](docs/UI-DESIGN-STANDARD.md) | 布局、走线、配色、控件、弹层与 UI 修改验收准则 |
 | [本次审查与优化记录](docs/AUDIT.md) | 已修复问题、测试证据、尚未验证的边界 |
 | [MCP 配置](config/mcp/mcp-configuration-guide.md) / [Lua 工具](config/mcp/mcp-tool-lua-guide.md) | 外部 Agent 接入及自定义工具 |
 | [协议解析](config/protocol/protocol-configuration-guide.md) | 字段、Lua 协议文件及事务 |

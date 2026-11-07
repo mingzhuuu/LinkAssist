@@ -18,6 +18,7 @@ export function normalizeTerminalChannelSettings(value: unknown): Record<string,
       || !isTerminalDataFormat(settings.receiveFormat)
       || typeof settings.showInputPrefix !== 'boolean'
       || typeof settings.showTimestamp !== 'boolean'
+      || (settings.interactiveMode !== undefined && typeof settings.interactiveMode !== 'boolean')
     ) {
       return null;
     }
@@ -26,6 +27,7 @@ export function normalizeTerminalChannelSettings(value: unknown): Record<string,
       receiveFormat: settings.receiveFormat,
       showInputPrefix: settings.showInputPrefix,
       showTimestamp: settings.showTimestamp,
+      interactiveMode: settings.interactiveMode === true,
     };
   }
   return normalized;

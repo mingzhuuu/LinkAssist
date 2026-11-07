@@ -7,7 +7,11 @@ use tauri::{AppHandle, Emitter};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::sync::{Mutex, RwLock};
 use tokio::time::{interval, timeout, Duration, Instant, sleep};
-use tokio_serial::{DataBits, FlowControl, Parity, SerialStream, StopBits};
+use tokio_serial::{DataBits, FlowControl, Parity, StopBits};
+#[cfg(not(windows))]
+use tokio_serial::SerialStream;
+#[cfg(windows)]
+use super::windows_stream::{SerialStream, Shutdown};
 
 // Short read slices keep the stream lock hold time bounded so concurrent
 // sends are delayed by at most one slice instead of a full receive_timeout.
@@ -62,11 +66,15 @@ impl From<&str> for FlowControlType {
 pub struct SerialConnection {
     stream: Arc<tokio::sync::Mutex<SerialStream>>,
     read_task: Option<tokio::task::JoinHandle<()>>,
+    #[cfg(not(windows))]
     flow_control: FlowControlType,
+    #[cfg(windows)]
+    shutdown: Shutdown,
     receive_timeout: Duration,
     buffered_packets: Arc<Mutex<VecDeque<Vec<u8>>>>,
 }
 
+#[derive(Clone)]
 pub struct SerialIoManager {
     connections: Arc<RwLock<HashMap<String, SerialConnection>>>,
 }
@@ -79,8 +87,13 @@ impl SerialIoManager {
     }
 
     pub async fn open(&self, config: &SerialConfig, app_handle: AppHandle) -> AppResult<String> {
-        let (stream, flow_control) = build_serial_stream(config)?;
         let connection_id = config.path.clone();
+        if let Some(existing) = self.connections.write().await.remove(&connection_id) {
+            let _ = close_connection(existing).await;
+        }
+        let (stream, _flow_control) = build_serial_stream(config).await?;
+        #[cfg(windows)]
+        let shutdown = stream.shutdown_handle();
         let receive_timeout = Duration::from_millis(config.receive_timeout_ms.max(1));
 
         let stream = Arc::new(tokio::sync::Mutex::new(stream));
@@ -89,6 +102,9 @@ impl SerialIoManager {
         let read_app = app_handle.clone();
         let buffered_packets = Arc::new(Mutex::new(VecDeque::new()));
         let read_buffered_packets = buffered_packets.clone();
+        let read_connections = self.connections.clone();
+        let monitor_stream = Arc::downgrade(&stream);
+        let mut connections = self.connections.write().await;
 
         let read_task = tokio::spawn(async move {
             let mut buf = vec![0u8; 4096];
@@ -143,15 +159,21 @@ impl SerialIoManager {
                     }
                 }
             }
+            let mut connections = read_connections.write().await;
+            if connections.get(&read_conn_id).is_some_and(|conn| Arc::ptr_eq(&conn.stream, &read_stream)) {
+                connections.remove(&read_conn_id);
+            }
         });
 
-        let mut connections = self.connections.write().await;
         connections.insert(
             connection_id.clone(),
             SerialConnection {
                 stream,
                 read_task: Some(read_task),
-                flow_control,
+                #[cfg(not(windows))]
+                flow_control: _flow_control,
+                #[cfg(windows)]
+                shutdown,
                 receive_timeout,
                 buffered_packets,
             },
@@ -166,24 +188,25 @@ impl SerialIoManager {
             loop {
                 ticker.tick().await;
                 let connections = monitor_connections.read().await;
-                if !connections.contains_key(&monitor_conn_id) {
+                if !connections.get(&monitor_conn_id).is_some_and(|conn| monitor_stream.ptr_eq(&Arc::downgrade(&conn.stream))) {
                     break;
                 }
                 drop(connections);
-                let ports = crate::serial::port::list_ports();
+                let Ok(ports) = tokio::task::spawn_blocking(crate::serial::port::list_ports).await else { continue; };
                 let still_exists = ports.iter().any(|p| p.path == monitor_conn_id);
                 if !still_exists {
-                    let _ = monitor_app.emit(
-                        "serial-connection-closed",
-                        SerialConnectionClosedEvent {
-                            connection_id: monitor_conn_id.clone(),
-                        },
-                    );
                     let mut connections = monitor_connections.write().await;
-                    if let Some(conn) = connections.remove(&monitor_conn_id) {
-                        if let Some(task) = conn.read_task {
-                            task.abort();
-                        }
+                    if !connections.get(&monitor_conn_id).is_some_and(|conn| monitor_stream.ptr_eq(&Arc::downgrade(&conn.stream))) {
+                        break;
+                    }
+                    let conn = connections.remove(&monitor_conn_id);
+                    drop(connections);
+                    if let Some(conn) = conn {
+                        let _ = monitor_app.emit(
+                            "serial-connection-closed",
+                            SerialConnectionClosedEvent { connection_id: monitor_conn_id.clone() },
+                        );
+                        let _ = close_connection(conn).await;
                     }
                     break;
                 }
@@ -198,10 +221,8 @@ impl SerialIoManager {
         let conn = connections
             .remove(connection_id)
             .ok_or_else(|| AppError::Serial(format!("Connection not found: {}", connection_id)))?;
-        if let Some(task) = conn.read_task {
-            task.abort();
-        }
-        Ok(())
+        drop(connections);
+        close_connection(conn).await
     }
 
     pub async fn send(&self, connection_id: &str, data: &[u8]) -> AppResult<usize> {
@@ -209,9 +230,14 @@ impl SerialIoManager {
         let conn = connections
             .get(connection_id)
             .ok_or_else(|| AppError::Serial(format!("Connection not found: {}", connection_id)))?;
+        let shared_stream = conn.stream.clone();
+        #[cfg(not(windows))]
+        let flow_control = conn.flow_control.clone();
+        drop(connections);
 
-        if matches!(conn.flow_control, FlowControlType::DtrDsr) {
-            let mut stream = conn.stream.lock().await;
+        #[cfg(not(windows))]
+        if matches!(flow_control, FlowControlType::DtrDsr) {
+            let mut stream = shared_stream.lock().await;
             use serialport::SerialPort;
             
             const DSR_TIMEOUT_MS: u64 = 5000;
@@ -228,7 +254,7 @@ impl SerialIoManager {
                         drop(stream);
                         sleep(Duration::from_millis(DSR_CHECK_INTERVAL_MS)).await;
                         waited_ms += DSR_CHECK_INTERVAL_MS;
-                        stream = conn.stream.lock().await;
+                        stream = shared_stream.lock().await;
                     }
                     Err(e) => {
                         return Err(AppError::Serial(format!("Failed to read DSR state: {}", e)));
@@ -237,12 +263,11 @@ impl SerialIoManager {
             }
             
             stream.write_all(data).await.map_err(AppError::Io)?;
-            Ok(data.len())
-        } else {
-            let mut stream = conn.stream.lock().await;
-            stream.write_all(data).await.map_err(AppError::Io)?;
-            Ok(data.len())
+            return Ok(data.len());
         }
+        let mut stream = shared_stream.lock().await;
+        stream.write_all(data).await.map_err(AppError::Io)?;
+        Ok(data.len())
     }
 
     pub async fn receive(&self, connection_id: &str, _buf_size: usize) -> AppResult<Vec<u8>> {
@@ -325,7 +350,20 @@ fn current_timestamp_ms() -> u64 {
         .as_millis() as u64
 }
 
-fn build_serial_stream(config: &SerialConfig) -> AppResult<(SerialStream, FlowControlType)> {
+async fn close_connection(conn: SerialConnection) -> AppResult<()> {
+    #[cfg(windows)]
+    let shutdown = conn.shutdown.clone();
+    if let Some(task) = conn.read_task {
+        task.abort();
+        let _ = task.await;
+    }
+    drop(conn.stream);
+    #[cfg(windows)]
+    shutdown.close().await.map_err(AppError::Io)?;
+    Ok(())
+}
+
+async fn build_serial_stream(config: &SerialConfig) -> AppResult<(SerialStream, FlowControlType)> {
     let data_bits = match config.data_bits {
         5 => DataBits::Five,
         6 => DataBits::Six,
@@ -362,14 +400,21 @@ fn build_serial_stream(config: &SerialConfig) -> AppResult<(SerialStream, FlowCo
         .parity(parity)
         .flow_control(flow_control);
 
+    #[cfg(windows)]
+    let stream = SerialStream::open(builder, matches!(flow_control_type, FlowControlType::DtrDsr), config.baud_rate).await?;
+    #[cfg(not(windows))]
     let stream = SerialStream::open(&builder).map_err(|e| AppError::Serial(e.to_string()))?;
     
-    let mut stream = stream;
-    if matches!(flow_control_type, FlowControlType::DtrDsr) {
-        use serialport::SerialPort;
-        stream.write_data_terminal_ready(true)
-            .map_err(|e| AppError::Serial(format!("Failed to set DTR: {}", e)))?;
-    }
+    #[cfg(not(windows))]
+    let stream = {
+        let mut stream = stream;
+        if matches!(flow_control_type, FlowControlType::DtrDsr) {
+            use serialport::SerialPort;
+            stream.write_data_terminal_ready(true)
+                .map_err(|e| AppError::Serial(format!("Failed to set DTR: {}", e)))?;
+        }
+        stream
+    };
 
     Ok((stream, flow_control_type))
 }

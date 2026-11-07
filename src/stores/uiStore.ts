@@ -19,6 +19,8 @@ const clampLeftPanelWidth = (width: number) => (
 const clampCenterPanelWidth = (width: number) => Math.max(CENTER_PANEL_MIN_WIDTH, width);
 
 export interface TerminalChannelSettings {
+  /** Missing in older configurations; defaults to OFF. */
+  interactiveMode?: boolean;
   sendFormat: TerminalDataFormat;
   receiveFormat: TerminalDataFormat;
   showInputPrefix: boolean;
@@ -108,7 +110,7 @@ export const useUIStore = create<UIStore>((set) => ({
   centerPanelWidth: CENTER_PANEL_DEFAULT_WIDTH,
   rightPanelWidth: 444,
   centerSplitRatio: 0.5,
-  centerTopVisible: false,
+  centerTopVisible: true,
   channelConfigPreview: false,
   centerBottomVisible: true,
   rightPanelVisible: true,

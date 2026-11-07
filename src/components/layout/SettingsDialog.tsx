@@ -405,7 +405,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
       ui.setLeftPanelWidth(LEFT_PANEL_MIN_WIDTH);
       ui.setRightPanelWidth(360);
       ui.setCenterSplitRatio(0.5);
-      ui.setCenterTopVisible(false);
+      ui.setCenterTopVisible(true);
       ui.setCenterBottomVisible(true);
       ui.setRightPanelVisible(true);
       ui.setDataViewMode('text' as 'text');
@@ -414,7 +414,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
       ui.setReceiveFormat('hex');
       ui.setChannelPanelVisible(true);
       ui.setShowInputPrefix(true);
-      ui.setShowTimestamp(true);
+      ui.setShowTimestamp(false);
       ui.setShowReceived(true);
       ui.replaceTerminalChannelSettings({});
 

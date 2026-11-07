@@ -710,13 +710,6 @@ export const BlePanel = React.memo(function BlePanel({ channelId }: { channelId:
                       >
                         {device.name || 'Unknown'}
                       </span>
-                      {pairingStatus?.isPaired && (
-                        <Collapse hidden={isCompact} hiddenMargin="-ml-1">
-                          <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded bg-accent-green/15 px-1.5 py-0.5 text-[10px] text-accent-green" title="Paired and bonded in Windows">
-                            <LockIcon className="h-3 w-3" /> Paired
-                          </span>
-                        </Collapse>
-                      )}
                       <div
                         className="flex min-w-0 shrink-0 items-center overflow-hidden transition-[width,margin,opacity] duration-150 ease-out motion-reduce:transition-none"
                         style={{
@@ -753,10 +746,23 @@ export const BlePanel = React.memo(function BlePanel({ channelId }: { channelId:
                           width: 'var(--ble-device-service-width, 48px)',
                         }}
                       >
-                        <span className="flex w-12 shrink-0 items-center justify-center whitespace-nowrap rounded bg-[var(--layer-hover)] px-1.5 py-0.5 text-center font-mono text-[10px] text-text-secondary">
+                        <span className="flex w-12 shrink-0 items-center justify-center whitespace-nowrap text-center font-mono text-[10px] text-text-secondary">
                           {device.serviceUuids?.length || 0} SVC
                         </span>
                       </div>
+
+                      {pairingStatus?.isPaired && (
+                        <Collapse hidden={isCompact} hiddenMargin="-ml-1" visibleMargin="ml-2">
+                          <span
+                            aria-label="Paired"
+                            className="inline-flex h-3 w-3 shrink-0 -translate-y-px items-center justify-center text-accent-green/70"
+                            role="img"
+                            title="Paired and bonded in Windows"
+                          >
+                            <LockIcon className="h-3 w-3" />
+                          </span>
+                        </Collapse>
+                      )}
 
                       <div className="ml-auto flex shrink-0 items-center gap-1">
                         <div className="flex w-12 justify-end">

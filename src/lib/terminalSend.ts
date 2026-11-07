@@ -1,8 +1,26 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useSerialStore } from '../stores/serialStore';
 import { useTcpStore } from '../stores/tcpStore';
+import { useBleStore } from '../stores/bleStore';
 import type { PaneState } from '../stores/terminalStore';
 import type { Channel } from '../types';
+
+/** Capture the selected endpoint before queuing raw terminal input. No parsing or newline suffix. */
+export function prepareTerminalInteractiveSend(
+  channel: Channel,
+  pane: PaneState,
+  data: number[],
+  report: (message: string) => void,
+): () => Promise<unknown> {
+  if (channel.type !== 'ble') return prepareTerminalNetworkSend(channel, pane, data, report);
+  const deviceId = useBleStore.getState().channelStates[channel.id]?.connectedDeviceId;
+  if (!deviceId) throw new Error('BLE not connected');
+  const target = pane.selectedWriteTarget;
+  if (!target) throw new Error('Turn interaction OFF and use /select to choose a writable characteristic first');
+  return () => invoke('write_ble_characteristic', {
+    deviceId, serviceUuid: target.serviceUuid, charUuid: target.charUuid, data,
+  });
+}
 
 /** Resolve only endpoints owned by the explicitly selected channel. */
 export function prepareTerminalNetworkSend(

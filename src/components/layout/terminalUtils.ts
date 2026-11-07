@@ -34,6 +34,7 @@ export interface TerminalEntryParts {
   leadingText: string;
   marker: '<' | '>';
   metadata?: string;
+  rawPayload: string;
   payload: string;
   continuationIndent: string;
 }
@@ -194,7 +195,11 @@ export function formatTerminalBytes(data: number[], format: TerminalDataFormat):
       continue;
     }
     if (byte === 0x0d) {
-      if (data[index + 1] === 0x0a) index++;
+      while (data[index + 1] === 0x0d) index++;
+      if (data[index + 1] === 0x0a) {
+        index++;
+        while (data[index + 1] === 0x0d && data[index + 2] !== 0x0a) index++;
+      }
       result += '\n';
       continue;
     }
@@ -215,12 +220,144 @@ export function formatTerminalBytes(data: number[], format: TerminalDataFormat):
   return result;
 }
 
+function isLineBreakByte(byte: number): boolean {
+  return byte === 0x0a || byte === 0x0b || byte === 0x0c || byte === 0x0d;
+}
+
+function consumeLeadingLineBreak(data: number[]): { consumed: number[]; rest: number[] } {
+  if (data.length === 0) return { consumed: [], rest: [] };
+  if (data[0] === 0x0d) {
+    let end = 1;
+    while (data[end] === 0x0d) end++;
+    if (data[end] === 0x0a) {
+      end++;
+      while (data[end] === 0x0d && data[end + 1] !== 0x0a) end++;
+    }
+    return { consumed: data.slice(0, end), rest: data.slice(end) };
+  }
+  if (isLineBreakByte(data[0])) {
+    return { consumed: [data[0]], rest: data.slice(1) };
+  }
+  return { consumed: [], rest: data };
+}
+
+export function entryEndsWithLineBreak(
+  entry: TerminalDisplayEntry,
+  receiveFormat: TerminalDataFormat,
+): boolean {
+  if (receiveFormat !== 'ascii' || entry.kind !== 'rx' || !entry.data || entry.data.length === 0) {
+    return false;
+  }
+  return isLineBreakByte(entry.data[entry.data.length - 1]);
+}
+
+function extractRxMetadataPrefix(text: string): string {
+  const match = /^(?:((?:\[[^\]]+\]\s*)+))?RX:\s*/.exec(text);
+  return match?.[1]?.trim() ?? '';
+}
+
+function trimAsciiLineBreaks(text: string): string {
+  return text.replace(/^\n+|\n+$/g, '');
+}
+
+function hasVisibleAsciiContent(data: number[]): boolean {
+  return trimAsciiLineBreaks(formatTerminalBytes(data, 'ascii')).length > 0;
+}
+
+/**
+ * Coalesces fragmented RX byte chunks in ASCII mode so mid-line packet splits,
+ * interactive character echoes, backspaces, and CRLF line endings render as
+ * natural terminal lines instead of one block per transport packet.
+ */
+export function coalesceTerminalEntries<T extends TerminalDisplayEntry>(
+  entries: T[],
+  receiveFormat: TerminalDataFormat,
+): T[] {
+  if (receiveFormat !== 'ascii' || entries.length === 0) {
+    return entries;
+  }
+
+  const result: T[] = [];
+
+  for (const entry of entries) {
+    if (entry.kind !== 'rx' || !entry.data || entry.data.length === 0) {
+      result.push(entry);
+      continue;
+    }
+
+    const prev = result[result.length - 1];
+    const canMergeWithPrev =
+      prev !== undefined &&
+      prev.kind === 'rx' &&
+      prev.data !== undefined &&
+      prev.data.length > 0 &&
+      (prev as { sourceChannelId?: string }).sourceChannelId === (entry as { sourceChannelId?: string }).sourceChannelId &&
+      prev.sourceLabel === entry.sourceLabel &&
+      prev.bleMetadata?.serviceUuid === entry.bleMetadata?.serviceUuid &&
+      prev.bleMetadata?.charUuid === entry.bleMetadata?.charUuid &&
+      extractRxMetadataPrefix(prev.text) === extractRxMetadataPrefix(entry.text);
+
+    let incomingData = entry.data;
+
+    if (canMergeWithPrev && prev.data) {
+      // Join CRLF split across two consecutive packets (\r at end of prev, \n at start of incoming)
+      if (prev.data[prev.data.length - 1] === 0x0d && incomingData[0] === 0x0a) {
+        prev.data.push(0x0a);
+        incomingData = incomingData.slice(1);
+        if (incomingData.length === 0) {
+          continue;
+        }
+      }
+
+      if (!hasVisibleAsciiContent(prev.data)) {
+        prev.data.push(...incomingData);
+        prev.timestamp = entry.timestamp;
+        continue;
+      }
+
+      const prevEndsWithLineBreak = isLineBreakByte(prev.data[prev.data.length - 1]);
+      if (!prevEndsWithLineBreak) {
+        if (isLineBreakByte(incomingData[0])) {
+          const { consumed, rest } = consumeLeadingLineBreak(incomingData);
+          prev.data.push(...consumed);
+          incomingData = rest;
+          if (incomingData.length === 0 || !hasVisibleAsciiContent(incomingData)) {
+            if (incomingData.length > 0) {
+              prev.data.push(...incomingData);
+            }
+            continue;
+          }
+        } else {
+          prev.data.push(...incomingData);
+          continue;
+        }
+      } else if (!hasVisibleAsciiContent(incomingData)) {
+        prev.data.push(...incomingData);
+        continue;
+      }
+    }
+
+    result.push({
+      ...entry,
+      data: [...incomingData],
+    });
+  }
+
+  return result.filter(
+    entry =>
+      entry.kind !== 'rx' ||
+      !entry.data ||
+      Boolean(entry.bleMetadata) ||
+      hasVisibleAsciiContent(entry.data),
+  );
+}
+
 function formatRxPayload(text: string, data: number[] | undefined, format: TerminalDataFormat): string {
   if (!data) return stripRxLabel(text);
 
-  const match = /^(?:((?:\[[^\]]+\]\s*)+))?RX:\s*/.exec(text);
-  const metadata = match?.[1]?.trim();
-  const payload = formatTerminalBytes(data, format);
+  const metadata = extractRxMetadataPrefix(text);
+  const formatted = formatTerminalBytes(data, format);
+  const payload = format === 'ascii' ? trimAsciiLineBreaks(formatted) : formatted;
   return metadata ? `${metadata} ${payload}` : payload;
 }
 
@@ -234,8 +371,12 @@ export function formatTerminalEntryParts(
     const directionPrefix = makeDirectionPrefix(promptText, entry.kind, showInputPrefix);
     const marker = directionPrefix.slice(-1) as '<' | '>';
     const prefix = directionPrefix.slice(0, -1);
-    const payload = entry.kind === 'tx'
-      ? (entry.data ? formatTerminalBytes(entry.data, sendFormat) : stripTxLabel(entry.text))
+    const rawPayload = entry.kind === 'tx'
+      ? (entry.data
+        ? (sendFormat === 'ascii'
+          ? trimAsciiLineBreaks(formatTerminalBytes(entry.data, sendFormat))
+          : formatTerminalBytes(entry.data, sendFormat))
+        : stripTxLabel(entry.text))
       : formatRxPayload(entry.text, entry.data, receiveFormat);
     const timestampPrefix = showTimestamp ? formatTimestamp(entry.timestamp) : '';
     const timestampSeparator = showTimestamp && showInputPrefix ? ' ' : '';
@@ -252,7 +393,8 @@ export function formatTerminalEntryParts(
       leadingText,
       marker,
       metadata,
-      payload: payload.replace(/\n/g, `\n${continuationIndent}`),
+      rawPayload,
+      payload: rawPayload.replace(/\n/g, `\n${continuationIndent}`),
       continuationIndent,
     };
   }

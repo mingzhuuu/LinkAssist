@@ -121,7 +121,7 @@ fn default_channel_panel_visible() -> bool {
 }
 
 fn default_center_top_visible() -> bool {
-    false
+    true
 }
 
 fn default_center_bottom_visible() -> bool {
@@ -143,7 +143,7 @@ impl Default for UiConfig {
             right_panel_width: 444.0,
             center_panel_width: Some(670.0),
             center_split_ratio: 0.5,
-            center_top_visible: false,
+            center_top_visible: true,
             center_bottom_visible: true,
             right_panel_visible: true,
             simple_mode: None,

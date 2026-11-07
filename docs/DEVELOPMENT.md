@@ -1,5 +1,9 @@
 # 开发与验证
 
+## UI 修改入口
+
+新增或修改界面前阅读 [UI 设计标准](UI-DESIGN-STANDARD.md)，确认区域布局、走线、Token、控件状态、弹层类型与交互约定。该文档区分现有实现、后续规则和待统一项，不能将历史差异当作新组件模板。公共设计规则改变时同步维护该标准；尺寸和弹层修改按其验收清单验证。
+
 ## 环境与构建入口
 
 - Node.js：开发使用 24.x；锁文件引擎范围见 [REFERENCE](REFERENCE.md)。不再沿用旧 README 的 Node >=18。
@@ -84,6 +88,8 @@ cargo test --manifest-path src-tauri/Cargo.toml --lib --locked
 
 ## 手动验收矩阵
 
+Windows 串口使用 `src-tauri/src/serial/windows_stream.rs` 的专用线程执行同步 COM 读写和句柄释放，避免驱动 `CloseHandle` 阻塞 Tokio 共用 IOCP 线程。接收队列有界，发送按波特率分块，驱动打开/关闭等待最多 3 秒；写入超时会结束该连接。应用层只短暂持有连接表/管理器锁，等待串口 I/O 时不持有全局管理器锁。非 Windows 平台继续使用 tokio-serial。回归需覆盖空闲关闭、接收积压、写入失败、驱动释放挂起，以及真实设备逐键收发后重复关闭/重开；关闭超时仅表示程序恢复响应，不保证故障驱动已释放硬件。
+
 以下是原生发布前检查清单，本次状态见 AUDIT，未勾选项不能理解为已通过。
 
 | 场景 | 步骤 | 预期证据 |
@@ -106,6 +112,7 @@ Rust GTK 兼容补丁的维护规则见 [vendor/README.md](../vendor/README.md)�
 
 1. 功能变化先更新 FEATURES 的入口、结果与限制，API 参数详细教程仍放在 `config/`。
 2. 模块责任或边界变化更新 ARCHITECTURE，事实性开发导航同步相关 AGENTS 文件。
+   UI 公共视觉或交互约定变化同时更新 UI-DESIGN-STANDARD；保留源码依据与尚未完成的验证边界。
 3. 运行 `npm run docs:generate`，生成源码接口/文件清单；无需手写重复工具表。
 4. 运行 `npm run check` 和适用的 Rust/原生检查。
 5. AUDIT 记录执行环境、实际结果、忽略/未执行项；不要将计划写成已验证事实。

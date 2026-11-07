@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { emit, emitTo, listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
@@ -17,7 +17,9 @@ import { prepareTerminalNetworkSend, sendWithImmediateTxEcho } from '../../lib/t
 import { createEventSubscriptions } from './eventSubscriptions';
 import { ChannelSelectionCircle } from '../common/ChannelSelectionCircle';
 import { TerminalContextMenu } from './TerminalContextMenu';
-import { formatInputTimestamp, formatTerminalEntryParts, formatTerminalEntryText, toHex } from './terminalUtils';
+import type { TerminalChannelSettings } from '../../stores/uiStore';
+import { coalesceTerminalEntries, entryEndsWithLineBreak, formatInputTimestamp, formatTerminalEntryParts, formatTerminalEntryText, toHex } from './terminalUtils';
+import { useInteractiveTerminalInput } from './InteractiveTerminal';
 
 function channelIcon(type: string) {
   if (type === 'ble') return <BluetoothIcon size={12} />;
@@ -52,7 +54,6 @@ export const DetachedTerminalWindow: React.FC = () => {
   const activeTab = pane?.tabs.find(t => t.id === pane.activeTabId);
   const { channels } = useChannelStore();
   useValidTerminalChannels(focusedPaneId, pane?.tabs, channels);
-  const visibleEntries = visibleTerminalEntries(activeTab, pane?.entries ?? []);
   const selectedChannels = activeTab ? terminalChannels(activeTab, channels) : [];
   const linkedChannel = selectedChannels.find(c => c.id === activeTab?.channelId);
   const [picker, setPicker] = useState<{ x: number; y: number } | null>(null);
@@ -105,7 +106,7 @@ export const DetachedTerminalWindow: React.FC = () => {
           focusedPaneId: paneId,
         });
         useUIStore.getState().setTerminalChannelSettings(
-          tab.channelId ?? '__terminal__',
+          tab.id ? `tab:${tab.id}` : (tab.channelId ?? '__terminal__'),
           initialTerminalSettings,
         );
 
@@ -163,7 +164,8 @@ export const DetachedTerminalWindow: React.FC = () => {
     const ch = channels.find(c => c.id === tab.channelId);
     const entries = currentPane.tabEntries[tab.id] ?? currentPane.entries ?? [];
     const ui = useUIStore.getState();
-    const currentTerminalSettings = ui.terminalChannelSettings[tab.channelId ?? '__terminal__'] ?? {
+    const currentTerminalSettings = (tab.id ? ui.terminalChannelSettings[`tab:${tab.id}`] : undefined)
+      ?? ui.terminalChannelSettings[tab.channelId ?? '__terminal__'] ?? {
       sendFormat: ui.sendFormat,
       receiveFormat: ui.receiveFormat,
       showInputPrefix: ui.showInputPrefix,
@@ -197,21 +199,35 @@ export const DetachedTerminalWindow: React.FC = () => {
     terminalChannelSettings,
     setTerminalChannelSettings,
   } = useUIStore();
-  const terminalSettingsKey = activeTab?.channelId ?? '__terminal__';
-  const terminalSettings = terminalChannelSettings[terminalSettingsKey] ?? {
-    sendFormat,
-    receiveFormat,
-    showInputPrefix,
-    showTimestamp,
-  };
+  const terminalSettingsKey = activeTab?.id
+    ? `tab:${activeTab.id}`
+    : (activeTab?.channelId ?? '__terminal__');
+  const getTerminalSettingsForTab = useCallback((tab: typeof activeTab): TerminalChannelSettings => {
+    const byTab = tab?.id ? terminalChannelSettings[`tab:${tab.id}`] : undefined;
+    const byChannel = terminalChannelSettings[tab?.channelId ?? '__terminal__'];
+    return byTab ?? byChannel ?? {
+      sendFormat,
+      receiveFormat,
+      showInputPrefix,
+      showTimestamp,
+    };
+  }, [receiveFormat, sendFormat, showInputPrefix, showTimestamp, terminalChannelSettings]);
+  const terminalSettings = getTerminalSettingsForTab(activeTab);
+  const visibleEntries = useMemo(
+    () => coalesceTerminalEntries(
+      visibleTerminalEntries(activeTab, pane?.entries ?? []),
+      terminalSettings.receiveFormat,
+    ),
+    [activeTab, pane?.entries, terminalSettings.receiveFormat],
+  );
   const updateTerminalSettings = useCallback((changes: Partial<typeof terminalSettings>) => {
     const nextSettings = { ...terminalSettings, ...changes };
     setTerminalChannelSettings(terminalSettingsKey, nextSettings);
     void emit('terminal-channel-settings-changed', {
-      channelId: activeTab?.channelId ?? null,
+      channelId: terminalSettingsKey,
       settings: nextSettings,
     });
-  }, [activeTab?.channelId, setTerminalChannelSettings, terminalSettings, terminalSettingsKey]);
+  }, [setTerminalChannelSettings, terminalSettings, terminalSettingsKey]);
 
   useEffect(() => {
     const unlistenPromise = listen<TerminalSettingsChangedPayload>(
@@ -428,8 +444,23 @@ export const DetachedTerminalWindow: React.FC = () => {
     }
   }, [focusedPaneId, activeTab, channels, linkedChannel, connectedDeviceId]);
 
+  const {
+    handleInteractiveKeyDown,
+    handleInteractivePaste,
+    handleInteractiveCompositionStart,
+    handleInteractiveCompositionEnd,
+    handleInteractiveBlur,
+  } = useInteractiveTerminalInput({
+    paneId: focusedPaneId,
+    channelId: linkedChannel?.id ?? null,
+    enabled: Boolean(terminalSettings.interactiveMode),
+  });
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!focusedPaneId) return;
+    if (handleInteractiveKeyDown(e)) {
+      return;
+    }
     if (e.key === 'Enter') {
       e.preventDefault();
       historyIndexRef.current = -1;
@@ -453,7 +484,7 @@ export const DetachedTerminalWindow: React.FC = () => {
       if (history[next] !== undefined) useTerminalStore.getState().setCmdInput(focusedPaneId, history[next]);
       return;
     }
-  }, [focusedPaneId, handleSend]);
+  }, [focusedPaneId, handleInteractiveKeyDown, handleSend]);
 
   // ─── Event listeners for incoming data (mirrors CenterPanel logic) ─
   useEffect(() => {
@@ -597,7 +628,18 @@ export const DetachedTerminalWindow: React.FC = () => {
   const promptText = linkedChannel ? `${linkedChannel.name}>` : '>';
   const visiblePrompt = terminalSettings.showInputPrefix ? promptText : '>';
 
-  const renderEntry = (entry: { kind: 'rx' | 'tx' | 'system'; timestamp: number; text: string; data?: number[]; bleMetadata?: { serviceUuid: string; charUuid: string }; sourceLabel?: string }): React.ReactNode => {
+  const renderInteractiveInputCursor = () => (
+    <span
+      data-testid="terminal-inline-cursor"
+      className="inline-block w-[7px] h-[14px] translate-y-[2px] bg-accent-green animate-pulse select-none"
+      aria-hidden="true"
+    />
+  );
+
+  const renderEntry = (
+    entry: { kind: 'rx' | 'tx' | 'system'; timestamp: number; text: string; data?: number[]; bleMetadata?: { serviceUuid: string; charUuid: string }; sourceLabel?: string },
+    isLastEntry = false,
+  ): React.ReactNode => {
     const options = {
       promptText: selectedChannels.length > 1 ? '>' : promptText,
       showTimestamp: terminalSettings.showTimestamp,
@@ -608,27 +650,56 @@ export const DetachedTerminalWindow: React.FC = () => {
     };
     const parts = formatTerminalEntryParts(entry, options);
     if (!parts) {
-      return <span className="text-text-muted italic">{formatTerminalEntryText(entry, options)}</span>;
+      return (
+        <span className="text-text-muted italic">
+          {formatTerminalEntryText(entry, options)}
+          {terminalSettings.interactiveMode && isLastEntry ? renderInteractiveInputCursor() : null}
+        </span>
+      );
     }
     const payloadClass = entry.kind === 'rx' ? channelTone.rx : channelTone.tx;
+    if (terminalSettings.interactiveMode) {
+      const trailingBreak = isLastEntry && entryEndsWithLineBreak(entry, terminalSettings.receiveFormat) ? '\n' : '';
+      return (
+        <span className={payloadClass}>
+          {parts.leadingText ? <span className="text-text-muted">{parts.leadingText} </span> : null}
+          {parts.metadata ? (
+            <>
+              <span className="text-text-secondary">{parts.metadata}</span>
+              {'\n'}
+            </>
+          ) : null}
+          {parts.rawPayload}
+          {trailingBreak}
+          {isLastEntry ? renderInteractiveInputCursor() : null}
+        </span>
+      );
+    }
     if (parts.metadata) {
       return (
-        <>
-          <span className="text-text-muted">{parts.leadingText}</span>
-          <span className="font-semibold text-text-secondary">{parts.marker}</span>
-          <span className="text-text-secondary">{` ${parts.metadata}`}</span>
-          {'\n'}
-          <span className="text-text-muted">{parts.continuationIndent}</span>
-          <span className={payloadClass}>{parts.payload}</span>
-        </>
+        <div className="flex items-start">
+          <span className="shrink-0 whitespace-pre">
+            <span className="text-text-muted">{parts.leadingText}</span>
+            <span className="font-semibold text-text-secondary">{parts.marker}</span>
+            {' '}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="text-text-secondary">{parts.metadata}</span>
+            {'\n'}
+            <span className={payloadClass}>{parts.rawPayload}</span>
+          </span>
+        </div>
       );
     }
     return (
-      <>
-        <span className="text-text-muted">{parts.leadingText}</span>
-        <span className="font-semibold text-text-secondary">{parts.marker}</span>
-        <span className={payloadClass}>{` ${parts.payload}`}</span>
-      </>
+      <div className="flex items-start">
+        <span className="shrink-0 whitespace-pre">
+          <span className="text-text-muted">{parts.leadingText}</span>
+          <span className="font-semibold text-text-secondary">{parts.marker}</span>
+          {' '}
+        </span>
+        <span className={`min-w-0 flex-1 ${payloadClass}`}>{parts.rawPayload}</span>
+      </div>
     );
   };
   const inputPromptBase = visiblePrompt.endsWith('>')
@@ -692,42 +763,62 @@ export const DetachedTerminalWindow: React.FC = () => {
               onContextMenu={handleReceiveContextMenu}
             >
               {pane && visibleEntries.length === 0 ? (
-                <div className="text-text-muted italic px-1 select-none">
-                  {selectedChannels.length ? 'Waiting for channel data…' : 'Create a channel to receive data.'}
-                </div>
+                terminalSettings.interactiveMode ? (
+                  <div className="whitespace-pre-wrap break-all">
+                    {renderInteractiveInputCursor()}
+                  </div>
+                ) : (
+                  <div className="text-text-muted italic px-1 select-none">
+                    {selectedChannels.length ? 'Waiting for channel data…' : 'Create a channel to receive data.'}
+                  </div>
+                )
               ) : (
-                visibleEntries.map(entry => (
+                visibleEntries.map((entry, index) => (
                   <div key={entry.id} className="whitespace-pre-wrap break-all">
-                    {renderEntry(entry)}
+                    {renderEntry(entry, index === visibleEntries.length - 1)}
                   </div>
                 ))
               )}
 
-              <div className="h-3 shrink-0" />
+              {!terminalSettings.interactiveMode && <div className="h-3 shrink-0" />}
 
-              <div className="flex items-center">
-                {terminalSettings.showTimestamp && (
+              <div className={terminalSettings.interactiveMode ? 'h-0 overflow-hidden opacity-0 pointer-events-none' : 'flex items-center'}>
+                {!terminalSettings.interactiveMode && terminalSettings.showTimestamp && (
                   <span className={`shrink-0 select-none font-mono text-[12px] leading-relaxed text-text-muted ${terminalSettings.showInputPrefix ? 'mr-1.5' : ''}`}>
                     {inputTimestamp}
                   </span>
                 )}
-                <span className="shrink-0 select-none font-mono text-[12px] leading-relaxed text-text-muted">
-                  {inputPromptBase}
-                </span>
-                <span className="mr-1.5 shrink-0 select-none font-mono text-[12px] font-semibold leading-relaxed text-text-secondary">
-                  &gt;
-                </span>
+                {!terminalSettings.interactiveMode && (
+                  <>
+                    <span className="shrink-0 select-none font-mono text-[12px] leading-relaxed text-text-muted">
+                      {inputPromptBase}
+                    </span>
+                    <span className="mr-1.5 shrink-0 select-none font-mono text-[12px] font-semibold leading-relaxed text-text-secondary">
+                      &gt;
+                    </span>
+                  </>
+                )}
                 <input
                   ref={inputRef}
                   type="text"
                   value={pane?.cmdInput ?? ''}
-                  onChange={e => focusedPaneId && useTerminalStore.getState().setCmdInput(focusedPaneId, e.target.value)}
+                  onChange={e => {
+                    if (focusedPaneId && !terminalSettings.interactiveMode) {
+                      useTerminalStore.getState().setCmdInput(focusedPaneId, e.target.value);
+                    }
+                  }}
                   onKeyDown={handleKeyDown}
+                  onPaste={handleInteractivePaste}
+                  onCompositionStart={handleInteractiveCompositionStart}
+                  onCompositionEnd={handleInteractiveCompositionEnd}
+                  onBlur={handleInteractiveBlur}
                   spellCheck={false}
                   autoCorrect="off"
                   autoCapitalize="off"
                   placeholder={linkedChannel ? "hex: 01 02 FF   'ASCII'   \"ASCII+NUL\"" : 'No channel'}
-                  className={`flex-1 bg-transparent font-mono text-[12px] leading-relaxed text-text-primary outline-none placeholder:text-text-muted/40 ${channelTone.caret}`}
+                  className={terminalSettings.interactiveMode
+                    ? 'w-0 h-0 opacity-0 outline-none border-0 p-0 m-0'
+                    : `flex-1 bg-transparent font-mono text-[12px] leading-relaxed text-text-primary outline-none placeholder:text-text-muted/40 ${channelTone.caret}`}
                 />
               </div>
             </div>
@@ -745,6 +836,11 @@ export const DetachedTerminalWindow: React.FC = () => {
           receiveFormat={terminalSettings.receiveFormat}
           showInputPrefix={terminalSettings.showInputPrefix}
           showTimestamp={terminalSettings.showTimestamp}
+          interactiveMode={terminalSettings.interactiveMode ?? false}
+          onToggleInteractiveMode={() => {
+            updateTerminalSettings({ interactiveMode: !terminalSettings.interactiveMode });
+            inputRef.current?.focus();
+          }}
           onClear={handleClearTerminal}
           onToggleReceived={handleToggleReceived}
           onSetSendFormat={(format) => updateTerminalSettings({ sendFormat: format })}
