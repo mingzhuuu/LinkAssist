@@ -1,3 +1,5 @@
+import { isRemoteWorkspace } from '../stores/remoteStore';
+import { remoteChannelAction } from '../lib/remoteClient';
 import { invoke } from '@tauri-apps/api/core';
 import { useTcpStore, useChannelStore } from '../stores';
 import { registerChannelConnection, unregisterChannelConnection } from '../lib';
@@ -7,6 +9,7 @@ export function useTcp() {
   const { updateChannelState } = useChannelStore();
 
   const connectTcp = async (addr: string, channelId: string) => {
+    if (isRemoteWorkspace()) return await remoteChannelAction('channel.connect', channelId) as string;
     try {
       updateChannelState(channelId, 'connecting');
       const connectionId = await invoke<string>('tcp_connect', { addr });
@@ -22,6 +25,7 @@ export function useTcp() {
   };
 
   const disconnectTcp = async (connectionId: string, channelId: string) => {
+    if (isRemoteWorkspace()) { await remoteChannelAction('channel.disconnect', channelId); return; }
     try {
       await invoke('tcp_disconnect', { connectionId });
       store.removeClientConnection(connectionId);
@@ -35,6 +39,7 @@ export function useTcp() {
   };
 
   const startServer = async (addr: string, channelId: string) => {
+    if (isRemoteWorkspace()) return await remoteChannelAction('channel.connect', channelId) as string;
     try {
       updateChannelState(channelId, 'connecting');
       await invoke('tcp_server_start', { addr });
@@ -51,6 +56,7 @@ export function useTcp() {
   };
 
   const stopServer = async (channelId: string) => {
+    if (isRemoteWorkspace()) { await remoteChannelAction('channel.disconnect', channelId); return; }
     try {
       await invoke('tcp_server_stop');
       const current = useTcpStore.getState();
@@ -68,6 +74,10 @@ export function useTcp() {
   };
 
   const disconnectClient = async (clientId: string) => {
+    if (isRemoteWorkspace()) {
+      const channelId = useTcpStore.getState().connectionMap[clientId];
+      await remoteChannelAction('tcp.disconnectClient', channelId, { clientId }); return;
+    }
     try {
       await invoke('tcp_server_disconnect_client', { clientId });
       store.removeServerClient(clientId);
@@ -78,6 +88,7 @@ export function useTcp() {
   };
 
   const bindUdp = async (addr: string, channelId: string) => {
+    if (isRemoteWorkspace()) return await remoteChannelAction('channel.connect', channelId) as string;
     try {
       updateChannelState(channelId, 'connecting');
       await invoke('udp_bind', { addr });
@@ -98,6 +109,7 @@ export function useTcp() {
   };
 
   const unbindUdp = async (channelId: string) => {
+    if (isRemoteWorkspace()) { await remoteChannelAction('channel.disconnect', channelId); return; }
     try {
       await invoke('udp_unbind');
       store.removeConnectionMapping(`udp:${useTcpStore.getState().udpAddr}`);

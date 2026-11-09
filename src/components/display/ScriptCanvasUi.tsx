@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { open as openFileDialog } from '@tauri-apps/plugin-dialog';
+import { openWorkspaceFile as openFileDialog } from '../../lib/workspaceFileDialog';
 import {
   summarizeTestRunnerSelection,
   testsForTestRunnerProfile,
@@ -15,6 +15,7 @@ import type {
 import { readUiPath, resolveUiSource, setUiPath } from './scriptUiUtils';
 
 interface ScriptCanvasUiProps {
+  allowFileDialogs?: boolean;
   ui: ScriptUiDocument;
   values: Record<string, unknown>;
   sources?: Record<string, unknown>;
@@ -89,6 +90,7 @@ function testExecutionProgress(run: TestRunSnapshot) {
 }
 
 export const ScriptCanvasUi: React.FC<ScriptCanvasUiProps> = ({
+  allowFileDialogs = true,
   ui,
   values,
   sources = {},
@@ -138,6 +140,7 @@ export const ScriptCanvasUi: React.FC<ScriptCanvasUiProps> = ({
               key={control.id}
             >
               <ScriptControl
+                allowFileDialogs={allowFileDialogs}
                 control={control}
                 values={values}
                 sources={sources}
@@ -178,6 +181,7 @@ export const ScriptCanvasUi: React.FC<ScriptCanvasUiProps> = ({
 };
 
 interface ScriptControlProps {
+  allowFileDialogs: boolean;
   control: ScriptUiControl;
   values: Record<string, unknown>;
   sources: Record<string, unknown>;
@@ -188,6 +192,7 @@ interface ScriptControlProps {
 }
 
 const ScriptControl: React.FC<ScriptControlProps> = ({
+  allowFileDialogs,
   control,
   values,
   sources,
@@ -232,6 +237,8 @@ const ScriptControl: React.FC<ScriptControlProps> = ({
         {input}
         <button
           className="rounded border border-border px-3 text-[11px] text-text-secondary hover:bg-[var(--layer-hover)]"
+          disabled={!allowFileDialogs}
+          title={allowFileDialogs ? undefined : 'Enter a path on the remote computer'}
           onClick={() => {
             void openFileDialog({
               directory: control.type === 'directory',
@@ -421,6 +428,8 @@ const ScriptControl: React.FC<ScriptControlProps> = ({
                     <button
                       type="button"
                       aria-label={`Browse ${label}`}
+                      disabled={!allowFileDialogs}
+                      title={allowFileDialogs ? undefined : 'Enter a path on the remote computer'}
                       className="rounded border border-border px-3 text-[11px] text-text-secondary hover:bg-[var(--layer-hover)]"
                       onClick={() => {
                         const extensions = inputType === 'file' ? definition?.extensions ?? [] : [];

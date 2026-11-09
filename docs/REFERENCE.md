@@ -11,12 +11,28 @@
 - vitest 锁定版本：4.1.12；Node.js 范围：`^20.0.0 || ^22.0.0 || >=24.0.0`。
 - jsdom 锁定版本：29.1.1；Node.js 范围：`^20.19.0 || ^22.13.0 || >=24.0.0`。
 
-## Tauri 命令（72）
+## Tauri 命令（88）
 
 前端 invoke 名称以此表为准；参数和返回值仍需核对函数签名及 serde 定义。
 
 | 命令 | 实现 |
 |---|---|
+| `remote_list_directory` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_status` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_reconnect` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_request_active` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_enable` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_invite` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_set_no_approval` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `close_main_window` | [src-tauri/src/lib.rs](../src-tauri/src/lib.rs) |
+| `remote_approve` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_revoke` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_connect` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_disconnect` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_action` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_snapshot` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_publish` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
+| `remote_respond` | [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs) |
 | `greet` | [src-tauri/src/lib.rs](../src-tauri/src/lib.rs) |
 | `get_launch_mode` | [src-tauri/src/lib.rs](../src-tauri/src/lib.rs) |
 | `main_window_ready` | [src-tauri/src/lib.rs](../src-tauri/src/lib.rs) |
@@ -153,7 +169,7 @@
 | `import_from_file` | Import content from a file path. The default 'utf8' encoding fails on binary files; pass encoding 'base64' to read any file, including firmware images. |
 | `get_recent_events` | Return recent Core events/logs buffered by the headless core. |
 
-## 应用文件（261）
+## 应用文件（293）
 
 目录职责见 [架构说明](ARCHITECTURE.md)。根目录构建入口另见 [开发与验证](DEVELOPMENT.md)。
 
@@ -189,7 +205,10 @@
 - [scripts/check-rust-backports.mjs](../scripts/check-rust-backports.mjs)
 - [scripts/core-smoke.mjs](../scripts/core-smoke.mjs)
 - [scripts/generate-notices.mjs](../scripts/generate-notices.mjs)
+- [scripts/package-portable.mjs](../scripts/package-portable.mjs)
 - [scripts/project-check.mjs](../scripts/project-check.mjs)
+- [scripts/remote-native-smoke.mjs](../scripts/remote-native-smoke.mjs)
+- [scripts/remote-ui-smoke.mjs](../scripts/remote-ui-smoke.mjs)
 - [scripts/test-rust-macro-diagnostics.mjs](../scripts/test-rust-macro-diagnostics.mjs)
 - [src-tauri/src/AGENTS.md](../src-tauri/src/AGENTS.md)
 - [src-tauri/src/ble/connection.rs](../src-tauri/src/ble/connection.rs)
@@ -226,6 +245,11 @@
 - [src-tauri/src/protocol/templates.rs](../src-tauri/src/protocol/templates.rs)
 - [src-tauri/src/protocol/types.rs](../src-tauri/src/protocol/types.rs)
 - [src-tauri/src/recent_events.rs](../src-tauri/src/recent_events.rs)
+- [src-tauri/src/remote/commands.rs](../src-tauri/src/remote/commands.rs)
+- [src-tauri/src/remote/dns.rs](../src-tauri/src/remote/dns.rs)
+- [src-tauri/src/remote/identity.rs](../src-tauri/src/remote/identity.rs)
+- [src-tauri/src/remote/mod.rs](../src-tauri/src/remote/mod.rs)
+- [src-tauri/src/remote/protocol.rs](../src-tauri/src/remote/protocol.rs)
 - [src-tauri/src/script_helper.rs](../src-tauri/src/script_helper.rs)
 - [src-tauri/src/script_markers.rs](../src-tauri/src/script_markers.rs)
 - [src-tauri/src/serial/io.rs](../src-tauri/src/serial/io.rs)
@@ -250,6 +274,8 @@
 - [src/__tests__/GlobalTooltip.test.tsx](../src/__tests__/GlobalTooltip.test.tsx)
 - [src/__tests__/InteractiveTerminal.test.tsx](../src/__tests__/InteractiveTerminal.test.tsx)
 - [src/__tests__/LeftPanelRename.test.tsx](../src/__tests__/LeftPanelRename.test.tsx)
+- [src/__tests__/RemoteAccessInteraction.test.tsx](../src/__tests__/RemoteAccessInteraction.test.tsx)
+- [src/__tests__/RemoteTitleBar.test.tsx](../src/__tests__/RemoteTitleBar.test.tsx)
 - [src/__tests__/RoundedSelect.test.tsx](../src/__tests__/RoundedSelect.test.tsx)
 - [src/__tests__/ScriptCanvasUi.test.tsx](../src/__tests__/ScriptCanvasUi.test.tsx)
 - [src/__tests__/ScriptToolbarButton.test.tsx](../src/__tests__/ScriptToolbarButton.test.tsx)
@@ -260,6 +286,7 @@
 - [src/__tests__/bleDeviceRowLayout.test.ts](../src/__tests__/bleDeviceRowLayout.test.ts)
 - [src/__tests__/bleFilterLayout.test.ts](../src/__tests__/bleFilterLayout.test.ts)
 - [src/__tests__/canvasBorderTheme.test.ts](../src/__tests__/canvasBorderTheme.test.ts)
+- [src/__tests__/canvasCornerUtils.test.ts](../src/__tests__/canvasCornerUtils.test.ts)
 - [src/__tests__/canvasFrameBounds.test.ts](../src/__tests__/canvasFrameBounds.test.ts)
 - [src/__tests__/canvasMigration.test.ts](../src/__tests__/canvasMigration.test.ts)
 - [src/__tests__/canvasSnapUtils.test.ts](../src/__tests__/canvasSnapUtils.test.ts)
@@ -275,6 +302,9 @@
 - [src/__tests__/persistenceValidation.test.ts](../src/__tests__/persistenceValidation.test.ts)
 - [src/__tests__/protocolParseDiagnostics.test.ts](../src/__tests__/protocolParseDiagnostics.test.ts)
 - [src/__tests__/releaseHardening.test.ts](../src/__tests__/releaseHardening.test.ts)
+- [src/__tests__/remoteAccess.test.ts](../src/__tests__/remoteAccess.test.ts)
+- [src/__tests__/remoteLayout.test.ts](../src/__tests__/remoteLayout.test.ts)
+- [src/__tests__/remoteWorkspaceParity.test.tsx](../src/__tests__/remoteWorkspaceParity.test.tsx)
 - [src/__tests__/scriptRuntime.test.ts](../src/__tests__/scriptRuntime.test.ts)
 - [src/__tests__/scriptRuntimeLuaHelpers.test.ts](../src/__tests__/scriptRuntimeLuaHelpers.test.ts)
 - [src/__tests__/scriptUiUtils.test.ts](../src/__tests__/scriptUiUtils.test.ts)
@@ -321,6 +351,7 @@
 - [src/components/display/adapters/lineAdapter.ts](../src/components/display/adapters/lineAdapter.ts)
 - [src/components/display/adapters/scatterAdapter.ts](../src/components/display/adapters/scatterAdapter.ts)
 - [src/components/display/adapters/theme.ts](../src/components/display/adapters/theme.ts)
+- [src/components/display/canvasCornerUtils.ts](../src/components/display/canvasCornerUtils.ts)
 - [src/components/display/canvasDataUtils.ts](../src/components/display/canvasDataUtils.ts)
 - [src/components/display/canvasLifecycleRuntime.ts](../src/components/display/canvasLifecycleRuntime.ts)
 - [src/components/display/canvasSnapUtils.ts](../src/components/display/canvasSnapUtils.ts)
@@ -342,15 +373,21 @@
 - [src/components/layout/AGENTS.md](../src/components/layout/AGENTS.md)
 - [src/components/layout/CenterPanel.tsx](../src/components/layout/CenterPanel.tsx)
 - [src/components/layout/ChannelConfigDrawer.tsx](../src/components/layout/ChannelConfigDrawer.tsx)
+- [src/components/layout/CloseConfirmation.tsx](../src/components/layout/CloseConfirmation.tsx)
 - [src/components/layout/DetachedTerminalWindow.tsx](../src/components/layout/DetachedTerminalWindow.tsx)
 - [src/components/layout/InteractiveTerminal.tsx](../src/components/layout/InteractiveTerminal.tsx)
 - [src/components/layout/LeftPanel.tsx](../src/components/layout/LeftPanel.tsx)
 - [src/components/layout/MainLayout.tsx](../src/components/layout/MainLayout.tsx)
 - [src/components/layout/PaneTreeRenderer.tsx](../src/components/layout/PaneTreeRenderer.tsx)
+- [src/components/layout/RemoteAccessControl.tsx](../src/components/layout/RemoteAccessControl.tsx)
+- [src/components/layout/RemoteCanvasPanel.tsx](../src/components/layout/RemoteCanvasPanel.tsx)
+- [src/components/layout/RemoteChannelPanel.tsx](../src/components/layout/RemoteChannelPanel.tsx)
+- [src/components/layout/RemoteWorkspace.tsx](../src/components/layout/RemoteWorkspace.tsx)
 - [src/components/layout/ResizeHandle.tsx](../src/components/layout/ResizeHandle.tsx)
 - [src/components/layout/RightPanel.tsx](../src/components/layout/RightPanel.tsx)
 - [src/components/layout/SavedCommandsDialog.tsx](../src/components/layout/SavedCommandsDialog.tsx)
 - [src/components/layout/SavedCommandsPanel.tsx](../src/components/layout/SavedCommandsPanel.tsx)
+- [src/components/layout/SettingsControls.tsx](../src/components/layout/SettingsControls.tsx)
 - [src/components/layout/SettingsDialog.tsx](../src/components/layout/SettingsDialog.tsx)
 - [src/components/layout/TerminalChannels.tsx](../src/components/layout/TerminalChannels.tsx)
 - [src/components/layout/TerminalContextMenu.tsx](../src/components/layout/TerminalContextMenu.tsx)
@@ -384,19 +421,29 @@
 - [src/lib/layoutValidation.ts](../src/lib/layoutValidation.ts)
 - [src/lib/numericExpression.ts](../src/lib/numericExpression.ts)
 - [src/lib/persistenceValidation.ts](../src/lib/persistenceValidation.ts)
+- [src/lib/remoteCanvasBridge.ts](../src/lib/remoteCanvasBridge.ts)
+- [src/lib/remoteClient.ts](../src/lib/remoteClient.ts)
+- [src/lib/remoteHost.ts](../src/lib/remoteHost.ts)
+- [src/lib/remoteLayout.ts](../src/lib/remoteLayout.ts)
+- [src/lib/remoteValidation.ts](../src/lib/remoteValidation.ts)
+- [src/lib/remoteWorkspaceState.ts](../src/lib/remoteWorkspaceState.ts)
 - [src/lib/terminalLayoutChange.ts](../src/lib/terminalLayoutChange.ts)
 - [src/lib/terminalSend.ts](../src/lib/terminalSend.ts)
 - [src/lib/testRunnerApi.ts](../src/lib/testRunnerApi.ts)
 - [src/lib/testRunnerSelection.ts](../src/lib/testRunnerSelection.ts)
+- [src/lib/workspaceFileDialog.tsx](../src/lib/workspaceFileDialog.tsx)
+- [src/lib/workspacePersistence.ts](../src/lib/workspacePersistence.ts)
 - [src/main.tsx](../src/main.tsx)
 - [src/stores/AGENTS.md](../src/stores/AGENTS.md)
 - [src/stores/bleStore.ts](../src/stores/bleStore.ts)
 - [src/stores/canvasStore.ts](../src/stores/canvasStore.ts)
 - [src/stores/channelStore.ts](../src/stores/channelStore.ts)
+- [src/stores/closeStore.ts](../src/stores/closeStore.ts)
 - [src/stores/commandStore.ts](../src/stores/commandStore.ts)
 - [src/stores/index.ts](../src/stores/index.ts)
 - [src/stores/mcpStore.ts](../src/stores/mcpStore.ts)
 - [src/stores/protocolStore.ts](../src/stores/protocolStore.ts)
+- [src/stores/remoteStore.ts](../src/stores/remoteStore.ts)
 - [src/stores/serialStore.ts](../src/stores/serialStore.ts)
 - [src/stores/tcpStore.ts](../src/stores/tcpStore.ts)
 - [src/stores/terminalStore.ts](../src/stores/terminalStore.ts)
@@ -414,6 +461,7 @@
 - [src/types/mcp.ts](../src/types/mcp.ts)
 - [src/types/persistence.ts](../src/types/persistence.ts)
 - [src/types/protocol.ts](../src/types/protocol.ts)
+- [src/types/remote.ts](../src/types/remote.ts)
 - [src/types/serial.ts](../src/types/serial.ts)
 - [src/types/tcp.ts](../src/types/tcp.ts)
 - [src/types/testRunner.ts](../src/types/testRunner.ts)

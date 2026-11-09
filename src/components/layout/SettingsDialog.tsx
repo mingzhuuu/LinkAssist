@@ -1,3 +1,4 @@
+import { useRemoteStore } from '../../stores/remoteStore';
 import { importLayout } from './layoutImport';
 import { version } from '../../../package.json';
 import { toast } from '../../stores/toastStore';
@@ -15,66 +16,19 @@ import {
   CloseIcon,
   SettingsIcon,
   SignalIcon,
+  TerminalIcon,
   SaveIcon,
 } from '../common/Icons';
 
-type SettingsSection = 'interface' | 'channel' | 'table' | 'layout' | 'mcp';
+import { SettingGroup, ToggleSetting } from './SettingsControls';
+
+type SettingsSection = 'interface' | 'channel' | 'terminal' | 'table' | 'layout' | 'mcp' | 'remote';
 
 interface SettingsDialogProps {
   open: boolean;
   onClose: () => void;
+  onRemoteContainer?: (element: HTMLDivElement | null) => void;
 }
-
-const SettingGroup: React.FC<{ children: React.ReactNode; title?: string }> = ({ children, title }) => (
-  <div className="mb-8">
-    {title && <h3 className="mb-3 text-[13px] font-medium text-text-muted">{title}</h3>}
-    <div className="rounded-xl border border-border bg-[var(--layer-hover)] divide-y divide-border">
-      {React.Children.map(children, (child, index) => {
-        if (React.isValidElement(child)) {
-          const isFirst = index === 0;
-          const isLast = index === React.Children.count(children) - 1;
-          const containerClasses = `transition-colors hover:bg-[var(--layer-hover)] ${isFirst ? 'rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`;
-          return (
-            <div className={containerClasses}>
-              {child}
-            </div>
-          );
-        }
-        return child;
-      })}
-    </div>
-  </div>
-);
-
-const ToggleSetting: React.FC<{
-  title: string;
-  description: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}> = ({ title, description, checked, onChange }) => (
-  <div className="flex items-center justify-between px-5 py-4 transition-colors">
-    <div className="pr-6">
-      <div className="text-[14px] font-medium text-text-primary">{title}</div>
-      <div className="mt-1 text-[13px] leading-relaxed text-text-muted">{description}</div>
-    </div>
-    <button
-      type="button"
-      role="switch"
-      aria-label={title}
-      aria-checked={checked}
-      className={`relative shrink-0 h-5 w-9 rounded-full transition-colors cursor-pointer ${
-        checked ? 'bg-accent-blue' : 'bg-[var(--layer-active)]'
-      }`}
-      onClick={() => onChange(!checked)}
-    >
-      <div
-        className={`absolute top-[2px] left-[2px] h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-          checked ? 'translate-x-4' : 'translate-x-0'
-        }`}
-      />
-    </button>
-  </div>
-);
 
 const DropdownSetting = <T extends string>({
   title,
@@ -103,17 +57,20 @@ const DropdownSetting = <T extends string>({
   }, [isOpen]);
 
   return (
-    <div className="flex items-center justify-between px-5 py-4 transition-colors">
-      <div className="pr-6">
-        <div className="text-[14px] font-medium text-text-primary">{title}</div>
-        <div className="mt-1 text-[13px] leading-relaxed text-text-muted">{description}</div>
+    <div className="settings-row">
+      <div className="min-w-0">
+        <div className="text-[13px] font-semibold text-text-primary">{title}</div>
+        <div className="mt-1 text-[12px] leading-5 text-text-secondary">{description}</div>
       </div>
       <div className="relative shrink-0" ref={containerRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex cursor-pointer items-center gap-2 text-text-secondary transition-colors hover:text-text-primary"
+          aria-label={title}
+          aria-expanded={isOpen}
+          onKeyDown={(event) => { if (event.key === 'Escape' && isOpen) { event.preventDefault(); event.stopPropagation(); setIsOpen(false); } }}
+          className="settings-select flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-[var(--layer-hover)] px-3 py-1 text-text-primary transition-colors hover:bg-[var(--layer-active)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-blue"
         >
-          <span className="text-[14px]">{options.find((o) => o.value === value)?.label}</span>
+          <span className="text-[13px]">{options.find((o) => o.value === value)?.label}</span>
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="opacity-70">
             <path
               d="M3.5 4.5L6 7L8.5 4.5"
@@ -168,8 +125,10 @@ function isMcpToolScriptPreview(value: unknown): value is McpToolScriptPreview {
     && value.tools.every((tool) => isMcpToolMetaPreview(tool));
 }
 
-export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose }) => {
-  const [activeSection, setActiveSection] = useState<SettingsSection>('interface');
+export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose, onRemoteContainer }) => {
+  const remote = useRemoteStore(state => state.active);
+  const [activeSection, setActiveSection] = useState<SettingsSection>(remote ? 'remote' : 'interface');
+  useEffect(() => { if (remote) setActiveSection('remote'); }, [remote]);
   const [isSaving, setIsSaving] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -185,6 +144,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
     setShowReceived,
     restoreCanvasLayout,
     setRestoreCanvasLayout,
+    closeBehavior,
     fileDialogDirs,
     setFileDialogDir,
   } = useUIStore();
@@ -507,11 +467,11 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
       <div
         role="dialog"
         aria-modal="true"
-        className="relative flex h-[min(640px,calc(100vh-4rem))] w-[min(900px,calc(100vw-4rem))] overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_24px_60px_rgba(0,0,0,0.4)]"
+        className="settings-dialog relative flex h-[min(640px,calc(100vh-4rem))] w-[min(900px,calc(100vw-4rem))] overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_24px_60px_rgba(0,0,0,0.4)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sidebar */}
-        <aside className="flex w-[240px] shrink-0 flex-col border-r border-border bg-surface-tertiary">
+        <aside className="settings-sidebar flex w-[190px] shrink-0 flex-col border-r border-border bg-surface-tertiary">
           <div className="flex flex-1 flex-col px-3 py-4">
             <div className="mb-2 px-3 pt-2 text-[12px] font-semibold text-text-muted">General</div>
             <button
@@ -526,7 +486,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
               Interface
             </button>
             <button
-              onClick={() => setActiveSection('layout')}
+              disabled={remote} title={remote ? 'Configure on the host' : undefined} onClick={() => setActiveSection('layout')}
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] transition-colors ${
                 activeSection === 'layout'
                   ? 'bg-[var(--layer-active)] text-text-primary font-medium'
@@ -555,7 +515,14 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
               Channel
             </button>
             <button
-              onClick={() => setActiveSection('table')}
+              onClick={() => setActiveSection('terminal')}
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] transition-colors ${activeSection === 'terminal' ? 'bg-[var(--layer-active)] text-text-primary font-medium' : 'text-text-secondary hover:bg-[var(--layer-hover)]'}`}
+            >
+              <TerminalIcon size={16} className={activeSection === 'terminal' ? 'opacity-100' : 'opacity-60'} />
+              Terminal
+            </button>
+            <button
+              disabled={remote} title={remote ? 'Configure on the host' : undefined} onClick={() => setActiveSection('table')}
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] transition-colors ${
                 activeSection === 'table'
                   ? 'bg-[var(--layer-active)] text-text-primary font-medium'
@@ -574,7 +541,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
             </button>
             <div className="mb-2 mt-4 px-3 pt-2 text-[12px] font-semibold text-text-muted">Advanced</div>
             <button
-              onClick={() => setActiveSection('mcp')}
+              disabled={remote} title={remote ? 'Configure on the host' : undefined} onClick={() => setActiveSection('mcp')}
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] transition-colors ${
                 activeSection === 'mcp'
                   ? 'bg-[var(--layer-active)] text-text-primary font-medium'
@@ -589,6 +556,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
               </div>
               MCP
             </button>
+            <button onClick={() => setActiveSection('remote')} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] ${activeSection === 'remote' ? 'bg-[var(--layer-active)] text-text-primary' : 'text-text-secondary hover:bg-[var(--layer-hover)]'}`}><SignalIcon size={16} />Remote</button>
           </div>
           
           <div className="px-6 py-6 pb-8">
@@ -598,14 +566,16 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
         </aside>
 
         {/* Content Area */}
-        <main className="relative flex flex-1 flex-col overflow-y-auto bg-surface">
-          <div className="sticky top-0 z-10 flex h-16 items-center justify-between bg-surface/95 px-10 pt-4 backdrop-blur-md">
-            <h2 className="text-[20px] font-medium text-text-primary">
+        <main className="settings-main relative flex min-w-0 flex-1 flex-col overflow-y-auto bg-surface-secondary">
+          <div className="settings-heading sticky top-0 z-10 flex min-h-16 shrink-0 items-center justify-between bg-surface-secondary/95 px-6 backdrop-blur-md">
+            <h2 className="text-[20px] font-bold text-text-primary">
               {activeSection === 'interface' && 'Interface'}
               {activeSection === 'layout' && 'Layout'}
               {activeSection === 'channel' && 'Channel'}
+              {activeSection === 'terminal' && 'Terminal'}
               {activeSection === 'table' && 'Canvas'}
               {activeSection === 'mcp' && 'MCP'}
+              {activeSection === 'remote' && 'Remote'}
             </h2>
             <button
               onClick={onClose}
@@ -615,10 +585,14 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
             </button>
           </div>
 
-          <div className="px-10 pb-12 pt-6">
+          <div className="settings-content px-6 pb-8 pt-3">
+            {activeSection === 'remote' && <div ref={onRemoteContainer} data-no-drag />}
             {activeSection === 'interface' && (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <SettingGroup title="System Theme">
+                {!remote && <SettingGroup title="Window">
+                  <DropdownSetting title="Close button" description="Choose what happens when closing the main window" value={closeBehavior ?? 'ask'} options={[{label:'Ask every time',value:'ask'},{label:'Exit program',value:'exit'},{label:'Hide in system tray',value:'background'}]} onChange={value => useUIStore.setState({ closeBehavior: value === 'exit' || value === 'background' ? value : null })} />
+                </SettingGroup>}
+                <SettingGroup title="Theme">
                   <DropdownSetting
                     title="Color Scheme"
                     description="Choose whether LinkAssist follows the system theme or uses light or dark mode"
@@ -649,33 +623,33 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
                 </SettingGroup>
 
                 <SettingGroup title="Layout Management">
-                  <div className="flex items-center justify-between px-5 py-4 transition-colors">
-                    <div className="pr-6">
-                      <div className="text-[14px] font-medium text-text-primary">Save current layout</div>
-                      <div className="mt-1 text-[13px] leading-relaxed text-text-muted">
+                  <div className="settings-row">
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-text-primary">Save current layout</div>
+                      <div className="mt-1 text-[12px] leading-5 text-text-secondary">
                         Save channels, terminal layout, command panels, protocol settings, and more to a JSON file
                       </div>
                     </div>
                     <button
                       onClick={handleSaveLayout}
                       disabled={isSaving}
-                      className="flex shrink-0 items-center gap-2 rounded-lg border border-border bg-[var(--layer-hover)] px-4 py-2 text-[13px] text-text-secondary transition-colors hover:bg-[var(--layer-active)] hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex shrink-0 items-center gap-2 rounded-lg border border-border bg-[var(--layer-hover)] px-3 py-1 text-[13px] text-text-secondary transition-colors hover:bg-[var(--layer-active)] hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <SaveIcon size={14} />
                       {isSaving ? 'Saving…' : 'Save'}
                     </button>
                   </div>
-                  <div className="flex items-center justify-between px-5 py-4 transition-colors">
-                    <div className="pr-6">
-                      <div className="text-[14px] font-medium text-text-primary">Load layout</div>
-                      <div className="mt-1 text-[13px] leading-relaxed text-text-muted">
+                  <div className="settings-row">
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-text-primary">Load layout</div>
+                      <div className="mt-1 text-[12px] leading-5 text-text-secondary">
                         Restore channels, terminal layout, command panels, and protocol settings from a JSON file
                       </div>
                     </div>
                     <button
                       onClick={handleLoadLayout}
                       disabled={isLoading}
-                      className="flex shrink-0 items-center gap-2 rounded-lg border border-border bg-[var(--layer-hover)] px-4 py-2 text-[13px] text-text-secondary transition-colors hover:bg-[var(--layer-active)] hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex shrink-0 items-center gap-2 rounded-lg border border-border bg-[var(--layer-hover)] px-3 py-1 text-[13px] text-text-secondary transition-colors hover:bg-[var(--layer-active)] hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                         <path d="M2 7.5V11C2 11.5523 2.44772 12 3 12H11C11.5523 12 12 11.5523 12 11V7.5M7 2V9M7 9L4.5 6.5M7 9L9.5 6.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -683,17 +657,17 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
                       {isLoading ? 'Loading…' : 'Load'}
                     </button>
                   </div>
-                  <div className="flex items-center justify-between px-5 py-4 transition-colors">
-                    <div className="pr-6">
-                      <div className="text-[14px] font-medium text-text-primary">Reset all layouts</div>
-                      <div className="mt-1 text-[13px] leading-relaxed text-text-muted">
+                  <div className="settings-row">
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-text-primary">Reset all layouts</div>
+                      <div className="mt-1 text-[12px] leading-5 text-text-secondary">
                         Clear all channels, terminal splits, and command settings, then restore the default state
                       </div>
                     </div>
                     <button
                       onClick={handleResetLayout}
                       disabled={isResetting}
-                      className="flex shrink-0 items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2 text-[13px] text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex shrink-0 items-center gap-2 rounded-lg border border-accent-red/20 bg-accent-red/10 px-3 py-1 text-[13px] text-accent-red transition-colors hover:bg-accent-red/20 hover:text-accent-red disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                         <path d="M2.5 4H11.5M5.5 6.5V9.5M8.5 6.5V9.5M3.5 4L4 11C4 11.5523 4.44772 12 5 12H9C9.55228 12 10 11.5523 10 11L10.5 4M5 4V2.5C5 2.22386 5.22386 2 5.5 2H8.5C8.77614 2 9 2.22386 9 2.5V4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -705,9 +679,9 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
               </div>
             )}
 
-            {activeSection === 'channel' && (
+            {activeSection === 'terminal' && (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <SettingGroup>
+                <SettingGroup title="Display">
                   <ToggleSetting
                     title="Show received content"
                     description="When disabled, terminals and data views stop rendering RX content, while background capture remains unaffected."
@@ -735,24 +709,24 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
                   />
                 </SettingGroup>
                 <SettingGroup title="Tool Definition Scripts">
-                  <div className="px-5 py-4">
+                  <div className="py-3">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <div className="text-[14px] font-medium text-text-primary">Lua MCP tools</div>
-                        <div className="mt-1 text-[13px] leading-relaxed text-text-muted">
+                        <div className="text-[13px] font-semibold text-text-primary">Lua MCP tools</div>
+                        <div className="mt-1 text-[12px] leading-5 text-text-secondary">
                           Add Lua scripts that can be exposed through MCP. File-based scripts must declare <span className="font-mono text-text-secondary">-- linkassist:type = mcp</span>, then either define legacy <span className="font-mono text-text-secondary">mcp_meta()</span> + <span className="font-mono text-text-secondary">call(args)</span> or multi-tool <span className="font-mono text-text-secondary">mcp_tools()</span> + <span className="font-mono text-text-secondary">call(tool_name, args)</span>.
                         </div>
                       </div>
                       <button
                         onClick={handleAddMcpScript}
-                        className="shrink-0 rounded-lg border border-accent-blue/30 bg-accent-blue/10 px-4 py-2 text-[13px] text-accent-blue transition-colors hover:bg-accent-blue/20 hover:text-text-primary"
+                        className="shrink-0 rounded-lg border border-accent-blue/30 bg-accent-blue/10 px-3 py-1 text-[13px] text-accent-blue transition-colors hover:bg-accent-blue/20 hover:text-text-primary"
                       >
                         Add Tool
                       </button>
                     </div>
                   </div>
                   {mcpScripts.length === 0 ? (
-                    <div className="px-5 py-6 text-[13px] text-text-muted">
+                    <div className="py-4 text-[13px] text-text-muted">
                       No MCP tool scripts yet. Add one to define a custom tool for MCP clients.
                     </div>
                   ) : (
@@ -769,9 +743,9 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
                         ? `${tools.length} tool${tools.length > 1 ? 's' : ''} ready for MCP exposure`
                         : (luaPathValid ? 'Waiting for MCP tool preview' : 'Select a Lua MCP file to preview metadata'));
                       return (
-                        <div key={script.id} className="flex items-center gap-3 px-5 py-4">
+                        <div key={script.id} className="flex flex-wrap items-center gap-3 py-3">
                           <div className="min-w-0 w-[180px] shrink-0">
-                            <div className="truncate text-[14px] font-medium text-text-primary">{firstTool?.name ?? 'Lua MCP tool script'}</div>
+                            <div className="truncate text-[13px] font-semibold text-text-primary">{firstTool?.name ?? 'Lua MCP tool script'}</div>
                             <div className={`truncate text-[12px] ${luaPathError || metaError ? 'text-red-300' : 'text-text-muted'}`} title={statusText}>
                               {statusText}
                             </div>
@@ -819,7 +793,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose })
 
                           <button
                             onClick={() => removeMcpScript(script.id)}
-                            className="shrink-0 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-[13px] text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
+                            className="shrink-0 rounded-lg border border-accent-red/20 bg-accent-red/10 px-3 py-2 text-[13px] text-accent-red transition-colors hover:bg-accent-red/20 hover:text-accent-red"
                           >
                             Remove
                           </button>

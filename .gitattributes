@@ -16,3 +16,7 @@
 
 # Preserve the upstream bytes used by vendor/backports.json on every platform.
 vendor/** -text
+
+# The license collection hashes verbatim upstream texts, including line endings
+# and trailing whitespace. Do not normalize these third-party contents.
+third-party-licenses/THIRD_PARTY_LICENSES.txt -text whitespace=-blank-at-eol,-blank-at-eof

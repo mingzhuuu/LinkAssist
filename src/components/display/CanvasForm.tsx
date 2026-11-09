@@ -1,3 +1,5 @@
+import { isRemoteWorkspace, useRemoteStore } from '../../stores/remoteStore';
+import { remoteAction, workspaceInvoke } from '../../lib/remoteClient';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
@@ -9,6 +11,7 @@ import { buildFormulaVariableDefinitions, FormulaVariableContext } from './formu
 import { getFormInputPlaceholder, shouldShowFormFieldNameColumn } from './formPlaceholderUtils';
 import { toast } from '../../stores/toastStore';
 import { sendWithImmediateTxEcho } from '../../lib/terminalSend';
+import { registerRemoteCanvas } from '../../lib/remoteCanvasBridge';
 
 interface CanvasFormProps {
   canvasId: string;
@@ -119,11 +122,19 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
   const latestRow = useLatestRow(canvasId);
 
   const [sendValues, setSendValues] = useState<Record<string, string>>({});
+  const editedFields = useRef(new Set<string>());
   const [sendStatus, setSendStatus] = useState<'idle' | 'sending' | 'success' | 'timeout'>('idle');
   const [protocolSummary, setProtocolSummary] = useState<ProtocolFileSummary | null>(null);
   const pendingConfirmRef = useRef<{ expected: string; timer: number } | null>(null);
   const statusTimerRef = useRef<number | null>(null);
+  const remoteSendRef = useRef<((values: Record<string, string>) => Promise<void>) | null>(null);
 
+  const remoteView = useRemoteStore(state => state.snapshot?.canvasFrames?.[canvasId]?.view);
+  useEffect(() => {
+    if (remoteView?.kind !== 'form') return;
+    if (['idle', 'sending', 'success', 'timeout'].includes(remoteView.status)) setSendStatus(remoteView.status as 'idle' | 'sending' | 'success' | 'timeout');
+    setSendValues(current => ({ ...current, ...Object.fromEntries(Object.entries(remoteView.values).filter(([id]) => !editedFields.current.has(id))) }));
+  }, [remoteView]);
   const clearStatusTimer = () => {
     if (statusTimerRef.current !== null) {
       clearTimeout(statusTimerRef.current);
@@ -160,7 +171,9 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
     for (const row of rows) {
       initial[row.id] = row.defaultValue ?? '';
     }
-    setSendValues(initial);
+    editedFields.current.clear();
+    const view = useRemoteStore.getState().snapshot?.canvasFrames?.[canvasId]?.view;
+    setSendValues(isRemoteWorkspace() && view?.kind === 'form' ? { ...initial, ...view.values } : initial);
   }, [rowsKey]);
 
   useEffect(() => {
@@ -169,7 +182,7 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
 
     if (!protocolFile) return;
 
-    invoke<ProtocolFileSummary>('get_lua_protocol_file_summary', {
+    workspaceInvoke<ProtocolFileSummary>('get_lua_protocol_file_summary', {
       filePath: protocolFile,
       resourceRoot: protocolResourceRoot,
     })
@@ -186,6 +199,7 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
   }, [protocolFile, protocolResourceRoot]);
 
   useEffect(() => {
+    if (isRemoteWorkspace()) return;
     if (formMode !== 'send' || !sendConfig?.expectedResponse || !linkedChannel) return;
 
     let unlisten: UnlistenFn | null = null;
@@ -283,7 +297,26 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
     };
   }, [formMode, sendConfig?.expectedResponse, linkedChannel]);
 
+  useEffect(() => isRemoteWorkspace() ? undefined : registerRemoteCanvas(canvasId, {
+    view: () => ({ kind: 'form', values: sendValues, status: sendStatus }),
+    action: async (action, args) => {
+      if (action !== 'canvas.formSend' || formMode !== 'send' || !remoteSendRef.current) throw new Error('Form is not ready to send');
+      if (!args.values || typeof args.values !== 'object' || Array.isArray(args.values)) throw new Error('Invalid form values');
+      const values = { ...sendValues };
+      for (const row of rows) {
+        const value = (args.values as Record<string, unknown>)[row.id];
+        if (row.editable !== false && value !== undefined) {
+          if (typeof value !== 'string' || value.length > 8192) throw new Error('Invalid form field');
+          values[row.id] = value;
+        }
+      }
+      setSendValues(values);
+      await remoteSendRef.current(values);
+    },
+  }), [canvasId, formMode, rows, sendStatus, sendValues]);
+
   if (!canvas || !formConfig) {
+    remoteSendRef.current = null;
     return (
       <div className="flex h-full items-center justify-center text-xs text-text-muted">
         Configure form fields to begin.
@@ -291,19 +324,22 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
     );
   }
 
-  const executeSend = async (packet: number[]) => {
+  const executeSend = async (packet: number[], propagateErrors = false) => {
     if (!linkedChannel) {
+      if (propagateErrors) throw new Error('No channel linked to this form');
       toast.error('No channel linked to this form');
       return;
     }
 
     const sendInfo = getChannelSendInfo(linkedChannel, canvasId);
     if (!sendInfo) {
+      if (propagateErrors) throw new Error('Channel is not connected');
       toast.error('Channel is not connected');
       return;
     }
 
     if (packet.length === 0) {
+      if (propagateErrors) throw new Error('Failed to encode form data');
       toast.error('Failed to encode data. Check input format (e.g. Hex must have even number of characters).');
       return;
     }
@@ -367,10 +403,15 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
       );
       toast.error('Send failed');
       setSendStatus('idle');
+      if (propagateErrors) throw error;
     }
   };
 
-  const handleSend = async () => {
+  const handleSend = async (values = sendValues, propagateErrors = false) => {
+    if (isRemoteWorkspace()) {
+      setSendStatus('sending');
+      await remoteAction('canvas.formSend', { canvasId, values }).catch(() => setSendStatus('idle')); return;
+    }
     try {
       const formulaVariableDefinitions = buildFormulaVariableDefinitions(
         rows.map((row, index) => ({
@@ -382,7 +423,7 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
       const encodedRows: Array<{ offset: number; bytes: number[] }> = [];
 
       for (const [index, row] of rows.entries()) {
-        const inputValue = sendValues[row.id] ?? '';
+        const inputValue = values[row.id] ?? '';
 
         if (protocolFile && row.parsedFieldId) {
           // Preferred path: the protocol script encodes the field from the input value and
@@ -399,6 +440,7 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
             // Protocols without an `encode` function fall back to the legacy decode-based path.
             const message = String(encodeError);
             if (!message.includes("global 'encode'")) {
+              if (propagateErrors) throw new Error(`Protocol field ${row.label}: ${message}`);
               toast.error(`Protocol field ${row.label}: ${message}`);
               return;
             }
@@ -410,6 +452,7 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
             const parsedField = findParsedField(result.fields, row.parsedFieldId);
             const bytes = parsedField?.raw_bytes ?? [];
             if (bytes.length === 0) {
+              if (propagateErrors) throw new Error(`Protocol field ${row.label} did not produce send bytes`);
               toast.error(`Protocol field ${row.label} did not produce send bytes`);
               return;
             }
@@ -418,6 +461,7 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
             continue;
           }
           if (!encodedField || encodedField.bytes.length === 0) {
+            if (propagateErrors) throw new Error(`Protocol field ${row.label} did not produce send bytes`);
             toast.error(`Protocol field ${row.label} did not produce send bytes`);
             return;
           }
@@ -434,13 +478,15 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
       }
 
       const packet = buildFormPacket(encodedRows);
-      await executeSend(packet);
+      await executeSend(packet, propagateErrors);
     } catch (error) {
       console.error('Failed to encode form send data:', error);
       toast.error('Failed to encode send data');
+      if (propagateErrors) throw error;
     }
   };
 
+  remoteSendRef.current = values => handleSend(values, true);
   const isSendMode = formMode === 'send';
   const canvasWidth = liveWidth ?? canvas.rect.width;
   const isCompactLayout = canvasWidth < 360;
@@ -548,7 +594,7 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
                             className="input-base h-full w-full translate-y-1 rounded-none border-0 bg-transparent px-2 py-0 text-xs leading-6"
                             value={inputValue}
                             onChange={(e) =>
-                              setSendValues((prev) => ({ ...prev, [row.id]: e.target.value }))
+                              { editedFields.current.add(row.id); setSendValues((prev) => ({ ...prev, [row.id]: e.target.value })); }
                             }
                             readOnly={!isEditable}
                             placeholder={getFormInputPlaceholder(row, protocolFile, protocolSummary)}
@@ -573,7 +619,7 @@ export const CanvasForm: React.FC<CanvasFormProps> = ({ canvasId, liveWidth }) =
             >
               <button
                 className="h-full w-full translate-y-1 rounded-xl border border-border bg-transparent text-xs font-medium text-text-secondary transition-colors hover:bg-surface-secondary disabled:opacity-50"
-                onClick={handleSend}
+                onClick={() => { void handleSend(); }}
                 disabled={sendStatus === 'sending'}
               >
                 {sendStatus === 'sending' ? '...' : 'Send'}

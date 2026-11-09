@@ -1,3 +1,8 @@
+import { isRemoteWorkspace } from '../stores/remoteStore';
+import { askCloseChoice } from '../stores/closeStore';
+import { registerWorkspaceSave } from '../lib/workspacePersistence';
+import { flushRemoteLayout } from '../lib/remoteClient';
+import type { RemoteStatus } from '../types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow, PhysicalPosition, PhysicalSize } from '@tauri-apps/api/window';
@@ -20,7 +25,7 @@ interface SaveConfigOptions {
 }
 
 const CLOSE_SAVE_TIMEOUT_MS = 500;
-const CLOSE_MODE_TIMEOUT_MS = 250;
+
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -113,6 +118,7 @@ export function usePersistence() {
 
         // Restore UI settings
         if (config.ui) {
+          useUIStore.setState({ closeBehavior: config.ui.close_behavior === 'exit' || config.ui.close_behavior === 'background' ? config.ui.close_behavior : null });
           const ui = useUIStore.getState();
           if (typeof config.ui.left_panel_width === 'number') {
             ui.setLeftPanelWidth(
@@ -282,6 +288,7 @@ export function usePersistence() {
   }, []);
 
   const saveConfig = useCallback(async ({ captureWindowState = true }: SaveConfigOptions = {}) => {
+    if (isRemoteWorkspace()) return;
     const channels = useChannelStore.getState().channels.map((ch) => {
       let settings: Record<string, unknown> = {};
       if (ch.type === 'ble') {
@@ -365,6 +372,7 @@ export function usePersistence() {
         restore_canvas_layout: ui.restoreCanvasLayout,
         channel_quick_open_selected_ids: ui.channelQuickOpenSelectedIds,
         file_dialog_dirs: ui.fileDialogDirs,
+        close_behavior: ui.closeBehavior,
       },
       protocol: {
         mode: proto.mode,
@@ -389,9 +397,11 @@ export function usePersistence() {
   useEffect(() => {
     if (!hydrated) return;
 
+    const unregisterSave = registerWorkspaceSave(() => saveConfig({ captureWindowState: false }));
     let timeout: number | undefined;
 
     function scheduleSave() {
+      if (isRemoteWorkspace()) return;
       window.clearTimeout(timeout);
       timeout = window.setTimeout(() => {
         saveConfig().catch((e) => {
@@ -442,36 +452,27 @@ export function usePersistence() {
       window.clearTimeout(timeout);
 
       try {
-        await withTimeout(
-          saveConfig({ captureWindowState: false }),
-          CLOSE_SAVE_TIMEOUT_MS,
-          'Timed out while saving config before close',
-        );
-      } catch (e) {
-        console.warn('Failed to save config before close:', e);
-      } finally {
-        let launchMode: 'ui' | 'headless' = 'headless';
-        try {
-          launchMode = await withTimeout(
-            invoke<'ui' | 'headless'>('get_launch_mode'),
-            CLOSE_MODE_TIMEOUT_MS,
-            'Timed out while resolving launch mode before close',
-          );
-        } catch (e) {
-          console.warn('Failed to resolve launch mode before close:', e);
+        const status = await invoke<RemoteStatus>('remote_status');
+        const preference = useUIStore.getState().closeBehavior;
+        let choice = preference;
+        if (!preference) {
+          const answer = await askCloseChoice(status.enabled ? 'remote' : 'first');
+          if (answer.choice === 'cancel') return;
+          choice = answer.choice;
+          if (answer.always) useUIStore.setState({ closeBehavior: answer.choice });
         }
-
-        if (launchMode === 'ui') {
-          try {
-            await appWindow.destroy();
-          } catch {
-            destroyingWindowRef.current = false;
-          }
+        if (isRemoteWorkspace()) {
+          await flushRemoteLayout();
+          const config = await invoke<AppConfig>('load_app_config');
+          await invoke('save_app_config', { config: { ...config, ui: { ...config.ui, close_behavior: useUIStore.getState().closeBehavior } } });
         } else {
-          await appWindow.hide().catch(() => {});
-          destroyingWindowRef.current = false;
+          await withTimeout(saveConfig({ captureWindowState: false }), CLOSE_SAVE_TIMEOUT_MS, 'Timed out while saving config before close');
         }
-      }
+        await invoke('close_main_window', { background: choice === 'background' });
+      } catch (error) {
+        console.warn('Failed to close application:', error);
+        // Leave the window visible if status, saving, or native close fails.
+      } finally { destroyingWindowRef.current = false; }
     })
       .then((unlisten) => {
         if (closeListenerCancelled) {
@@ -492,6 +493,7 @@ export function usePersistence() {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
+      unregisterSave();
       closeListenerCancelled = true;
       closeUnlisten?.();
       window.clearTimeout(timeout);

@@ -1,3 +1,4 @@
+import { isRemoteWorkspace } from '../../stores/remoteStore';
 import { enqueueCanvasIngest as queueCanvasIngest } from '../../lib/canvasIngestQueue';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createEventSubscriptions } from './eventSubscriptions';
@@ -352,12 +353,14 @@ export const CenterPanel: React.FC = () => {
   }, [setLinkedChannel]);
 
   useEffect(() => {
+    if (isRemoteWorkspace()) return;
     for (const channel of channels) {
       syncCanvasesForChannel(channel);
     }
   }, [channels]);
 
   useEffect(() => {
+    if (isRemoteWorkspace()) return;
     const events = createEventSubscriptions();
 
     events.listen('serial-connection-error', (event) => {
@@ -420,6 +423,7 @@ export const CenterPanel: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (isRemoteWorkspace()) return;
     const events = createEventSubscriptions();
 
     events.listen('tcp-data-received', (event) => {
@@ -547,6 +551,7 @@ export const CenterPanel: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (isRemoteWorkspace()) return;
     const events = createEventSubscriptions();
 
     events.listen('ble-notification-received', (event) => {
@@ -616,6 +621,7 @@ export const CenterPanel: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (isRemoteWorkspace()) return;
     const events = createEventSubscriptions();
 
     events.listen('channel-activity', (event) => {
@@ -675,6 +681,7 @@ export const CenterPanel: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (isRemoteWorkspace()) return;
     const events = createEventSubscriptions();
     events.listen('detached-terminal-entry', (event) => {
       const entry = event.payload;

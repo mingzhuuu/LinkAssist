@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { workspaceInvoke } from '../../lib/remoteClient';
 import type { ScriptDocument } from './scriptTypes';
 
 export function normalizeScriptDocument(document: ScriptDocument): ScriptDocument {
@@ -40,11 +41,11 @@ export async function parseScriptLua(content: string): Promise<ScriptDocument> {
 }
 
 export async function parseScriptLuaFile(path: string): Promise<ScriptDocument> {
-  const document = await invoke<ScriptDocument>('parse_lua_automation_file', { path });
+  const document = await workspaceInvoke<ScriptDocument>('parse_lua_automation_file', { path });
   return { ...normalizeScriptDocument(document), sourcePath: path };
 }
 
 export async function parseCanvasLifecycleLuaFile(path: string): Promise<ScriptDocument> {
-  const document = await invoke<ScriptDocument>('parse_lua_canvas_lifecycle_file', { path });
+  const document = await workspaceInvoke<ScriptDocument>('parse_lua_canvas_lifecycle_file', { path });
   return { ...normalizeCanvasLifecycleDocument(document), sourcePath: path };
 }

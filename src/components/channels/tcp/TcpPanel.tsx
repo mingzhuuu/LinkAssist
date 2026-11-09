@@ -1,40 +1,25 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { useTcp } from '../../../hooks/useTcp';
+import React, { useState, useCallback } from 'react';
+import { useTcp } from '../../../hooks';
 import { useTcpStore, DEFAULT_TCP_CONFIG } from '../../../stores';
 import { toast } from '../../../stores/toastStore';
 import { WifiIcon } from '../../common/Icons';
 
 export const TcpPanel = React.memo(function TcpPanel({ channelId }: { channelId: string }) {
-  const { mode, setMode, connectTcp, disconnectTcp, startServer, stopServer, disconnectClient, serverClients, serverListening, bindUdp, unbindUdp, udpBound } = useTcp();
-  const savedConfig = useTcpStore(s => s.channelConfigs[channelId]);
-  const setChannelConfig = useTcpStore(s => s.setChannelConfig);
-  
-  const [address, setAddress] = useState(savedConfig?.clientAddress ?? DEFAULT_TCP_CONFIG.clientAddress);
-  const [currentConnectionId, setCurrentConnectionId] = useState<string | null>(null);
-  
-  const [serverAddress, setServerAddress] = useState(savedConfig?.serverAddress ?? DEFAULT_TCP_CONFIG.serverAddress);
+  const { connectTcp, disconnectTcp, startServer, stopServer, disconnectClient, bindUdp, unbindUdp } = useTcp();
+  const tcp = useTcpStore();
+  const config = tcp.channelConfigs[channelId] ?? DEFAULT_TCP_CONFIG;
+  const mode = config.mode;
+  const address = config.clientAddress, serverAddress = config.serverAddress, udpBindAddress = config.udpBindAddress;
+  const setMode = (mode: typeof config.mode) => tcp.setChannelConfig(channelId, { mode });
+  const setAddress = (clientAddress: string) => tcp.setChannelConfig(channelId, { clientAddress });
+  const setServerAddress = (serverAddress: string) => tcp.setChannelConfig(channelId, { serverAddress });
+  const setUdpBindAddress = (udpBindAddress: string) => tcp.setChannelConfig(channelId, { udpBindAddress });
+  const currentConnectionId = tcp.clientConnections.find(c => tcp.connectionMap[c.id] === channelId)?.id ?? null;
+  const serverListening = tcp.serverListening && tcp.connectionMap['server:' + tcp.serverAddr] === channelId;
+  const udpBound = tcp.udpBound && tcp.connectionMap['udp:' + tcp.udpAddr] === channelId;
+  const serverClients = tcp.serverClients.filter(c => tcp.connectionMap[c.id] === channelId);
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
-  
-  const [udpBindAddress, setUdpBindAddress] = useState(savedConfig?.udpBindAddress ?? DEFAULT_TCP_CONFIG.udpBindAddress);
-
-  // Initialize mode from saved config
-  useEffect(() => {
-    if (savedConfig?.mode && savedConfig.mode !== mode) {
-      setMode(savedConfig.mode);
-    }
-    // Only run on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Sync config changes back to store for persistence
-  useEffect(() => {
-    setChannelConfig(channelId, {
-      mode,
-      clientAddress: address,
-      serverAddress,
-      udpBindAddress,
-    });
-  }, [channelId, mode, address, serverAddress, udpBindAddress, setChannelConfig]);
+  const [pending, setPending] = useState(false);
   const tcpAddressRowClassName = "relative flex min-h-[40px] items-center justify-between gap-3 px-4 py-1.5 hover:bg-[var(--layer-hover)] transition-all duration-150 after:absolute after:bottom-0 after:left-2 after:right-2 after:border-b after:border-border after:content-[''] last:after:hidden";
   const tcpLabelClassName = 'channel-config-label w-[40px]';
   const tcpFieldClassName = 'channel-config-control w-[184px] min-w-[184px] max-w-none bg-surface border border-border rounded-lg px-3 py-1.5 font-mono text-[13px] text-text-primary outline-none focus:border-accent-green/40 disabled:opacity-50';
@@ -49,15 +34,13 @@ export const TcpPanel = React.memo(function TcpPanel({ channelId }: { channelId:
     if (currentConnectionId) {
       try {
         await disconnectTcp(currentConnectionId, channelId);
-        setCurrentConnectionId(null);
         toast.info('Disconnected from server');
       } catch (e) {
         toast.error(String(e));
       }
     } else {
       try {
-        const id = await connectTcp(address, channelId);
-        setCurrentConnectionId(id);
+        await connectTcp(address, channelId);
         toast.success('Connected to server');
       } catch (e) {
         toast.error(String(e));
@@ -160,7 +143,8 @@ export const TcpPanel = React.memo(function TcpPanel({ channelId }: { channelId:
         {/* Right side: action button */}
         <div className="ml-4 shrink-0">
           <button
-            onClick={handleAction}
+            disabled={pending}
+            onClick={() => { setPending(true); void handleAction().finally(() => setPending(false)); }}
             className={`btn-channel-action ${
               isActive
                 ? 'bg-accent-red hover:bg-accent-red/80 text-surface'

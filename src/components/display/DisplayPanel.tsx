@@ -1,9 +1,11 @@
+import { isRemoteWorkspace } from '../../stores/remoteStore';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
 import { useBle, useSerial, useTcp } from '../../hooks';
 import { toast } from '../../stores/toastStore';
 import { useCanvasStore, useChannelStore, useBleStore, useSerialStore, useTcpStore, useUIStore } from '../../stores';
 import { Canvas as StoredCanvas, CanvasChannelLink, CanvasRect, Channel } from '../../types';
 import { CanvasContainer, computeCanvasBorderColor } from './Canvas';
+import { getSnapPreviewCornerClassNames } from './canvasCornerUtils';
 const CanvasChart = lazy(() => import('./CanvasChart').then(module => ({ default: module.CanvasChart })));
 import { CanvasForm } from './CanvasForm';
 import { CanvasScript } from './CanvasScript';
@@ -1048,6 +1050,7 @@ export const DisplayPanel: React.FC<DisplayPanelProps> = ({
   }, [effectiveViewportRect.height, effectiveViewportRect.width, endDrag, scrollBounds, scrollRangeX, scrollRangeY, selectedCanvasIds.length, selectedCanvasIdSet, setCanvasRects, triggerScrolling]);
 
   useEffect(() => {
+    if (isRemoteWorkspace()) return;
     for (const canvas of canvases) {
       const linkedChannels = canvas.config.channels
         .map((link) => channelMap[link.channelId])
@@ -1064,6 +1067,7 @@ export const DisplayPanel: React.FC<DisplayPanelProps> = ({
   }, [activeChannelId, canvases, channelMap, connectedChannelId, channelStates, syncCanvasChannelState]);
 
   useEffect(() => {
+    if (isRemoteWorkspace()) return;
     const previous = previousCanvasActiveRef.current;
     const next: Record<string, boolean> = {};
 
@@ -1108,6 +1112,15 @@ export const DisplayPanel: React.FC<DisplayPanelProps> = ({
         const liveRect = isBeingMoved ? movingRect : resizedResult ? resizedResult.rect : null;
         const displayCanvas = { ...canvas, rect: liveRect ?? getCanvasDisplayRect(canvas) };
 
+        const adjacentRects = canvases
+          .filter((c) => c.id !== canvas.id && !c.maximized)
+          .map((c) => {
+            const movingOther = getMovingSelectionDisplayRect(c.id);
+            if (dragState.mode === 'moving' && movingOther !== null) return movingOther;
+            if (dragState.mode === 'resizing' && dragState.canvasId === c.id && resizedResult) return resizedResult.rect;
+            return getCanvasDisplayRect(c);
+          });
+
         return (
           <div key={canvas.id} data-canvas-id={canvas.id}>
             <ErrorBoundary label={`Canvas: ${canvas.name}`} inline>
@@ -1115,6 +1128,7 @@ export const DisplayPanel: React.FC<DisplayPanelProps> = ({
                 canvas={displayCanvas}
                 isMoving={isBeingMoved || isBeingResized}
                 isSelected={selectedCanvasIdSet.has(canvas.id)}
+                adjacentRects={adjacentRects}
                 onMouseDownMove={handleCanvasMouseDownMove}
                 onResizeStart={handleCanvasResizeStart}
                 onContextMenu={handleCanvasContextMenu}
@@ -1143,7 +1157,7 @@ export const DisplayPanel: React.FC<DisplayPanelProps> = ({
 
       {creationRect && (
         <div
-          className="absolute border-2 border-dashed border-accent-mauve/40 bg-accent-mauve/5 rounded-sm pointer-events-none"
+          className="absolute border-2 border-dashed border-accent-mauve/40 bg-accent-mauve/5 rounded-xl pointer-events-none"
           style={{
             zIndex: 2147483630,
             left: creationRect.x,
@@ -1161,9 +1175,13 @@ export const DisplayPanel: React.FC<DisplayPanelProps> = ({
         const snapColor = computeCanvasBorderColor(draggedCanvas?.config.channels || [], allChannels);
         const snapBg = snapColor.replace('rgb', 'rgba').replace(')', ', 0.1)');
         const snapBorder = snapColor.replace('rgb', 'rgba').replace(')', `, ${highContrast ? 0.9 : 0.3})`);
+        const otherDisplayRects = canvases
+          .filter((c) => c.id !== dragState.canvasId && !c.maximized)
+          .map(getCanvasDisplayRect);
+        const snapCornerClass = getSnapPreviewCornerClassNames(snapPreview.zone, snapPreview.rect, otherDisplayRects);
         return (
           <div
-            className="absolute border-2 rounded-sm pointer-events-none transition-all duration-100"
+            className={`absolute border-2 ${snapCornerClass} pointer-events-none transition-all duration-100`}
             style={{
               zIndex: 2147483630,
               left: snapPreview.rect.x,

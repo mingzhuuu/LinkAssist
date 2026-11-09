@@ -1,3 +1,4 @@
+import { useRemoteStore } from '../../stores/remoteStore';
 import React, { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -10,6 +11,7 @@ import { CenterPanel } from './CenterPanel';
 import { RightPanel } from './RightPanel';
 import { CHANNEL_CARD_JOIN_WIDTH } from './channelCardGeometry';
 import { ResizeHandle } from './ResizeHandle';
+import { RemoteAccessControl } from './RemoteAccessControl';
 const SettingsDialog = lazy(() => import('./SettingsDialog').then(module => ({ default: module.SettingsDialog })));
 
 const LEFT_PANEL_COLLAPSED_THRESHOLD = 100;
@@ -25,6 +27,7 @@ interface MainLayoutProps {
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true }) => {
+  const remote = useRemoteStore(state => state.active);
   const [appWindow] = useState(() => getCurrentWindow());
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const titleBarContextMenuRef = useRef<HTMLDivElement>(null);
@@ -32,6 +35,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
   const maximizeTransitionRef = useRef(false);
   const maximizeSyncRequestRef = useRef(0);
   const resizeSettleTimerRef = useRef<number | null>(null);
+  const [remoteSettingsContainer, setRemoteSettingsContainer] = useState<HTMLDivElement | null>(null);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [titleBarContextMenu, setTitleBarContextMenu] = useState<{ x: number; y: number } | null>(null);
   const {
@@ -300,7 +304,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
   };
 
   useEffect(() => {
-    if (!persistenceReady) {
+    if (!persistenceReady || remote) {
       return;
     }
 
@@ -329,7 +333,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
     return () => {
       observer.disconnect();
     };
-  }, [persistenceReady, setCenterPanelWidth, setRightPanelWidth]);
+  }, [persistenceReady, remote, setCenterPanelWidth, setRightPanelWidth]);
 
   const isCollapsed = leftPanelWidth < LEFT_PANEL_COLLAPSED_THRESHOLD;
   const leftPanelExpansionProgress = clampPanelRatio(
@@ -385,6 +389,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
             )}
             {/* Title bar content section — has bottom border */}
             <div className="flex-1 flex items-center h-full min-w-0">
+
               <TitleBarContent
                 isMaximized={isMaximized}
                 onToggleMaximize={handleToggleMaximize}
@@ -439,7 +444,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
                 ].join(' ')}
                 style={rightPanelVisible || previewOverlay ? { width: centerPanelWidth } : undefined}
               >
-                <CenterPanel />
+                <CenterPanel key={remote ? 'remote' : 'local'} />
               </div>
               {!centerHidden && rightPanelVisible && (
                 <div data-panel-separator className="relative mx-0.5 flex h-full shrink-0 items-stretch">
@@ -456,7 +461,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
                       : 'rounded-xl border border-[color:var(--divider-default)]'
                   }`}
                 >
-                  <RightPanel
+                  <RightPanel key={remote ? 'remote' : 'local'}
                     layoutReady={persistenceReady}
                     roundMaximizedCanvasTopLeft={centerHidden}
                     roundMaximizedCanvasBottomRight={roundContentBottomRight}
@@ -469,7 +474,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
             </div>
           </div>
 
-          {showSettingsDialog && <Suspense fallback={null}><SettingsDialog open onClose={() => setShowSettingsDialog(false)} /></Suspense>}
+          <RemoteAccessControl ready={persistenceReady} container={remoteSettingsContainer} onConnected={() => setShowSettingsDialog(false)} />
+          {showSettingsDialog && <Suspense fallback={null}><SettingsDialog open onRemoteContainer={setRemoteSettingsContainer} onClose={() => setShowSettingsDialog(false)} /></Suspense>}
         </div>
       </div>
       {titleBarContextMenu && (

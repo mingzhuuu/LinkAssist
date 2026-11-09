@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:portable": "npm run licenses:generate && npm run tauri -- build --no-bundle -- --locked && node scripts/package-portable.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "node --test --test-timeout=60000 scripts/core-smoke.mjs",

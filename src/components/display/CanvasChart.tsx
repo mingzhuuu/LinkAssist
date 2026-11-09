@@ -1,3 +1,5 @@
+import { isRemoteWorkspace, useRemoteStore } from '../../stores/remoteStore';
+import { remoteAction } from '../../lib/remoteClient';
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
@@ -9,7 +11,7 @@ import {
   clear,
   createRuntime,
   dispose,
-  getSnapshot,
+  getSnapshot as getLocalSnapshot,
   setPaused,
   subscribe,
 } from './chartRuntime';
@@ -239,6 +241,7 @@ export const CanvasChart: React.FC<CanvasChartProps> = ({ canvasId, isMoving }) 
       return;
     }
 
+    if (isRemoteWorkspace()) { dirtyRef.current = true; return; }
     createRuntime(canvasId, chartConfig, canvas?.config.channels.map((link) => link.channelId) ?? []);
     dirtyRef.current = true;
     xRangeRef.current = undefined;
@@ -256,7 +259,7 @@ export const CanvasChart: React.FC<CanvasChartProps> = ({ canvasId, isMoving }) 
   }, [canvas?.config.channels, canvasId, chartConfig, hasSeries]);
 
   useEffect(() => {
-    setPaused(canvasId, paused);
+    if (!isRemoteWorkspace()) setPaused(canvasId, paused);
   }, [canvasId, paused, chartConfig, canvas?.config.channels, hasSeries]);
 
   useLayoutEffect(() => {
@@ -400,7 +403,7 @@ export const CanvasChart: React.FC<CanvasChartProps> = ({ canvasId, isMoving }) 
 
     const tick = () => {
       const plot = plotRef.current;
-      if (!plot || !dirtyRef.current) {
+      if (!plot || (!dirtyRef.current && !isRemoteWorkspace())) {
         return;
       }
 
@@ -447,6 +450,7 @@ export const CanvasChart: React.FC<CanvasChartProps> = ({ canvasId, isMoving }) 
   }
 
   const handleTogglePause = () => {
+    if (isRemoteWorkspace()) { void remoteAction('canvas.pause', { canvasId, paused: !paused }).catch(() => {}); return; }
     const nextPaused = !paused;
     setChartPaused(canvasId, nextPaused);
     setPaused(canvasId, nextPaused);
@@ -512,6 +516,7 @@ export const CanvasChart: React.FC<CanvasChartProps> = ({ canvasId, isMoving }) 
   };
 
   const handleClear = () => {
+    if (isRemoteWorkspace()) { void remoteAction('canvas.clear', { canvasId }).catch(() => {}); return; }
     clear(canvasId);
     latestSnapshotRef.current = getSnapshot(canvasId);
     xRangeRef.current = undefined;
@@ -571,3 +576,11 @@ export const CanvasChart: React.FC<CanvasChartProps> = ({ canvasId, isMoving }) 
     </div>
   );
 };
+
+function getSnapshot(canvasId: string, range?: ScaleRange): ChartSnapshot {
+  if (!isRemoteWorkspace()) return getLocalSnapshot(canvasId, range);
+  const frame = useRemoteStore.getState().snapshot?.canvasFrames?.[canvasId]?.chart;
+  const series = useCanvasStore.getState().canvases.find(c => c.id === canvasId)?.config.chart?.series ?? [];
+  if (!frame || frame.length !== series.length + 1 || frame[0].some(value => value === null)) return [[], ...series.map(() => [])];
+  return [frame[0] as number[], ...frame.slice(1)];
+}

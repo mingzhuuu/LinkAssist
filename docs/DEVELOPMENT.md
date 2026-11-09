@@ -36,7 +36,39 @@ npm run docs:generate
 npm run check:architecture
 npm run check
 npm run tauri build
+npm run build:portable
 ```
+
+## Windows 免安装包
+
+在仓库根目录运行 `npm run build:portable`，会更新许可证汇总、执行锁定依赖的 Tauri release 构建（跳过安装器），再生成免安装压缩包。输出位于 `src-tauri/target/release/portable/`，包括通用 ZIP、安装了 7-Zip 时额外生成的更小的 solid LZMA2 `.7z`，以及 SHA-256 校验文件。7-Zip 可安装到默认目录、加入 PATH，或通过 `LINKASSIST_7Z` 指定；没有它时使用系统 ZIP 压缩能力。
+
+完整解压后运行 `linkassist.exe`，目标电脑需已有 Microsoft Edge WebView2 Runtime。普通配置仍保存在应用数据目录；“免安装”不代表配置随 EXE 存储。需要携带配置和资源时使用已有的快照命令。
+
+`scripts/package-portable.mjs` 采用明确的分发清单，只包含 release EXE、使用说明和完整许可证材料，不复制 PDB、编译缓存、安装器、源码、个人配置或 WebView2 运行时。只重新打包已经构建的 EXE 时可运行 `node scripts/package-portable.mjs`；该命令不会重编译，源码改变后应使用完整构建命令。生成 ZIP 使用 Deflate 以保持兼容性，7z 用于进一步减少下载体积；两者解压后的程序相同。
+
+许可证生成器仅合并逐字节一致的全文，以 SHA-256 索引将每个依赖及其原始文件名关联到同一文件内的全文。不同版权归属和 NOTICE 内容不做合并，依赖清单保持完整。
+
+Release 使用 `opt-level = "z"`，保留单 codegen unit、LTO、panic abort 和符号裁剪。[Cargo 官方文档](https://doc.rust-lang.org/cargo/reference/profiles.html#opt-level)说明 `z` 关闭循环向量化，且不保证总比 `s` 小，因此更新工具链或大型依赖后应重新测量体积与性能。
+
+2026-11-08 Windows x64 / Rust 1.94.1 实测（保留全部业务功能，release 仅保留 warn/error 级别的底层诊断日志）：
+
+| 项目 | 优化前 | 优化后 |
+|---|---:|---:|
+| Release EXE | 9,473,536 bytes | 8,168,960 bytes（-13.8%） |
+| 完整许可证汇总 | 3,753,889 bytes | 1,097,420 bytes（-70.8%） |
+| ZIP（原工作区预览包 → 新免安装包） | 5,090,937 bytes | 4,093,638 bytes（-19.6%） |
+| 新增 7z（与新 ZIP 内容相同） | — | 2,989,858 bytes（比原 ZIP 小 41.3%） |
+
+仅将 `s` 改为 `z` 时 EXE 为 8,259,072 bytes；后续合并 HTTP/SHA-2 依赖、裁剪 `tracing` 和 `log` 详细诊断、修复初始化并更新 Tokio 后为 8,168,960 bytes，后续净收益约 88 KiB。iroh 已只启用 `tls-ring`，保留 QUIC 加密、打洞、中继、DNS/Pkarr 地址发现和网络变化监测。图标资源在 EXE 中约 56 KiB，前端已有压缩；没有为小幅收益改动它们的显示或兼容性。
+
+配置快照导出的 gzip 等级从默认提高到最高，优先减小配置/资源负载，代价是导出时可能增加压缩时间；既有快照读取格式不变。此项收益取决于实际资源，不能计入无配置的标准免安装包。
+
+许可证去重阶段可精确重建全部旧汇总全文；依赖合并后清单从 447 项减为 445 项（移除旧 reqwest 和 serde_urlencoded），保留所选依赖的完整许可证。最终前端构建、架构检查、369 项 Vitest、178 项 Rust 测试（另有 5 项默认忽略）、7 项真实 EXE Core/MCP/TCP/UDP 回归、两个隔离原生实例的远程配对/收发/重连/撤销测试及 ZIP/7z 完整性检查通过。额外单独执行强制禁用 IP 直连的公共中继测试，通过加密往返与中继路径断言。两个压缩包解压后的 19 个文件逐一哈希一致，EXE/许可证与当前构建/源码一致，SHA-256 校验文件正确。沙箱中 iroh 回环测试超时，放行后通过。实际硬件、跨两台物理电脑/不同网络及长时间高吞吐性能未重测。
+
+依赖审计发现原锁文件 Tokio 1.54.0 存在 RUSTSEC-2026-0384，已更新到 1.54.1 并设置最低版本。最新审计不再报告漏洞或撤回版本，仍报告既有 `paste` 1.0.15 停止维护提示；因此不将完整 `audit:rust` 命令记为通过。证据位于 `logs/rust-audit-LcqqiE/`。编译初始化显式复用 ring，避免合并后的 Reqwest 在独立 MCP 模式中因缺少默认 TLS provider 而 panic。
+
+## Rust 与原生回归验证
 
 Rust 命令在 `src-tauri` 目录执行：
 

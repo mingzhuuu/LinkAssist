@@ -1,8 +1,8 @@
 import { FormulaInput } from './FormulaInput';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { open as openFileDialog } from '@tauri-apps/plugin-dialog';
-import { invoke } from '@tauri-apps/api/core';
+import { openWorkspaceFile as openFileDialog } from '../../lib/workspaceFileDialog';
+import { workspaceInvoke as invoke } from '../../lib/remoteClient';
 import { useCanvasStore, useChannelStore, useBleStore, useUIStore } from '../../stores';
 import type {
   BarChartConfig,

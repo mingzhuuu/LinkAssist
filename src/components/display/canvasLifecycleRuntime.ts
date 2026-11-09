@@ -1,3 +1,4 @@
+import { isRemoteWorkspace } from '../../stores/remoteStore';
 import { useBleStore, useCanvasStore, useChannelStore, useSerialStore, useTcpStore } from '../../stores';
 import type { Canvas, CanvasChannelLink, Channel } from '../../types';
 import {
@@ -39,6 +40,7 @@ export function hasCanvasLifecycleScript(canvas: Canvas): boolean {
 }
 
 export async function runCanvasLifecycleHook(canvas: Canvas, hook: CanvasLifecycleHookName): Promise<void> {
+  if (isRemoteWorkspace()) return;
   if (!hasCanvasLifecycleScript(canvas)) return;
   if (hook === 'activate' && isCanvasLifecycleSuspended(canvas)) return;
 

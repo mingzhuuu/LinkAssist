@@ -1,3 +1,5 @@
+import { isRemoteWorkspace } from '../stores/remoteStore';
+import { remoteAction, remoteChannelAction } from '../lib/remoteClient';
 import { invoke } from '@tauri-apps/api/core';
 import { useBleStore, useChannelStore } from '../stores';
 import { useTerminalStore } from '../stores/terminalStore';
@@ -14,6 +16,7 @@ export function useBle() {
   const { updateChannelState } = useChannelStore();
 
   const startScan = async (channelId?: string) => {
+    if (isRemoteWorkspace()) { if (!channelId) throw new Error('Select a BLE channel'); await remoteChannelAction('ble.scan', channelId); return; }
     try {
       clearDevices(channelId);
       await invoke('start_ble_scan');
@@ -43,6 +46,7 @@ export function useBle() {
   };
 
   const stopScan = async () => {
+    if (isRemoteWorkspace()) { await remoteAction('ble.stopScan'); return; }
     try {
       await invoke('stop_ble_scan');
       setScanning(false);
@@ -69,6 +73,7 @@ export function useBle() {
   };
 
   const connectDevice = async (deviceId: string, channelId: string) => {
+    if (isRemoteWorkspace()) { await remoteChannelAction('channel.connect', channelId, { deviceId }); return; }
     try {
       updateChannelState(channelId, 'connecting');
       const connection = await invoke<BleConnectionInfo>('connect_ble_device', { deviceId });
@@ -109,6 +114,7 @@ export function useBle() {
   };
 
   const reconnectLastDevice = async (channelId: string, deviceId?: string) => {
+    if (isRemoteWorkspace()) { await remoteChannelAction('channel.connect', channelId, { deviceId }); return deviceId ?? useBleStore.getState().lastConnectedDeviceIds[channelId]; }
     const targetDeviceId = deviceId ?? useBleStore.getState().lastConnectedDeviceIds[channelId];
     if (!targetDeviceId) {
       throw new Error('No previous BLE device available to reconnect');
@@ -131,6 +137,7 @@ export function useBle() {
   };
 
   const disconnectDevice = async (deviceId: string, channelId: string) => {
+    if (isRemoteWorkspace()) { await remoteChannelAction('channel.disconnect', channelId); return; }
     try {
       await invoke('disconnect_ble_device', { deviceId });
       updateChannelState(channelId, 'disconnected');
@@ -143,6 +150,7 @@ export function useBle() {
   };
 
   const getPairingStatuses = async (deviceIds: string[]) => {
+    if (isRemoteWorkspace()) { return await remoteAction('ble.pairingStatuses', { deviceIds }) as BlePairingStatus[]; }
     try {
       return await invoke<BlePairingStatus[]>('get_ble_pairing_statuses', { deviceIds });
     } catch (error) {
@@ -152,6 +160,7 @@ export function useBle() {
   };
 
   const discoverServices = async (deviceId: string, channelId?: string) => {
+    if (isRemoteWorkspace()) { return await remoteChannelAction('ble.discover', channelId ?? remoteBleChannel(deviceId)) as GattService[]; }
     try {
       const services = await invoke<GattService[]>('get_gatt_services', { deviceId });
       setGattServices(services, channelId);
@@ -163,6 +172,7 @@ export function useBle() {
   };
 
   const readCharacteristic = async (deviceId: string, serviceUuid: string, charUuid: string) => {
+    if (isRemoteWorkspace()) { return await remoteChannelAction('ble.read', remoteBleChannel(deviceId), { serviceUuid, charUuid }) as number[]; }
     try {
       const data = await invoke<number[]>('read_ble_characteristic', { deviceId, serviceUuid, charUuid });
       return data;
@@ -173,6 +183,7 @@ export function useBle() {
   };
 
   const writeCharacteristic = async (deviceId: string, serviceUuid: string, charUuid: string, data: number[]) => {
+    if (isRemoteWorkspace()) { await remoteChannelAction('channel.send', remoteBleChannel(deviceId), { serviceUuid, charUuid, data }); return; }
     try {
       await invoke('write_ble_characteristic', { deviceId, serviceUuid, charUuid, data });
     } catch (error) {
@@ -182,6 +193,7 @@ export function useBle() {
   };
 
   const subscribeNotifications = async (deviceId: string, serviceUuid: string, charUuid: string) => {
+    if (isRemoteWorkspace()) { await remoteChannelAction('ble.subscribe', remoteBleChannel(deviceId), { serviceUuid, charUuid }); return; }
     try {
       await invoke('subscribe_ble_notifications', { deviceId, serviceUuid, charUuid });
     } catch (error) {
@@ -191,6 +203,7 @@ export function useBle() {
   };
 
   const unsubscribeNotifications = async (deviceId: string, serviceUuid: string, charUuid: string) => {
+    if (isRemoteWorkspace()) { await remoteChannelAction('ble.unsubscribe', remoteBleChannel(deviceId), { serviceUuid, charUuid }); return; }
     try {
       await invoke('unsubscribe_ble_notifications', { deviceId, serviceUuid, charUuid });
     } catch (error) {
@@ -214,4 +227,10 @@ export function useBle() {
     scanning,
     devices
   };
+}
+
+function remoteBleChannel(deviceId: string): string {
+  const id = useBleStore.getState().deviceChannelMap[deviceId];
+  if (!id) throw new Error('BLE device is not connected');
+  return id;
 }

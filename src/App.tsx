@@ -1,3 +1,4 @@
+import { CloseConfirmation } from './components/layout/CloseConfirmation';
 import { useEffect, useMemo } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { emit, listen } from '@tauri-apps/api/event';
@@ -18,7 +19,7 @@ function useDetachedMode(): boolean {
   }, []);
 }
 
-function App() {
+function MainApp() {
   const isDetached = useDetachedMode();
   let persistenceReady = true;
 
@@ -169,10 +170,13 @@ function App() {
   return (
     <ErrorBoundary label="App">
       <MainLayout persistenceReady={persistenceReady} />
+      <CloseConfirmation />
       <ToastContainer />
       <GlobalTooltip />
     </ErrorBoundary>
   );
 }
 
-export default App;
+export default function App() {
+  return <MainApp />;
+}

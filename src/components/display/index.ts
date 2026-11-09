@@ -8,6 +8,12 @@ export { CanvasEditDialog } from './CanvasEditDialog';
 export { ChartToolbar } from './ChartToolbar';
 export { ContextMenu } from './ContextMenu';
 export {
+  computeCanvasCornerState,
+  getCornerClassNames,
+  getSnapPreviewCornerClassNames,
+} from './canvasCornerUtils';
+export type { CanvasCornerState, CanvasCornerOptions } from './canvasCornerUtils';
+export {
   disposeCanvasLifecycleRuntime,
   getCanvasLifecycleRuntimeId,
   hasCanvasLifecycleScript,

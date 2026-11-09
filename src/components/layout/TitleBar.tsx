@@ -1,3 +1,7 @@
+import { createPortal } from 'react-dom';
+import { invoke } from '@tauri-apps/api/core';
+import { isRemoteWorkspace, useRemoteStore } from '../../stores/remoteStore';
+import { endRemoteWorkspace, flushRemoteLayout, remoteChannelAction } from '../../lib/remoteClient';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { DEFAULT_SERIAL_CONFIG, DEFAULT_TCP_CONFIG, useBleStore, useChannelStore, useSerialStore, useTcpStore, useUIStore } from '../../stores';
@@ -123,6 +127,7 @@ export const ChannelQuickOpenButton: React.FC = () => {
   const connectSelectedChannel = useCallback(async (channelId: string) => {
     const channel = useChannelStore.getState().channels.find((item) => item.id === channelId);
     if (!channel || channel.state === 'connected' || channel.state === 'connecting') return;
+    if (isRemoteWorkspace()) { await remoteChannelAction('channel.connect', channelId).catch(() => {}); return; }
 
     try {
       if (channel.type === 'serial') {
@@ -156,6 +161,7 @@ export const ChannelQuickOpenButton: React.FC = () => {
   const disconnectSelectedChannel = useCallback(async (channelId: string) => {
     const channel = useChannelStore.getState().channels.find((item) => item.id === channelId);
     if (!channel || channel.state !== 'connected') return;
+    if (isRemoteWorkspace()) { await remoteChannelAction('channel.disconnect', channelId).catch(() => {}); return; }
 
     try {
       if (channel.type === 'serial') {
@@ -350,6 +356,32 @@ export const TitleBarContent: React.FC<TitleBarContentProps> = ({
   isMaximized,
   onToggleMaximize,
 }) => {
+  const remote = useRemoteStore();
+  const [disconnectPeer, setDisconnectPeer] = useState<{ name: string; id?: string } | null>(null);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [disconnectError, setDisconnectError] = useState('');
+  const disconnectDialog = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!disconnectPeer) return;
+    const previous = document.activeElement;
+    disconnectDialog.current?.querySelector('button')?.focus();
+    return () => { if (previous instanceof HTMLElement) previous.focus(); };
+  }, [disconnectPeer]);
+  const disconnect = async () => {
+    if (!disconnectPeer || disconnecting) return;
+    setDisconnecting(true);
+    try {
+      if (disconnectPeer.id) {
+        if (useRemoteStore.getState().controller?.id === disconnectPeer.id) await invoke('remote_enable', { enabled: false });
+      } else {
+        await flushRemoteLayout();
+        await invoke('remote_disconnect');
+        endRemoteWorkspace();
+      }
+      setDisconnectPeer(null);
+    } catch (error) { setDisconnectError(String(error)); }
+    finally { setDisconnecting(false); }
+  };
   const appWindow = getCurrentWindow();
 
   const handleMinimize = useCallback(() => {
@@ -363,7 +395,35 @@ export const TitleBarContent: React.FC<TitleBarContentProps> = ({
   return (
     <>
       {/* Center: Drag region */}
-      <div className="flex-1 h-full select-none" />
+      <div className="flex min-w-0 flex-1 h-full items-center select-none">
+        {(remote.active || remote.controller) && <button data-no-drag
+          className={`min-w-0 truncate rounded px-3 py-1 text-xs hover:bg-[var(--layer-hover)] focus-visible:outline focus-visible:outline-1 ${remote.active ? 'text-accent-green' : 'text-accent-blue'}`}
+          title={remote.active ? remote.name : remote.controller?.name}
+          onMouseDown={event => event.stopPropagation()}
+          onDoubleClick={event => event.stopPropagation()}
+          onClick={() => { setDisconnectError(''); setDisconnectPeer(remote.active ? { name: remote.name } : remote.controller); }}>
+          {remote.active ? remote.name : remote.controller?.name}
+        </button>}
+      </div>
+
+      {disconnectPeer && createPortal(<div data-no-drag className="fixed inset-0 z-[11000] flex items-center justify-center bg-black/40 p-4" onMouseDown={event => event.stopPropagation()} onDoubleClick={event => event.stopPropagation()}>
+        <div ref={disconnectDialog} role="dialog" aria-modal="true" aria-labelledby="disconnect-title" className="w-full max-w-md rounded-2xl border border-border bg-surface-overlay p-5 text-sm text-text-primary shadow-xl" onKeyDown={event => {
+          if (event.key === 'Escape' && !disconnecting) setDisconnectPeer(null);
+          if (event.key === 'Tab') {
+            const buttons = [...(disconnectDialog.current?.querySelectorAll('button') ?? [])];
+            if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[buttons.length - 1]?.focus(); }
+            else if (!event.shiftKey && document.activeElement === buttons[buttons.length - 1]) { event.preventDefault(); buttons[0]?.focus(); }
+          }
+        }}>
+          <h2 id="disconnect-title" className="font-semibold">Disconnect remote device?</h2>
+          <p className="mt-3 break-words text-text-secondary">Disconnect from {disconnectPeer.name}?</p>
+          {disconnectError && <p role="alert" className="mt-3 text-accent-red">{disconnectError}</p>}
+          <div className="mt-5 flex justify-end gap-2" aria-busy={disconnecting}>
+            <button className="btn-channel-action px-3" aria-disabled={disconnecting} onClick={() => { if (!disconnecting) setDisconnectPeer(null); }}>Cancel</button>
+            <button className="btn-channel-action px-3" aria-disabled={disconnecting} onClick={() => void disconnect()}>Disconnect</button>
+          </div>
+        </div>
+      </div>, document.body)}
 
       {/* Right: Window controls */}
       <div className="flex items-center h-full shrink-0">

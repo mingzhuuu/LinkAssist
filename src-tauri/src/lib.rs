@@ -11,6 +11,7 @@ mod mcp_tools;
 mod persistence;
 mod protocol;
 mod recent_events;
+mod remote;
 mod script_helper;
 mod script_markers;
 mod serial;
@@ -308,6 +309,18 @@ fn exit_from_tray(app_handle: &tauri::AppHandle, ui_lifecycle: &UiLifecycle) {
     });
 }
 
+#[tauri::command]
+fn close_main_window(app: tauri::AppHandle, window: tauri::WebviewWindow, background: bool) -> Result<(), String> {
+    if window.label() != "main" { return Err("Only the main window can close the application".into()); }
+    if background {
+        set_tray_visible(app.clone(), true, app.state::<UiLifecycle>(), app.state::<TrayRequests>(), app.state::<McpToolAccess>())?;
+        window.hide().map_err(|e| e.to_string())?;
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
+        window.set_skip_taskbar(true).map_err(|e| e.to_string())?;
+    } else { exit_from_tray(&app, app.state::<UiLifecycle>().inner()); }
+    Ok(())
+}
+
 fn create_tray_menu(
     app: &tauri::AppHandle,
     mcp_tools_enabled: bool,
@@ -417,6 +430,7 @@ fn setup_tray(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    initialize_tls_provider();
     if let Err(error) = discovery::clear_explicit_shutdown_sync() {
         eprintln!("Failed to clear the previous LinkAssist shutdown marker: {error}");
     }
@@ -428,6 +442,7 @@ pub fn run() {
 }
 
 pub fn run_core_headless() {
+    initialize_tls_provider();
     match discovery::try_acquire_core_instance_lock() {
         Ok(Some(core_lock)) => run_tauri_core(true, core_lock),
         Ok(None) => {}
@@ -436,8 +451,16 @@ pub fn run_core_headless() {
 }
 
 pub fn run_mcp_bridge() -> AppResult<()> {
+    initialize_tls_provider();
     let runtime = tokio::runtime::Runtime::new()?;
     runtime.block_on(mcp_bridge::run_stdio_bridge())
+}
+
+fn initialize_tls_provider() {
+    // Reqwest shares iroh's rustls-no-provider build, including in standalone
+    // MCP mode before any endpoint exists. Reuse ring instead of linking a
+    // second crypto backend. An existing process-wide provider is kept intact.
+    let _ = rustls::crypto::ring::default_provider().install_default();
 }
 
 enum UiLaunchDecision {
@@ -550,7 +573,24 @@ fn run_tauri_core(headless: bool, core_lock: discovery::CoreInstanceLock) {
         .manage(ui_lifecycle)
         .manage(tray_requests)
         .manage(mcp_tool_access)
+        .manage(remote::RemoteAccess::default())
         .invoke_handler(tauri::generate_handler![
+            remote::commands::remote_list_directory,
+            remote::commands::remote_status,
+            remote::commands::remote_reconnect,
+            remote::commands::remote_request_active,
+            remote::commands::remote_enable,
+            remote::commands::remote_invite,
+            remote::commands::remote_set_no_approval,
+            close_main_window,
+            remote::commands::remote_approve,
+            remote::commands::remote_revoke,
+            remote::commands::remote_connect,
+            remote::commands::remote_disconnect,
+            remote::commands::remote_action,
+            remote::commands::remote_snapshot,
+            remote::commands::remote_publish,
+            remote::commands::remote_respond,
             greet,
             get_launch_mode,
             main_window_ready,
@@ -628,30 +668,22 @@ fn run_tauri_core(headless: bool, core_lock: discovery::CoreInstanceLock) {
         .expect("error while building tauri application");
 
     app.run(move |app_handle, event| {
+        if let tauri::RunEvent::WindowEvent { label, event: tauri::WindowEvent::Destroyed, .. } = &event {
+            if label == "remote-workspace" {
+                let remote = app_handle.state::<remote::RemoteAccess>().inner().clone();
+                let handle = app_handle.clone();
+                tauri::async_runtime::spawn(async move { remote.disconnect(&handle).await; });
+            }
+        }
         if matches!(event, tauri::RunEvent::Exit) {
             let _ = discovery::remove_discovery_for_current_process_sync();
             return;
         }
 
-        // The tray owns the app lifetime: closing the main window hides it
-        // while the Core keeps running (exit lives in the tray menu). Detached
-        // terminal windows close for real.
-        if let tauri::RunEvent::WindowEvent {
-            label,
-            event: tauri::WindowEvent::CloseRequested { api, .. },
-            ..
-        } = event
-        {
-            if label == "main" {
-                api.prevent_close();
-                if let Some(window) = app_handle.get_webview_window(&label) {
-                    let _ = window.hide();
-                    #[cfg(any(target_os = "windows", target_os = "linux"))]
-                    if let Err(error) = window.set_skip_taskbar(true) {
-                        log::warn!("Failed to remove hidden main window from the taskbar: {error}");
-                    }
-                }
-            }
+        // Frontend owns the save/confirmation sequence. Keep the webview alive
+        // until close_main_window explicitly chooses exit or background mode.
+        if let tauri::RunEvent::WindowEvent { label, event: tauri::WindowEvent::CloseRequested { api, .. }, .. } = event {
+            if label == "main" { api.prevent_close(); }
         }
     });
     drop(core_lock);

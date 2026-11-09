@@ -33,6 +33,8 @@ pub struct ChannelConfig {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UiConfig {
+    #[serde(default)]
+    pub close_behavior: Option<String>,
     pub left_panel_width: f64,
     pub right_panel_width: f64,
     #[serde(default)]
@@ -162,6 +164,7 @@ impl Default for UiConfig {
             restore_canvas_layout: true,
             channel_quick_open_selected_ids: Vec::new(),
             file_dialog_dirs: FileDialogDirs::default(),
+            close_behavior: None,
         }
     }
 }

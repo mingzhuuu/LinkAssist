@@ -15,6 +15,7 @@ export interface ChannelEntry {
 }
 
 export interface UiEntry {
+  close_behavior?: 'exit' | 'background' | null;
   left_panel_width: number;
   center_panel_width?: number | null;
   right_panel_width: number;

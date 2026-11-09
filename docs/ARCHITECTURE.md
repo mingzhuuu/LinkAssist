@@ -4,6 +4,8 @@
 
 ## 1. 运行结构
 
+远程工作区见 [REMOTE-ACCESS](REMOTE-ACCESS.md)：Rust `remote/` 内嵌 iroh，负责身份、配对、单控制者会话和有界帧；主窗口 `RemoteAccessControl` 接收经白名单验证的请求，通过 `remoteHost` 调用现有通道/画布操作并发布快照。控制端主窗口通过 `remoteClient` 显示远端工作区，远程编辑经 `remoteLayout` 验证版本并写入被控端的状态与持久化流程。控制端退出远程会话时恢复本机工作区。既有 Core HTTP 不承担外网入口。
+
 ```mermaid
 flowchart TB
   UI[React 主窗口 / 分离终端] -->|invoke| IPC[Tauri commands]

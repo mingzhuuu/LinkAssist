@@ -1,5 +1,7 @@
+import { isRemoteWorkspace, useRemoteStore } from '../../stores/remoteStore';
+import { remoteAction } from '../../lib/remoteClient';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { open as openFileDialog } from '@tauri-apps/plugin-dialog';
+import { openWorkspaceFile as openFileDialog } from '../../lib/workspaceFileDialog';
 import { toast, useCanvasStore, useChannelStore } from '../../stores';
 import { ScriptCanvasUi, ScriptEditableSelect } from './ScriptCanvasUi';
 import { getScriptRuntime } from './scriptRuntime';
@@ -8,11 +10,13 @@ import type {
   ScriptDocument,
   ScriptRuntimeSnapshot,
   ScriptUiButtonControl,
+  ScriptUiDocument,
   ScriptUiStaticOption,
   ScriptUiToolbarControl,
   ScriptUiToolbarSelectControl,
 } from './scriptTypes';
 import { collectPersistedUiState, mergeUiValues, readUiPath, resolveUiSource, setUiPath } from './scriptUiUtils';
+import { registerRemoteCanvas } from '../../lib/remoteCanvasBridge';
 
 interface CanvasScriptProps {
   canvasId: string;
@@ -49,7 +53,7 @@ export async function pickScriptDirectory(
   return typeof selected === 'string' ? setUiPath(values, bind, selected) : null;
 }
 
-export const CanvasScript: React.FC<CanvasScriptProps> = ({ canvasId }) => {
+const LocalCanvasScript: React.FC<CanvasScriptProps> = ({ canvasId }) => {
   const canvas = useCanvasStore((state) => state.canvases.find((item) => item.id === canvasId));
   const config = canvas?.config.script;
   const channels = useChannelStore((state) => state.channels);
@@ -223,17 +227,83 @@ export const CanvasScript: React.FC<CanvasScriptProps> = ({ canvasId }) => {
     }).catch((error) => toast.error(String(error)));
   };
 
+  useEffect(() => registerRemoteCanvas(canvasId, {
+    view: () => ({ kind: 'script', ui: document?.ui ?? null, values: uiValues, sources: appSources, snapshot: runtime.getSnapshot(), error: loadError }),
+    action: async (action, args) => {
+      if (action === 'script.stop') { runtime.stop(); return; }
+      let activeDocument = document;
+      if (args.reloadDocument === true || args.handler === '$reload') {
+        if (runtime.getSnapshot().status === 'running') throw new Error('Stop the script before reloading');
+        const loaded = await loadDocument(args.values && typeof args.values === 'object' ? args.values as Record<string, unknown> : undefined);
+        if (!loaded) throw new Error('Cannot reload the script on the host');
+        activeDocument = loaded.document;
+        if (args.handler === '$reload') return;
+      }
+      if (!activeDocument) throw new Error(loadError || 'Script is not loaded on the host');
+      if (action === 'script.run') {
+        if (activeDocument.ui) throw new Error('Use the script controls to run an interactive script');
+        if (runtime.getSnapshot().status === 'running') throw new Error('Script is already running');
+        runtime.reset(activeDocument.name);
+        void runtime.run(activeDocument).catch(error => toast.error(String(error)));
+        return;
+      }
+      if (action !== 'script.action' || typeof args.handler !== 'string') throw new Error('Unsupported script action');
+      if (args.handler === '$stop') { runtime.stop(); return; }
+      if (!args.values || typeof args.values !== 'object' || Array.isArray(args.values)) throw new Error('Invalid script values');
+      const nextValues = args.values as Record<string, unknown>;
+      if (runtime.getSnapshot().status === 'running') throw new Error('Script is already running');
+      if (args.handler === '$reset') { setUiValues(nextValues); runtime.initializeInteractive(activeDocument, nextValues); return; }
+      if (!Object.prototype.hasOwnProperty.call(activeDocument.handlers ?? {}, args.handler)) throw new Error(`Script handler not found: ${args.handler}`);
+      setUiValues(nextValues);
+      // Starts once on the host and outlives the remote connection.
+      void runtime.runHandler(activeDocument, args.handler, nextValues, { preserveLogs: args.preserveLogs === true })
+        .catch(error => toast.error(String(error)));
+    },
+  }), [appSources, canvasId, document, loadDocument, loadError, runtime, uiValues]);
+
   if (!canvas || !config) {
     return <div className="flex h-full items-center justify-center text-xs text-text-muted">Script canvas not configured</div>;
   }
 
-  const displayName = canvas.name.trim() || document?.name || snapshot.scriptName || 'Automation Script';
-  const isRunning = snapshot.status === 'running';
+  return <ScriptCanvasView displayName={canvas.name.trim() || document?.name || snapshot.scriptName || 'Automation Script'}
+    ui={document?.ui} snapshot={snapshot} uiValues={uiValues} appSources={appSources} loading={loading} loadError={loadError}
+    setUiValues={setUiValues} onAction={handleAction} onReload={() => { void loadDocument(); }}
+    onStop={() => runtime.stop()} onRun={() => { void handleLegacyRun(); }} />;
+};
 
+export const CanvasScript: React.FC<CanvasScriptProps> = props => isRemoteWorkspace() ? <RemoteScriptCanvas {...props} /> : <LocalCanvasScript {...props} />;
+
+const RemoteScriptCanvas: React.FC<CanvasScriptProps> = ({ canvasId }) => {
+  const view = useRemoteStore(state => state.snapshot?.canvasFrames?.[canvasId]?.view);
+  const canvas = useCanvasStore(state => state.canvases.find(c => c.id === canvasId));
+  const [values, setValues] = useState<Record<string, unknown>>({});
+  const editing = useRef(false);
+  useEffect(() => { if (!editing.current && view?.kind === 'script') setValues(view.values); }, [view]);
+  const call = (action: string, args: Record<string, unknown> = {}) => { void remoteAction(action, { canvasId, ...args }).then(() => { editing.current = false; }).catch(() => {}); };
+  if (view?.kind !== 'script') return <div className="p-3 text-xs text-text-muted">Loading script…</div>;
+  return <ScriptCanvasView displayName={canvas?.name.trim() || view.snapshot.scriptName || 'Automation Script'}
+    ui={view.ui ?? undefined} snapshot={view.snapshot} uiValues={values} appSources={view.sources} loading={false} loadError={view.error}
+    setUiValues={next => { editing.current = true; setValues(next); }}
+    onAction={async (handler, options) => {
+      let next = values;
+      if (options?.directoryBind) { const picked = await pickScriptDirectory(values, options.directoryBind); if (!picked) return; next = picked; setValues(next); }
+      call('script.action', { handler, values: next, ...options });
+    }} onReload={() => call('script.action', { handler: '$reload' })} onRun={() => call('script.run')} onStop={() => call('script.stop')} />;
+};
+
+interface ScriptCanvasViewProps {
+  displayName: string; ui?: ScriptUiDocument; snapshot: ScriptRuntimeSnapshot;
+  uiValues: Record<string, unknown>; appSources: Record<string, unknown>; loading: boolean; loadError: string;
+  setUiValues: (values: Record<string, unknown>) => void;
+  onAction: (action: string, options?: { preserveLogs?: boolean; reloadDocument?: boolean; directoryBind?: string }) => void;
+  onReload: () => void; onStop: () => void; onRun: () => void;
+}
+const ScriptCanvasView: React.FC<ScriptCanvasViewProps> = ({ displayName, ui, snapshot, uiValues, appSources, loading, loadError, setUiValues, onAction, onReload, onStop, onRun }) => {
+  const isRunning = snapshot.status === 'running';
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface text-xs text-text-secondary">
       <div className="flex shrink-0 items-center gap-3 border-b border-border bg-surface px-3 py-2">
-        {document?.ui?.showHeaderInfo !== false && (
+        {ui?.showHeaderInfo !== false && (
           <>
             <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-text-primary" title={displayName}>{displayName}</span>
             {snapshot.activeHandler && <span className="truncate font-mono text-[10px] text-text-muted">{snapshot.activeHandler}</span>}
@@ -242,7 +312,7 @@ export const CanvasScript: React.FC<CanvasScriptProps> = ({ canvasId }) => {
             )}
           </>
         )}
-        {document?.ui?.toolbar ? document.ui.toolbar.map((control) => (
+        {ui?.toolbar ? ui.toolbar.map((control) => (
           <ScriptToolbarControlView
             key={control.id}
             control={control}
@@ -251,34 +321,34 @@ export const CanvasScript: React.FC<CanvasScriptProps> = ({ canvasId }) => {
             snapshot={snapshot}
             loading={loading}
             onValuesChange={setUiValues}
-            onAction={(action, options) => { void handleAction(action, options); }}
+            onAction={(action, options) => { void onAction(action, options); }}
           />
         )) : (
           <button
             className="rounded border border-border px-2 py-1 text-[10px] text-text-secondary hover:bg-[var(--layer-hover)] disabled:opacity-40"
             disabled={loading || isRunning}
-            onClick={() => { void loadDocument(); }}
+            onClick={() => { onReload(); }}
           >{loading ? 'Loading…' : 'Reload'}</button>
         )}
-        {!document?.ui && (
+        {!ui && (
           <button
             className={`btn-channel-action min-w-16 shrink-0 px-3 py-[1px] text-xs leading-4 ${isRunning ? 'bg-accent-red hover:bg-accent-red/80 text-surface' : 'bg-accent-green hover:bg-accent-green/80 text-surface'}`}
-            onClick={() => { if (isRunning) runtime.stop(); else void handleLegacyRun(); }}
+            onClick={() => { if (isRunning) onStop(); else onRun(); }}
           >{isRunning ? 'Stop' : 'Run'}</button>
         )}
       </div>
 
       {loadError ? (
         <div className="m-3 rounded border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">{loadError}</div>
-      ) : document?.ui ? (
+      ) : ui ? (
         <div className="min-h-0 flex-1">
           <ScriptCanvasUi
-            ui={document.ui}
+            ui={ui}
             values={uiValues}
             sources={appSources}
             snapshot={snapshot}
             onValuesChange={setUiValues}
-            onAction={(action, options) => { void handleAction(action, options); }}
+            onAction={(action, options) => { void onAction(action, options); }}
           />
         </div>
       ) : (
@@ -288,7 +358,7 @@ export const CanvasScript: React.FC<CanvasScriptProps> = ({ canvasId }) => {
   );
 };
 
-const ScriptToolbarControlView: React.FC<{
+export const ScriptToolbarControlView: React.FC<{
   control: ScriptUiToolbarControl;
   values: Record<string, unknown>;
   sources: Record<string, unknown>;
@@ -423,7 +493,7 @@ export const ScriptToolbarButton: React.FC<{
   );
 };
 
-const LegacyScriptOutput: React.FC<{ snapshot: ScriptRuntimeSnapshot }> = ({ snapshot }) => (
+export const LegacyScriptOutput: React.FC<{ snapshot: ScriptRuntimeSnapshot }> = ({ snapshot }) => (
   <div className="min-h-0 flex-1 overflow-auto">
     {snapshot.steps.length === 0 ? (
       <div className="p-4 text-text-muted">Run the script to show steps.</div>

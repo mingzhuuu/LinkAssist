@@ -10,3 +10,4 @@ export * from './canvasMigration';
 export * from './mcp';
 export * from './testRunner';
 export * from './persistence';
+export type { RemotePeer, RemoteStatus, RemoteChannel, RemoteWorkspaceSnapshot, RemoteHostRequest } from './remote';

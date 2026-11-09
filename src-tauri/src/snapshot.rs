@@ -372,7 +372,9 @@ pub fn create_snapshot(output: &Path, mut config: Value) -> Result<SnapshotRepor
     };
     let json = serde_json::to_vec(&payload)
         .map_err(|error| format!("Cannot serialize snapshot payload: {error}"))?;
-    let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+    // Export is infrequent: favor a smaller portable payload over compression
+    // speed. The gzip format and existing snapshot reader remain unchanged.
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
     encoder
         .write_all(&json)
         .map_err(|error| format!("Cannot compress snapshot payload: {error}"))?;

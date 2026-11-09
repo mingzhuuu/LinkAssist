@@ -601,3 +601,79 @@ button {
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+.remote-ui :is(button, input, select, textarea):focus-visible {
+  outline: 2px solid rgb(var(--accent-mauve));
+  outline-offset: 2px;
+}
+
+.remote-ui button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Settings pages: inset separators and compact, right-aligned controls. */
+.settings-group-item + .settings-group-item {
+  border-top: 1px solid var(--divider-default);
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 60px;
+  padding-block: 12px;
+}
+.settings-main {
+  container-type: inline-size;
+}
+.settings-row > :first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.settings-row > button,
+.settings-select {
+  min-height: 28px;
+}
+.settings-row > [role="switch"] {
+  min-height: 20px;
+}
+@container (max-width: 420px) {
+  .settings-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .settings-row > :first-child {
+    flex: 1 1 190px;
+  }
+  .settings-row > :last-child {
+    margin-left: auto;
+  }
+}
+@media (max-width: 640px) {
+  .settings-dialog {
+    width: calc(100vw - 16px);
+    height: calc(100vh - 16px);
+  }
+  .settings-sidebar { width: 132px; overflow-y: auto; }
+  .settings-heading { padding-inline: 16px; }
+  .settings-content { padding-inline: 12px; }
+}
+
+.remote-ui input.remote-pairing-code:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.remote-ui .remote-borderless-action {
+  border: 0;
+  background-color: transparent;
+}
+.remote-ui input.remote-peer-code {
+  background-color: transparent;
+}
+.remote-ui input.remote-peer-code:focus {
+  outline: none;
+  box-shadow: none;
+  border-color: rgb(var(--accent-mauve));
+}

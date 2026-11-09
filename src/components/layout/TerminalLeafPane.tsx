@@ -1,6 +1,7 @@
 import React, { Component, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { terminalInvoke, clearRemoteTerminal } from '../../lib/remoteClient';
+import { isRemoteWorkspace } from '../../stores/remoteStore';
 import { emit } from '@tauri-apps/api/event';
 import { useChannelStore, useProtocolStore, useBleStore, useTcpStore, useUIStore, toast } from '../../stores';
 import { useTerminalStore, visibleTerminalEntries, receiveChannelsFor, DropZone } from '../../stores/terminalStore';
@@ -132,7 +133,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     setFocusedPane,
     appendEntry,
     appendEntryToChannel,
-    clearEntries,
+
     setCmdInput,
     pushCmdHistory,
     setAutoScroll,
@@ -320,11 +321,11 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
           return;
         }
         if (val === 'on') {
-          invoke('subscribe_ble_notifications', { deviceId: connectedDeviceId, serviceUuid: linkedServiceUuid, charUuid: linkedCharUuid })
+          terminalInvoke('subscribe_ble_notifications', { deviceId: connectedDeviceId, serviceUuid: linkedServiceUuid, charUuid: linkedCharUuid }, linkedChannel?.id ?? null)
             .then(() => addEntry('system', 'BLE notifications: ON'))
             .catch(e => addEntry('system', `Notify error: ${e}`));
         } else if (val === 'off') {
-          invoke('unsubscribe_ble_notifications', { deviceId: connectedDeviceId, serviceUuid: linkedServiceUuid, charUuid: linkedCharUuid })
+          terminalInvoke('unsubscribe_ble_notifications', { deviceId: connectedDeviceId, serviceUuid: linkedServiceUuid, charUuid: linkedCharUuid }, linkedChannel?.id ?? null)
             .then(() => addEntry('system', 'BLE notifications: OFF'))
             .catch(e => addEntry('system', `Notify error: ${e}`));
         } else {
@@ -339,11 +340,11 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
           return;
         }
         if (val === 'on') {
-          invoke('subscribe_ble_notifications', { deviceId: connectedDeviceId, serviceUuid: linkedServiceUuid, charUuid: linkedCharUuid })
+          terminalInvoke('subscribe_ble_notifications', { deviceId: connectedDeviceId, serviceUuid: linkedServiceUuid, charUuid: linkedCharUuid }, linkedChannel?.id ?? null)
             .then(() => addEntry('system', 'BLE indications: ON'))
             .catch(e => addEntry('system', `Indicate error: ${e}`));
         } else if (val === 'off') {
-          invoke('unsubscribe_ble_notifications', { deviceId: connectedDeviceId, serviceUuid: linkedServiceUuid, charUuid: linkedCharUuid })
+          terminalInvoke('unsubscribe_ble_notifications', { deviceId: connectedDeviceId, serviceUuid: linkedServiceUuid, charUuid: linkedCharUuid }, linkedChannel?.id ?? null)
             .then(() => addEntry('system', 'BLE indications: OFF'))
             .catch(e => addEntry('system', `Indicate error: ${e}`));
         } else {
@@ -445,7 +446,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
         break;
       }
       case '/clear': {
-        clearEntries(paneId);
+        clearRemoteTerminal(paneId);
         break;
       }
       case '/help': {
@@ -475,7 +476,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
       default:
         addEntry('system', `Unknown command: ${cmd}  (type /help for help)`);
     }
-  }, [activeTab, appendEntry, configureTab, channels, linkedChannel, linkedServiceUuid, linkedCharUuid, connectedDeviceId, addEntry, paneId, setLinkedChannel, setLinkedService, setLinkedChar, updateTerminalSettings, setShowReceived, showSelectMenu, clearEntries, setUdpTargetAddr, setSelectedTcpClient]);
+  }, [activeTab, appendEntry, configureTab, channels, linkedChannel, linkedServiceUuid, linkedCharUuid, connectedDeviceId, addEntry, paneId, setLinkedChannel, setLinkedService, setLinkedChar, updateTerminalSettings, setShowReceived, showSelectMenu, setUdpTargetAddr, setSelectedTcpClient]);
 
   const handleSend = useCallback(async () => {
     const currentPane = useTerminalStore.getState().panes[paneId];
@@ -567,12 +568,12 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
           () => {
             addEntry('tx', txLine, bytes);
           },
-          () => invoke('write_ble_characteristic', {
+          () => terminalInvoke('write_ble_characteristic', {
             deviceId: connectedDeviceId,
             serviceUuid: writeTarget.serviceUuid,
             charUuid: writeTarget.charUuid,
             data: bytes,
-          })
+          }, linkedChannel.id)
         );
         return;
       }
@@ -762,9 +763,9 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
   }, [paneId, setFocusedPane]);
 
   const handleClearTerminal = useCallback(() => {
-    clearEntries(paneId);
+    clearRemoteTerminal(paneId);
     inputRef.current?.focus();
-  }, [clearEntries, paneId]);
+  }, [paneId]);
 
   const handleToggleReceived = useCallback(() => {
     setShowReceived(!showReceived);
@@ -844,6 +845,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     const ch = channels.find(c => c.id === tab.channelId);
     const entries = pane?.tabEntries[tabId] ?? pane?.entries ?? [];
 
+    if (isRemoteWorkspace()) { toast.error('Remote terminals stay in the main window'); return; }
     const label = await detachTabToWindow(
       {
         tab: { ...tab, label: terminalTabLabel(terminalChannels(tab, channels), channels.length) },
@@ -870,6 +872,7 @@ export const TerminalLeafPane: React.FC<Props> = ({ paneId }) => {
     const ch = channels.find(c => c.id === activeTab.channelId);
     const entries = pane?.tabEntries[activeTab.id] ?? pane?.entries ?? [];
 
+    if (isRemoteWorkspace()) { toast.error('Remote terminals stay in the main window'); return; }
     const label = await detachTabToWindow(
       { tab: { ...activeTab, label: terminalTabLabel(terminalChannels(activeTab, channels), channels.length) }, writeTarget: pane?.selectedWriteTarget, udpTargetAddr: pane?.udpTargetAddr, entries, channelType: ch?.type, terminalSettings },
     );

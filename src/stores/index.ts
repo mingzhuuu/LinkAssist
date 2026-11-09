@@ -9,3 +9,5 @@ export * from './terminalStore';
 export * from './commandStore';
 export * from './canvasStore';
 export * from './mcpStore';
+
+export { useRemoteStore, isRemoteWorkspace } from './remoteStore';

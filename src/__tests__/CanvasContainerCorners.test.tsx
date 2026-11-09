@@ -36,7 +36,7 @@ const handlers = {
 describe('CanvasContainer maximized corners', () => {
   afterEach(cleanup);
 
-  it('matches the outer panel corners only while maximized', () => {
+  it('matches the outer panel corners while maximized and uses rounded curves when restored', () => {
     const { container, rerender } = render(
       <CanvasContainer
         canvas={canvas}
@@ -69,10 +69,25 @@ describe('CanvasContainer maximized corners', () => {
     const nonMaximizedClasses = element.className.split(' ');
     expect(nonMaximizedClasses).toContain('border');
     expect(nonMaximizedClasses).not.toContain('border-0');
-    expect(nonMaximizedClasses).toContain('rounded-none');
+    expect(nonMaximizedClasses).toContain('rounded-xl');
     expect(nonMaximizedClasses).not.toContain('border-t-0');
     expect(nonMaximizedClasses).not.toContain('border-l-0');
-    expect(nonMaximizedClasses).not.toContain('rounded-br-xl');
+  });
+
+  it('adapts corner curves when abutting adjacent aligned canvases', () => {
+    const { container } = render(
+      <CanvasContainer
+        canvas={{ ...canvas, maximized: false, rect: { x: 0, y: 0, width: 200, height: 200 } }}
+        adjacentRects={[{ x: 200, y: 0, width: 200, height: 200 }]}
+        {...handlers}
+      >
+        <div />
+      </CanvasContainer>,
+    );
+
+    const element = container.firstElementChild as HTMLElement;
+    expect(element.className).toContain('rounded-l-xl');
+    expect(element.className).toContain('rounded-r-none');
   });
 
   it('lets the outer frame own every edge in seamless maximized mode', () => {

@@ -1,3 +1,5 @@
+import { isRemoteWorkspace } from '../stores/remoteStore';
+import { remoteAction, remoteChannelAction } from '../lib/remoteClient';
 import { useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useSerialStore, useChannelStore, normalizeSerialConfig } from '../stores';
@@ -10,6 +12,7 @@ export function useSerial() {
   const { updateChannelState } = useChannelStore();
 
   const refreshPorts = useCallback(async () => {
+    if (isRemoteWorkspace()) { await remoteAction('serial.refresh').catch(() => {}); return; }
     try {
       const ports = await invoke<SerialPortInfo[]>('list_serial_ports');
       setPorts(ports);
@@ -19,6 +22,7 @@ export function useSerial() {
   }, [setPorts]);
 
   const openPort = async (config: SerialConfig, channelId: string) => {
+    if (isRemoteWorkspace()) return await remoteChannelAction('channel.connect', channelId) as string;
     try {
       updateChannelState(channelId, 'connecting');
       // Final gate: repair configs that reached here malformed (stale
@@ -38,6 +42,7 @@ export function useSerial() {
   };
 
   const closePort = async (connectionId: string, channelId: string) => {
+    if (isRemoteWorkspace()) { await remoteChannelAction('channel.disconnect', channelId); return; }
     try {
       await runLinkedCanvasDeactivateHooks(channelId);
       await invoke('close_serial_port', { connectionId });

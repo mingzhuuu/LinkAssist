@@ -33,5 +33,35 @@
     "file": "webview2-com-0.39.1.txt",
     "source": "https://github.com/wravery/webview2-rs/tree/edc2caf886175ccaebe86078c9cfe1ae2a187328",
     "url": "https://raw.githubusercontent.com/wravery/webview2-rs/edc2caf886175ccaebe86078c9cfe1ae2a187328/LICENSE"
+  },
+  "iroh-base@1.4.1": {
+    "url": "https://raw.githubusercontent.com/n0-computer/iroh/d6c6963b9602d1b8dd2ba53b6519e7eb19cc7940/LICENSE-MIT",
+    "file": "iroh-base-1.4.1.txt",
+    "source": "https://github.com/n0-computer/iroh/tree/d6c6963b9602d1b8dd2ba53b6519e7eb19cc7940/iroh-base"
+  },
+  "iroh-dns@1.4.1": {
+    "url": "https://raw.githubusercontent.com/n0-computer/iroh/d6c6963b9602d1b8dd2ba53b6519e7eb19cc7940/LICENSE-MIT",
+    "file": "iroh-dns-1.4.1.txt",
+    "source": "https://github.com/n0-computer/iroh/tree/d6c6963b9602d1b8dd2ba53b6519e7eb19cc7940/iroh-dns"
+  },
+  "iroh-metrics-derive@1.0.1": {
+    "url": "https://raw.githubusercontent.com/n0-computer/iroh-metrics/a9afb7cd49bb3804fffefec61647993851f9b8c8/LICENSE-MIT",
+    "file": "iroh-metrics-derive-1.0.1.txt",
+    "source": "https://github.com/n0-computer/iroh-metrics/tree/a9afb7cd49bb3804fffefec61647993851f9b8c8/iroh-metrics-derive"
+  },
+  "n0-error-macros@1.0.1": {
+    "url": "https://raw.githubusercontent.com/n0-computer/n0-error/596f4113918712d545cbb25b7fa12c7153706f54/LICENSE-MIT",
+    "file": "n0-error-macros-1.0.1.txt",
+    "source": "https://github.com/n0-computer/n0-error/tree/596f4113918712d545cbb25b7fa12c7153706f54/n0-error-macros"
+  },
+  "netwatch@0.19.3": {
+    "url": "https://raw.githubusercontent.com/n0-computer/net-tools/0030e57fc70981895bb86212ff0f059cc41c8a4e/LICENSE-MIT",
+    "file": "netwatch-0.19.3.txt",
+    "source": "https://github.com/n0-computer/net-tools/tree/0030e57fc70981895bb86212ff0f059cc41c8a4e/netwatch"
+  },
+  "enum-assoc@1.4.2": {
+    "url": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+    "source": "https://github.com/Eolu/enum-assoc/blob/5d732f47b429d382daffb0948770adbaa2de0b8c/Cargo.toml",
+    "file": "enum-assoc-1.4.2.txt"
   }
 }

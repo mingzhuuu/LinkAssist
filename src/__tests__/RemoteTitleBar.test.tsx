@@ -1,0 +1,45 @@
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { invoke } from '@tauri-apps/api/core';
+import { TitleBarContent } from '../components/layout/TitleBar';
+import { useRemoteStore } from '../stores/remoteStore';
+import { CloseConfirmation } from '../components/layout/CloseConfirmation';
+import { askCloseChoice } from '../stores/closeStore';
+import { act } from '@testing-library/react';
+vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('@tauri-apps/api/window', () => ({ getCurrentWindow: () => ({ minimize: vi.fn(), close: vi.fn() }) }));
+vi.mock('../lib/remoteClient', () => ({ flushRemoteLayout: vi.fn().mockResolvedValue(undefined), endRemoteWorkspace: vi.fn(), remoteChannelAction: vi.fn() }));
+beforeEach(() => { useRemoteStore.setState({ active: false, name: '', controller: null }); });
+afterEach(() => { cleanup(); vi.clearAllMocks(); });
+it('shows a green peer name and requires confirmation before disconnecting', async () => {
+  useRemoteStore.setState({ active: true, name: 'Lab host' });
+  render(<TitleBarContent isMaximized={false} onToggleMaximize={() => {}} />);
+  const peer = screen.getByRole('button', { name: 'Lab host' });
+  expect(peer.className).toContain('text-accent-green');
+  expect(screen.queryByText('Remote')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Disconnect' })).toBeNull();
+  fireEvent.click(peer);
+  expect(invoke).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
+  fireEvent.click(peer);
+  fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }));
+  await waitFor(() => expect(invoke).toHaveBeenCalledWith('remote_disconnect'));
+});
+it('shows the controller in blue and confirms taking back control', async () => {
+  useRemoteStore.setState({ controller: { id: 'peer', name: 'Office controller' } });
+  render(<TitleBarContent isMaximized={false} onToggleMaximize={() => {}} />);
+  const peer = screen.getByRole('button', { name: 'Office controller' });
+  expect(peer.className).toContain('text-accent-blue');
+  fireEvent.click(peer);
+  fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }));
+  await waitFor(() => expect(invoke).toHaveBeenCalledWith('remote_enable', { enabled: false }));
+});
+it('passes the Always checkbox choice to the close decision', async () => {
+  render(<CloseConfirmation />);
+  let answer!: ReturnType<typeof askCloseChoice>;
+  act(() => { answer = askCloseChoice('first'); });
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Always' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Keep in background' }));
+  await expect(answer).resolves.toEqual({ choice: 'background', always: true });
+});

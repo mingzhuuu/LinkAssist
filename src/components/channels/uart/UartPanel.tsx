@@ -1,10 +1,11 @@
-import React, { useEffect, useCallback } from 'react';
-import { useSerial } from '../../../hooks/useSerial';
+import React, { useEffect, useCallback, useState } from 'react';
+import { useSerial } from '../../../hooks';
 import { useSerialStore, useChannelStore, DEFAULT_SERIAL_CONFIG } from '../../../stores';
 import { toast } from '../../../stores/toastStore';
 import { RoundedSelect } from '../../common/RoundedSelect';
 
 export const UartPanel = React.memo(function UartPanel({ channelId }: { channelId: string }) {
+  const [pending, setPending] = useState(false);
   const { refreshPorts, openPort, closePort, ports, setActiveConfig } = useSerial();
   const savedConfig = useSerialStore(s => s.channelConfigs[channelId]);
   const setChannelConfig = useSerialStore(s => s.setChannelConfig);
@@ -77,7 +78,8 @@ export const UartPanel = React.memo(function UartPanel({ channelId }: { channelI
         {/* Right side: Open/Close button */}
         <div className="ml-4 shrink-0">
           <button
-            onClick={handleOpenClose}
+            disabled={pending}
+            onClick={() => { setPending(true); void handleOpenClose().finally(() => setPending(false)); }}
             className={`btn-channel-action ${
               isOpen
                 ? 'bg-accent-red hover:bg-accent-red/80 text-surface'

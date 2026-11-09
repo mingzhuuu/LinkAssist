@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 
 const root = process.cwd();
 const target = process.env.LINKASSIST_LICENSE_TARGET ?? 'x86_64-pc-windows-msvc';
@@ -16,6 +17,14 @@ const selected = new Set(cargo.resolve.nodes.map(node => node.id));
 const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
 const inventory = [];
 const sections = [];
+// Share only byte-identical texts. Keep every package attribution and every
+// distinct copyright/NOTICE verbatim, even when their SPDX identifiers match.
+const uniqueTexts = new Map();
+function referenceText(text) {
+  const id = createHash('sha256').update(text).digest('hex');
+  if (!uniqueTexts.has(id)) uniqueTexts.set(id, text);
+  return id;
+}
 const missing = [];
 const supplements = JSON.parse(fs.readFileSync('third-party-licenses/upstream/sources.json', 'utf8'));
 
@@ -26,12 +35,12 @@ function add(ecosystem, name, version, license, directory, explicitFile) {
   for (const filename of [...filenames].sort()) {
     const file = path.resolve(directory, filename);
     if (fs.existsSync(file) && fs.statSync(file).isFile()) {
-      texts.push(`--- ${path.basename(filename)} ---\n${fs.readFileSync(file, 'utf8')}`);
+      texts.push(`${path.basename(filename)}: SHA256:${referenceText(fs.readFileSync(file, 'utf8'))}`);
     }
   }
   const supplement = supplements[`${name}@${version}`];
   if (!texts.length && supplement) {
-    texts.push(`Upstream source: ${supplement.source}\nLicense source: ${supplement.url}\n\n${fs.readFileSync(path.join('third-party-licenses/upstream', supplement.file), 'utf8')}`);
+    texts.push(`Upstream source: ${supplement.source}\nLicense source: ${supplement.url}\n${supplement.file}: SHA256:${referenceText(fs.readFileSync(path.join('third-party-licenses/upstream', supplement.file), 'utf8'))}`);
   }
   inventory.push({ ecosystem, name, version, license: license ?? 'UNSPECIFIED', licenseFiles: [...filenames].map(file => path.basename(file)).sort(), ...(supplement ? { upstream: supplement } : {}) });
   if (!texts.length) missing.push(`${ecosystem}:${name}@${version} (${license ?? 'UNSPECIFIED'})`);
@@ -58,7 +67,11 @@ for (const [name, commit] of [
 const output = 'third-party-licenses';
 fs.mkdirSync(output, { recursive: true });
 fs.writeFileSync(path.join(output, 'inventory.json'), JSON.stringify({ target, packages: inventory, missingLicenseTexts: missing }, null, 2) + '\n');
-fs.writeFileSync(path.join(output, 'THIRD_PARTY_LICENSES.txt'), sections.join('\n\n') + '\n');
+fs.writeFileSync(path.join(output, 'THIRD_PARTY_LICENSES.txt'),
+  'Package attributions below reference the complete, unmodified texts in the second part of this file.\n'
+  + 'Only byte-identical texts are shared; SHA256 identifiers refer to UTF-8 text content.\n\n'
+  + sections.join('\n\n') + '\n\n'
+  + [...uniqueTexts].map(([id, text]) => `===== LICENSE TEXT SHA256:${id} =====\n${text}`).join('\n\n') + '\n');
 console.log(`Collected ${inventory.length} packages; ${missing.length} require upstream license-text review.`);
 if (missing.length) console.log(missing.join('\n'));
 if (missing.length) process.exitCode = 1;

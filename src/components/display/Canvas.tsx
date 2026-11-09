@@ -1,9 +1,10 @@
 import React, { useCallback, useRef } from 'react';
 import { Canvas as CanvasType } from '../../types';
-import type { CanvasChannelLink, Channel } from '../../types';
+import type { CanvasChannelLink, CanvasRect, Channel } from '../../types';
 import { useChannelStore } from '../../stores';
 import { ResizeEdge } from './useCanvasInteraction';
 import { CanvasIngestStatus } from './CanvasIngestStatus';
+import { computeCanvasCornerState, getCornerClassNames } from './canvasCornerUtils';
 
 function isHighContrastCanvasMode(): boolean {
   const root = document.documentElement;
@@ -96,6 +97,7 @@ interface CanvasProps {
   roundMaximizedTopLeft?: boolean;
   roundMaximizedBottomRight?: boolean;
   seamlessMaximized?: boolean;
+  adjacentRects?: CanvasRect[];
   children: React.ReactNode;
 }
 
@@ -113,6 +115,7 @@ export const CanvasContainer: React.FC<CanvasProps> = ({
   roundMaximizedTopLeft = false,
   roundMaximizedBottomRight = false,
   seamlessMaximized = false,
+  adjacentRects,
   children,
 }) => {
   const allChannels = useChannelStore((state) => state.channels);
@@ -195,9 +198,16 @@ export const CanvasContainer: React.FC<CanvasProps> = ({
     ? 0.3
     : 0.5;
   const usesOuterFrame = canvas.maximized && seamlessMaximized;
-  const cornerClassName = !usesOuterFrame && canvas.maximized && roundMaximizedBottomRight
-    ? 'rounded-br-xl'
-    : 'rounded-none';
+  const cornerClassName = usesOuterFrame
+    ? 'rounded-none'
+    : getCornerClassNames(
+        computeCanvasCornerState(canvas.rect, adjacentRects ?? [], {
+          maximized: canvas.maximized,
+          usesOuterFrame,
+          roundMaximizedTopLeft,
+          roundMaximizedBottomRight,
+        }),
+      );
   const borderClassName = usesOuterFrame
     ? 'border-0'
     : 'border';
@@ -237,23 +247,23 @@ export const CanvasContainer: React.FC<CanvasProps> = ({
     >
       {/* Content */}
       <div
-        className="flex-1 min-h-0 bg-surface overflow-hidden relative cursor-move rounded-none"
+        className="flex-1 min-h-0 bg-surface overflow-hidden relative cursor-move rounded-[inherit]"
       >
         {children}
         <CanvasIngestStatus canvasId={canvas.id} />
       </div>
 
-      {/* Resize handles — edges (4px thick strips) */}
-      <div className="absolute top-0 left-1 right-1 h-1 cursor-n-resize z-20" onMouseDown={(e) => handleResizeMouseDown(e, 'n')} />
-      <div className="absolute bottom-0 left-1 right-1 h-1 cursor-s-resize z-20" onMouseDown={(e) => handleResizeMouseDown(e, 's')} />
-      <div className="absolute left-0 top-1 bottom-1 w-1 cursor-w-resize z-20" onMouseDown={(e) => handleResizeMouseDown(e, 'w')} />
-      <div className="absolute right-0 top-1 bottom-1 w-1 cursor-e-resize z-20" onMouseDown={(e) => handleResizeMouseDown(e, 'e')} />
+      {/* Resize handles — edges (4px thick strips, inset by corner arc) */}
+      <div className="absolute top-0 left-3 right-3 h-1 cursor-n-resize z-20" onMouseDown={(e) => handleResizeMouseDown(e, 'n')} />
+      <div className="absolute bottom-0 left-3 right-3 h-1 cursor-s-resize z-20" onMouseDown={(e) => handleResizeMouseDown(e, 's')} />
+      <div className="absolute left-0 top-3 bottom-3 w-1 cursor-w-resize z-20" onMouseDown={(e) => handleResizeMouseDown(e, 'w')} />
+      <div className="absolute right-0 top-3 bottom-3 w-1 cursor-e-resize z-20" onMouseDown={(e) => handleResizeMouseDown(e, 'e')} />
 
-      {/* Resize handles — corners (8x8 squares) */}
-      <div className="absolute top-0 left-0 w-2 h-2 cursor-nw-resize z-30" onMouseDown={(e) => handleResizeMouseDown(e, 'nw')} />
-      <div className="absolute top-0 right-0 w-2 h-2 cursor-ne-resize z-30" onMouseDown={(e) => handleResizeMouseDown(e, 'ne')} />
-      <div className="absolute bottom-0 left-0 w-2 h-2 cursor-sw-resize z-30" onMouseDown={(e) => handleResizeMouseDown(e, 'sw')} />
-      <div className="absolute bottom-0 right-0 w-2 h-2 cursor-se-resize z-30" onMouseDown={(e) => handleResizeMouseDown(e, 'se')} />
+      {/* Resize handles — corners (12x12 squares matching rounded-xl curve) */}
+      <div className="absolute top-0 left-0 w-3 h-3 cursor-nw-resize z-30" onMouseDown={(e) => handleResizeMouseDown(e, 'nw')} />
+      <div className="absolute top-0 right-0 w-3 h-3 cursor-ne-resize z-30" onMouseDown={(e) => handleResizeMouseDown(e, 'ne')} />
+      <div className="absolute bottom-0 left-0 w-3 h-3 cursor-sw-resize z-30" onMouseDown={(e) => handleResizeMouseDown(e, 'sw')} />
+      <div className="absolute bottom-0 right-0 w-3 h-3 cursor-se-resize z-30" onMouseDown={(e) => handleResizeMouseDown(e, 'se')} />
     </div>
   );
 };

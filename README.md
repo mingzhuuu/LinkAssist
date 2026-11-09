@@ -61,9 +61,12 @@ npm run tauri dev
 ```bash
 npm run check          # 架构/文档检查 + TS/前端构建 + Vitest
 npm run tauri build    # 原生应用及安装包
+npm run build:portable # Windows 免安装 ZIP；装有 7-Zip 时另生成更小的 7z
 ```
 
 Rust 验证在 `src-tauri` 目录执行 `cargo test --lib --locked`。标准构建输出在 `dist/` 与 `src-tauri/target/`；安装包在 `src-tauri/target/release/bundle/`。
+
+免安装包输出在 `src-tauri/target/release/portable/`，完整解压即可运行，目标电脑需已有 WebView2 Runtime；构建与体积优化说明见 [开发与验证](docs/DEVELOPMENT.md#windows-免安装包)。
 
 基本使用顺序：新建通道 → 配置并连接 → 在终端验证收发 → 按需要加载协议 Lua → 建立表格/图表/表单或脚本画布 → 保存布局。BLE 通知需要先发现 GATT 并订阅相应特征值。
 

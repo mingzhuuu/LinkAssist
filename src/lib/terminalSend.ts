@@ -1,3 +1,5 @@
+import { isRemoteWorkspace, useRemoteStore } from '../stores/remoteStore';
+import { remoteChannelAction } from './remoteClient';
 import { invoke } from '@tauri-apps/api/core';
 import { useSerialStore } from '../stores/serialStore';
 import { useTcpStore } from '../stores/tcpStore';
@@ -12,6 +14,7 @@ export function prepareTerminalInteractiveSend(
   data: number[],
   report: (message: string) => void,
 ): () => Promise<unknown> {
+  if (isRemoteWorkspace()) return prepareRemoteSend(channel, pane, data);
   if (channel.type !== 'ble') return prepareTerminalNetworkSend(channel, pane, data, report);
   const deviceId = useBleStore.getState().channelStates[channel.id]?.connectedDeviceId;
   if (!deviceId) throw new Error('BLE not connected');
@@ -29,6 +32,7 @@ export function prepareTerminalNetworkSend(
   data: number[],
   report: (message: string) => void,
 ): () => Promise<unknown> {
+  if (isRemoteWorkspace()) return prepareRemoteSend(channel, pane, data);
   if (channel.type === 'serial') {
     const id = Object.entries(useSerialStore.getState().connectionMap).find(([, owner]) => owner === channel.id)?.[0];
     if (!id) throw new Error('No serial port open for this channel');
@@ -73,4 +77,11 @@ export async function sendWithImmediateTxEcho(
   // Echo the user's send first so terminal history preserves causality.
   echoTx();
   await send();
+}
+
+function prepareRemoteSend(channel: Channel, pane: PaneState, data: number[]): () => Promise<unknown> {
+  const clients = useRemoteStore.getState().snapshot?.channels.find(item => item.channel.id === channel.id)?.clients ?? [];
+  const args = { data, target: pane.udpTargetAddr ?? undefined, serviceUuid: pane.selectedWriteTarget?.serviceUuid, charUuid: pane.selectedWriteTarget?.charUuid };
+  if (pane.selectedTcpClientId === 'all' && channel.type === 'tcp') return () => Promise.all(clients.map(client => remoteChannelAction('channel.send', channel.id, { ...args, clientId: client.id })));
+  return () => remoteChannelAction('channel.send', channel.id, { ...args, clientId: pane.selectedTcpClientId ?? clients[0]?.id });
 }

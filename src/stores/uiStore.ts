@@ -31,6 +31,7 @@ type DataViewMode = 'text' | 'table' | 'chart';
 type LegacyDataViewMode = DataViewMode | 'image';
 
 interface UIStore {
+  closeBehavior: 'exit' | 'background' | null;
   leftPanelWidth: number;
   centerPanelWidth: number;
   rightPanelWidth: number;
@@ -106,6 +107,7 @@ function getInitialThemeMode(): ThemeMode {
 }
 
 export const useUIStore = create<UIStore>((set) => ({
+  closeBehavior: null,
   leftPanelWidth: LEFT_PANEL_MIN_WIDTH,
   centerPanelWidth: CENTER_PANEL_DEFAULT_WIDTH,
   rightPanelWidth: 444,

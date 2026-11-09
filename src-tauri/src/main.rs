@@ -2,6 +2,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
+    // The hidden main webview owns remote host actions and script runtimes.
+    // Apply the same WebView2 environment to all windows before any threads start;
+    // per-window arguments would prevent detached windows sharing that environment.
+    #[cfg(windows)]
+    {
+        let existing = std::env::var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS").unwrap_or_default();
+        std::env::set_var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", format!("{existing} --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows"));
+    }
     let args: Vec<String> = std::env::args().collect();
     if args.get(1).is_some_and(|arg| arg == "snapshot") {
         if args.len() != 3 {

@@ -6,10 +6,13 @@ LinkAssist's own code is licensed under MIT. Dependencies and data retain their 
 |---|---|---|
 | BLE assigned-number data | [Nordic Semiconductor](https://github.com/nordicsemi/bluetooth-numbers-database) | BSD-3-Clause; preserve Nordic's copyright and disclaimer |
 | Web Bluetooth registries | [WebBluetoothCG](https://github.com/WebBluetoothCG/registries) | Apache-2.0 |
+| iroh peer transport | [n0-computer/iroh](https://github.com/n0-computer/iroh) | MIT OR Apache-2.0; see locked package license texts |
 | Bluetooth backend fork | [mingzhuliv/btleplug](https://github.com/mingzhuliv/btleplug/tree/65c0d76b6f4e5e51d9012723d5ff01fd412e7186) | See exact locked crate's license texts |
 | Frontend and native dependencies | `package-lock.json`, `src-tauri/Cargo.lock` | Per-package terms in the generated inventory |
 
 `third-party-licenses/inventory.json` records the selected Windows dependency graph and npm production dependencies. `third-party-licenses/THIRD_PARTY_LICENSES.txt` preserves license and NOTICE files shipped with those packages and the referenced datasets. It includes build dependencies; inclusion does not claim every listed crate is linked into the final executable.
+
+The text collection maps each package and original filename to a SHA-256 reference, followed by the complete original texts in the same file. Only byte-identical texts are stored once; distinct copyright statements and NOTICE texts remain separate.
 
 Regenerate after lockfile changes, with Node/Rust dependencies available and data submodules initialized:
 

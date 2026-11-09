@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "remote-workspace",
+  "description": "Remote workspace receives session events; native file dialogs and window creation remain local-only",
+  "windows": ["remote-workspace"],
+  "permissions": ["core:event:default"]
+}
