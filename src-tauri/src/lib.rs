@@ -15,6 +15,8 @@ mod remote;
 mod script_helper;
 mod script_markers;
 mod serial;
+#[cfg(windows)]
+pub use serial::monitor_elevation::run_serial_monitor_helper;
 mod snapshot;
 mod tcp;
 mod test_runner;
@@ -614,6 +616,11 @@ fn run_tauri_core(headless: bool, core_lock: discovery::CoreInstanceLock) {
             commands::serial::send_serial_data,
             commands::serial::receive_serial_data,
             commands::serial::get_serial_connections,
+            commands::serial::start_serial_monitor,
+            commands::serial::inspect_serial_monitor,
+            commands::serial::check_usbpcap,
+            commands::serial::open_usbpcap_install_guide,
+            commands::serial::stop_serial_monitor,
             commands::tcp::tcp_connect,
             commands::tcp::tcp_disconnect,
             commands::tcp::tcp_send,
@@ -667,6 +674,7 @@ fn run_tauri_core(headless: bool, core_lock: discovery::CoreInstanceLock) {
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
+    let monitors = tauri::async_runtime::block_on(async { app.state::<AppState>().serial_manager.lock().await.monitor.clone() });
     app.run(move |app_handle, event| {
         if let tauri::RunEvent::WindowEvent { label, event: tauri::WindowEvent::Destroyed, .. } = &event {
             if label == "remote-workspace" {
@@ -676,6 +684,7 @@ fn run_tauri_core(headless: bool, core_lock: discovery::CoreInstanceLock) {
             }
         }
         if matches!(event, tauri::RunEvent::Exit) {
+            monitors.stop_all();
             let _ = discovery::remove_discovery_for_current_process_sync();
             return;
         }

@@ -805,7 +805,7 @@ export const DisplayPanel: React.FC<DisplayPanelProps> = ({
             toast.error('UART channel has no saved config to reopen');
             return false;
           }
-          await openPort(config, channel.id);
+          if (await openPort(config, channel.id) === null) return false;
         }
         activateCanvas(canvasId);
         return true;

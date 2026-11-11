@@ -55,7 +55,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
       return (
         <div className="w-full h-full flex items-center justify-center bg-surface p-8">
-          <div className="max-w-lg w-full bg-surface-overlay border border-border rounded-2xl p-6 shadow-2xl">
+          <div className="max-w-lg w-full bg-surface-overlay border border-border rounded-2xl p-6 window-shadow-dialog-md">
             <h2 className="text-sm font-semibold text-accent-red mb-2">
               {label ? `${label}: Application Error` : 'Application Error'}
             </h2>

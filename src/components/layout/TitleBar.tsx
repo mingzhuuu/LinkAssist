@@ -292,7 +292,7 @@ export const ChannelQuickOpenButton: React.FC = () => {
 
       {channelButtonTooltip && !channelPickerOpen && (
         <div
-          className="pointer-events-none fixed z-[75] -translate-y-1/2 animate-fade-in rounded-2xl border border-border bg-surface-overlay/95 px-3 py-2 text-xs font-medium text-text-primary shadow-xl shadow-black/30 backdrop-blur-sm whitespace-nowrap"
+          className="pointer-events-none fixed z-[75] -translate-y-1/2 animate-fade-in rounded-2xl border border-border bg-surface-overlay/95 px-3 py-2 text-xs font-medium text-text-primary window-shadow-tooltip shadow-xl backdrop-blur-sm whitespace-nowrap"
           style={{ top: channelButtonTooltip.y, left: channelButtonTooltip.x }}
         >
           Left-click to open, right-click to choose
@@ -308,7 +308,7 @@ export const ChannelQuickOpenButton: React.FC = () => {
           onMouseDown={(event) => event.stopPropagation()}
           onDoubleClick={(event) => event.stopPropagation()}
           onContextMenu={(event) => event.stopPropagation()}
-          className="animate-fade-in fixed z-[70] w-max overflow-hidden rounded-xl border border-border bg-surface-overlay shadow-xl shadow-black/30 backdrop-blur-sm"
+          className="animate-fade-in fixed z-[70] w-max overflow-hidden rounded-xl border border-border bg-surface-overlay window-shadow-popover backdrop-blur-sm"
           style={{ ...channelPickerPos, maxWidth: `calc(100vw - ${channelPickerPos.left + 8}px)` }}
         >
           <div className="max-h-72 overflow-y-auto p-1.5">
@@ -407,7 +407,7 @@ export const TitleBarContent: React.FC<TitleBarContentProps> = ({
       </div>
 
       {disconnectPeer && createPortal(<div data-no-drag className="fixed inset-0 z-[11000] flex items-center justify-center bg-black/40 p-4" onMouseDown={event => event.stopPropagation()} onDoubleClick={event => event.stopPropagation()}>
-        <div ref={disconnectDialog} role="dialog" aria-modal="true" aria-labelledby="disconnect-title" className="w-full max-w-md rounded-2xl border border-border bg-surface-overlay p-5 text-sm text-text-primary shadow-xl" onKeyDown={event => {
+        <div ref={disconnectDialog} role="dialog" aria-modal="true" aria-labelledby="disconnect-title" className="w-full max-w-md rounded-2xl border border-border bg-surface-overlay p-5 text-sm text-text-primary window-shadow-dialog-sm" onKeyDown={event => {
           if (event.key === 'Escape' && !disconnecting) setDisconnectPeer(null);
           if (event.key === 'Tab') {
             const buttons = [...(disconnectDialog.current?.querySelectorAll('button') ?? [])];

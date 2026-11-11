@@ -182,7 +182,7 @@ export const GlobalTooltip: React.FC = () => {
   return createPortal(
     <div
       role="tooltip"
-      className="pointer-events-none fixed z-[99999] max-w-xs animate-fade-in rounded-2xl border border-border bg-surface-overlay/95 px-3 py-1.5 text-xs font-medium text-text-primary shadow-xl shadow-black/30 backdrop-blur-sm whitespace-pre-line leading-snug"
+      className="pointer-events-none fixed z-[99999] max-w-xs animate-fade-in rounded-2xl border border-border bg-surface-overlay/95 px-3 py-1.5 text-xs font-medium text-text-primary window-shadow-tooltip shadow-xl backdrop-blur-sm whitespace-pre-line leading-snug"
       style={{
         left: tooltip.x,
         top: tooltip.y,

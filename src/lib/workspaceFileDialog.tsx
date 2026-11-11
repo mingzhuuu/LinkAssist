@@ -53,7 +53,7 @@ function RemoteFilePicker({ options, onClose }: { options: OpenDialogOptions; on
   const choose = (paths: string[]) => { if (paths.length) onClose(options.multiple ? paths : paths[0]); };
   return <div data-no-drag className="fixed inset-0 z-[10020] flex items-center justify-center bg-black/40 p-4" onMouseDown={e => e.stopPropagation()}>
     <div ref={dialog} role="dialog" aria-modal="true" aria-label={options.title ?? 'Choose a file on the remote computer'}
-      className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-2xl border border-border bg-surface-overlay p-4 text-sm text-text-primary shadow-xl"
+      className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-2xl border border-border bg-surface-overlay p-4 text-sm text-text-primary window-shadow-dialog-md"
       onKeyDown={e => {
         if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); onClose(null); }
         if (e.key === 'Tab') {

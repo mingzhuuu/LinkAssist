@@ -1462,7 +1462,7 @@ export const CanvasEditDialog: React.FC<CanvasEditDialogProps> = ({ open, canvas
       onContextMenu={handleBackdropContextMenu}
     >
       <div
-        className="flex h-[min(640px,calc(100vh-4rem))] w-full max-w-[52rem] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_24px_60px_rgba(0,0,0,0.4)]"
+        className="flex h-[min(640px,calc(100vh-4rem))] w-full max-w-[52rem] flex-col overflow-hidden rounded-2xl border border-border bg-surface window-shadow-dialog-lg"
         onClick={(event) => event.stopPropagation()}
         onMouseDown={(event) => event.stopPropagation()}
         onMouseUp={(event) => event.stopPropagation()}

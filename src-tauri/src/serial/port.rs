@@ -21,6 +21,12 @@ pub struct PortInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SerialConfig {
+    #[serde(default)]
+    pub monitor: bool,
+    #[serde(default)]
+    pub monitor_manual: bool,
+    #[serde(default)]
+    pub usb_capture: Option<super::monitor::UsbCaptureConfig>,
     pub path: String,
     #[serde(default = "default_baud_rate", deserialize_with = "flexible_baud_rate")]
     pub baud_rate: u32,
@@ -153,6 +159,9 @@ impl Default for SerialConfig {
     fn default() -> Self {
         Self {
             path: String::new(),
+            monitor: false,
+            monitor_manual: false,
+            usb_capture: None,
             baud_rate: 115200,
             data_bits: 8,
             stop_bits: 1,

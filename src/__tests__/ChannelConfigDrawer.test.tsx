@@ -208,4 +208,27 @@ describe('channel settings interaction', () => {
     act(() => useUIStore.getState().setCenterTopVisible(false));
     expect(drawer().getAttribute('data-state')).toBe('hidden');
   });
+
+  it('shows Configure Channel in context menu only when channel config is hidden, and triggers preview matching double-click', () => {
+    useUIStore.setState({ centerTopVisible: true });
+    renderWorkspace();
+    fireEvent.contextMenu(channel('UART'));
+    expect(screen.queryByText('Configure Channel')).toBeNull();
+    expect(screen.getByText('Rename Channel')).toBeDefined();
+
+    fireEvent.mouseDown(document.body);
+
+    act(() => useUIStore.getState().setCenterTopVisible(false));
+    expect(drawer().getAttribute('data-state')).toBe('hidden');
+
+    fireEvent.contextMenu(channel('Sensor'));
+    const configOption = screen.getByText('Configure Channel');
+    expect(configOption).toBeDefined();
+
+    fireEvent.click(configOption);
+    expect(drawer().getAttribute('data-state')).toBe('preview');
+    expect(useChannelStore.getState().activeChannelId).toBe('serial-2');
+    expect(channel('Sensor').className).toContain('channel-item-connected');
+    expect(screen.queryByText('Configure Channel')).toBeNull();
+  });
 });

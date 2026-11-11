@@ -48,23 +48,46 @@ interface BindingProps {
   channels: Channel[];
 }
 
-/** Drop deleted channels and keep at least one receive channel when channels exist. */
+/** Drop deleted channels, close tabs whose channels are all closed, or clear invalid send targets. */
 export function useValidTerminalChannels(paneId: string | null, tabs: ChannelTab[] | undefined, channels: Channel[]) {
   useEffect(() => {
-    if (!paneId || !tabs || !channels.length) return;
+    if (!paneId || !tabs) return;
     const live = new Set(channels.map(channel => channel.id));
-    const configure = useTerminalStore.getState().configureTab;
+    const { configureTab, removeTab } = useTerminalStore.getState();
     for (const tab of tabs) {
       const receive = receiveChannelsFor(tab);
+      if (tab.isPinned) {
+        if (receive === 'all') {
+          if (tab.channelId && !live.has(tab.channelId)) configureTab(paneId, tab.id, receive, null);
+        } else {
+          const next = receive.filter(id => live.has(id));
+          if (next.length !== receive.length) {
+            if (!next.length) {
+              configureTab(paneId, tab.id, 'all', null);
+            } else {
+              const target = next.length === 1 ? next[0] : (tab.channelId && live.has(tab.channelId) ? tab.channelId : null);
+              configureTab(paneId, tab.id, next, target);
+            }
+          }
+        }
+        continue;
+      }
       if (receive === 'all') {
-        if (tab.channelId && !live.has(tab.channelId)) configure(paneId, tab.id, receive, null);
+        if (!channels.length) {
+          removeTab(paneId, tab.id);
+        } else if (tab.channelId && !live.has(tab.channelId)) {
+          configureTab(paneId, tab.id, receive, null);
+        }
         continue;
       }
       const next = receive.filter(id => live.has(id));
       if (next.length === receive.length) continue;
-      if (!next.length) next.push(channels[0].id);
+      if (!next.length) {
+        removeTab(paneId, tab.id);
+        continue;
+      }
       const target = next.length === 1 ? next[0] : (tab.channelId && live.has(tab.channelId) ? tab.channelId : null);
-      configure(paneId, tab.id, next, target);
+      configureTab(paneId, tab.id, next, target);
     }
   }, [paneId, tabs, channels]);
 }
@@ -87,7 +110,7 @@ export function TerminalChannelPicker({ paneId, tab, channels, x, y, onClose }: 
   }
   return createPortal(<>
     <div className="fixed inset-0 z-[9998]" onMouseDown={onClose} onContextMenu={e => { e.preventDefault(); onClose(); }} />
-    <div role="dialog" aria-label="Select channels" className="fixed left-1 top-1 z-[9999] w-max max-w-[calc(100vw-8px)] overflow-hidden rounded-xl border border-border bg-surface-overlay shadow-xl shadow-black/30" style={{
+    <div role="dialog" aria-label="Select channels" className="fixed left-1 top-1 z-[9999] w-max max-w-[calc(100vw-8px)] overflow-hidden rounded-xl border border-border bg-surface-overlay window-shadow-popover" style={{
       // Percentages in translate() use the actual size of the picker.
       transform: `translate(clamp(0px, ${x - 4}px, calc(100vw - 8px - 100%)), clamp(0px, ${y - 4}px, calc(100vh - 8px - 100%)))`,
     }} onContextMenu={e => e.preventDefault()}>

@@ -137,13 +137,13 @@ describe('shared remote workspace editing', () => {
 });
 
 describe('shared remote components', () => {
-  it('renders the normal UART fields and sends Open Port to the host', async () => {
+  it('renders the normal UART fields and sends Open to the host', async () => {
     const id = useChannelStore.getState().addChannel('serial', 'UART');
     useSerialStore.getState().setChannelConfig(id, { path: 'COM42' }); connect();
     render(<UartPanel channelId={id} />);
     expect(screen.getByText('Recv Timeout')).toBeTruthy();
     expect(screen.queryByText('Configure')).toBeNull();
-    fireEvent.click(screen.getByText('Open Port'));
+    fireEvent.click(screen.getByText('Open'));
     await waitFor(() => expect(invoke).toHaveBeenCalledWith('remote_action', expect.objectContaining({ action: 'channel.connect' })));
     expect(vi.mocked(invoke).mock.calls.every(([command]) => command === 'remote_action')).toBe(true);
   });

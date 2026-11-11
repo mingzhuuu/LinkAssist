@@ -138,7 +138,7 @@ export const SavedCommandsDialog: React.FC<Props> = ({ onClose, anchor, tagId })
     <div className="fixed inset-0 z-[9000]" onMouseDown={onClose}>
       <div
         ref={menuRef}
-        className="fixed bg-surface-overlay border border-border rounded-2xl shadow-xl w-max max-w-[calc(100vw-16px)] flex flex-col overflow-y-auto overscroll-contain [&>*]:shrink-0"
+        className="fixed bg-surface-overlay border border-border rounded-2xl window-shadow-floating w-max max-w-[calc(100vw-16px)] flex flex-col overflow-y-auto overscroll-contain [&>*]:shrink-0"
         onMouseDown={event => event.stopPropagation()}
       >
         <input

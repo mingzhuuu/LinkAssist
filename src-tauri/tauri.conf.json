@@ -54,6 +54,7 @@
         "language": "en-US"
       },
       "nsis": {
+        "installerHooks": "../config/usbpcap/installer-hooks.nsh",
         "languages": ["English", "SimpChinese"],
         "displayLanguageSelector": true
       }

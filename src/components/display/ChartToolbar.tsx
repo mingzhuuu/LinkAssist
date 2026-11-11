@@ -40,7 +40,7 @@ export const ChartToolbar: React.FC<ChartToolbarProps> = ({
 }) => {
   return (
     <div className="pointer-events-none absolute inset-x-2 top-2 z-20 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-      <div className="pointer-events-auto rounded-2xl border border-border bg-surface-overlay/95 p-1 shadow-xl shadow-black/30 backdrop-blur-sm">
+      <div className="pointer-events-auto rounded-2xl border border-border bg-surface-overlay/95 p-1 window-shadow-floating backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-1.5 border-b border-border/70 p-1">
           <button className="flex h-7 items-center justify-center rounded-lg px-2.5 py-1 text-xs text-text-secondary hover:bg-[var(--layer-hover)] hover:text-text-primary transition-colors cursor-pointer" onMouseDown={stopEvent} onClick={onTogglePause}>
             {paused ? 'Resume' : 'Pause'}

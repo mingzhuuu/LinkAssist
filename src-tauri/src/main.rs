@@ -11,6 +11,19 @@ fn main() {
         std::env::set_var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", format!("{existing} --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows"));
     }
     let args: Vec<String> = std::env::args().collect();
+    #[cfg(windows)]
+    if args
+        .get(1)
+        .is_some_and(|arg| arg == "--serial-monitor-helper")
+    {
+        std::process::exit(
+            if linkassist_lib::run_serial_monitor_helper(&args[2..]).is_ok() {
+                0
+            } else {
+                1
+            },
+        );
+    }
     if args.get(1).is_some_and(|arg| arg == "snapshot") {
         if args.len() != 3 {
             eprintln!("Usage: linkassist.exe snapshot <output.exe>");

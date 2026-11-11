@@ -1,0 +1,6 @@
+{
+  "bundle": {
+    "targets": ["nsis"],
+    "windows": { "nsis": { "installerHooks": "../config/usbpcap/installer-hooks.nsh" } }
+  }
+}

@@ -29,7 +29,7 @@ export const ToastContainer: React.FC = () => {
           className={`
             animate-slide-in pointer-events-auto
             flex items-center gap-3 p-3 min-w-[300px] max-w-md
-            bg-surface-overlay/95 backdrop-blur-md border border-border rounded-xl shadow-xl shadow-black/20 border-l-4
+            bg-surface-overlay/95 backdrop-blur-md border border-border rounded-xl window-shadow-toast border-l-4
             ${toast.type === 'success' ? 'border-l-accent-green' : ''}
             ${toast.type === 'error' ? 'border-l-accent-red' : ''}
             ${toast.type === 'warning' ? 'border-l-accent-yellow' : ''}

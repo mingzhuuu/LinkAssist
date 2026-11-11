@@ -186,7 +186,7 @@ export const RoundedSelect: React.FC<RoundedSelectProps> = ({
             <div
               ref={menuRef}
               data-portal-owner={triggerId}
-              className={joinClassNames(portalTheme, 'fixed z-[10000] overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_30px_rgba(0,0,0,0.35)]')}
+              className={joinClassNames(portalTheme, 'fixed z-[10000] overflow-hidden rounded-xl border border-border bg-surface window-shadow-popover')}
               style={{
                 top: menuPosition.top,
                 left: menuPosition.left,
@@ -229,7 +229,7 @@ export const RoundedSelect: React.FC<RoundedSelectProps> = ({
 
       {tooltip && createPortal(
         <div
-          className={joinClassNames(portalTheme, 'pointer-events-none fixed z-[10010] max-w-[220px] animate-fade-in rounded-2xl border border-border bg-surface-overlay/95 px-3 py-2 text-xs font-medium text-text-primary shadow-xl shadow-black/30 backdrop-blur-sm whitespace-nowrap')}
+          className={joinClassNames(portalTheme, 'pointer-events-none fixed z-[10010] max-w-[220px] animate-fade-in rounded-2xl border border-border bg-surface-overlay/95 px-3 py-2 text-xs font-medium text-text-primary window-shadow-tooltip shadow-xl backdrop-blur-sm whitespace-nowrap')}
           style={{
             top: tooltip.top,
             left: tooltip.left,

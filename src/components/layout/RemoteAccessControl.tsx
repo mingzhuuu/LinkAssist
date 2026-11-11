@@ -192,7 +192,7 @@ export const RemoteAccessControl: React.FC<{ ready: boolean; container: HTMLElem
   return <>
     {container && createPortal(<div className="remote-ui" data-no-drag onMouseDown={event => event.stopPropagation()}>{content}</div>, container)}
     {open && !container && createPortal(<div data-no-drag onDoubleClick={event => event.stopPropagation()} className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 p-4" onMouseDown={event => { event.stopPropagation(); if (event.target === event.currentTarget && !status.pending) setOpen(false); }}>
-      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="remote-access-title" className="remote-ui flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-surface-overlay text-sm text-text-primary shadow-xl">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="remote-access-title" className="remote-ui flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-surface-overlay text-sm text-text-primary window-shadow-dialog-md">
         <header className="flex items-center justify-between border-b border-border px-5 py-3">
           <h2 id="remote-access-title" className="font-semibold">Remote</h2><button className="btn-icon" aria-label="Close remote" onClick={() => setOpen(false)}><CloseIcon size={16} /></button>
         </header>

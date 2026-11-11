@@ -559,7 +559,7 @@ export const CanvasChart: React.FC<CanvasChartProps> = ({ canvasId, isMoving }) 
 
       {tooltip && (
         <div
-          className="pointer-events-none absolute z-30 max-w-[240px] animate-fade-in rounded-2xl border border-border bg-surface-overlay/95 px-3 py-2 text-xs font-medium text-text-primary shadow-xl shadow-black/30 backdrop-blur-sm"
+          className="pointer-events-none absolute z-30 max-w-[240px] animate-fade-in rounded-2xl border border-border bg-surface-overlay/95 px-3 py-2 text-xs font-medium text-text-primary window-shadow-tooltip shadow-xl backdrop-blur-sm"
           style={{
             left: Math.min(Math.max(tooltip.x + 18, 8), Math.max(size.width - 180, 8)),
             top: Math.min(Math.max(tooltip.y + 18, 8), Math.max(size.height - 80, 8)),

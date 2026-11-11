@@ -31,7 +31,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, options, onClose
       />
       {/* Menu */}
       <div
-        className="fixed z-[9999] min-w-[140px] p-1 overflow-hidden bg-surface-overlay border border-border rounded-xl shadow-xl shadow-black/30 backdrop-blur-sm animate-fade-in"
+        className="fixed z-[9999] min-w-[140px] p-1 overflow-hidden bg-surface-overlay border border-border rounded-xl window-shadow-menu backdrop-blur-sm animate-fade-in"
         style={{ left: x, top: y }}
         onMouseDown={stopMenuEvent}
         onMouseUp={(e) => e.stopPropagation()}

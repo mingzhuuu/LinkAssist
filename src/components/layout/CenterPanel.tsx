@@ -404,6 +404,16 @@ export const CenterPanel: React.FC = () => {
       );
     });
 
+    events.listen('serial-monitor-data', (event) => {
+      for (const record of event.payload) {
+        const detail = (record.flags & 3) ? ' [incomplete capture]' : '';
+        const status = record.status ? ` [status 0x${record.status.toString(16)}]` : '';
+        useTerminalStore.getState().appendEntryToChannel(record.channelId, record.direction,
+          `${record.direction.toUpperCase()}: ${toHex(record.data)}${detail}${status}`,
+          record.timestamp, record.data, undefined, record.source);
+      }
+    });
+
     events.listen('serial-connection-closed', (event) => {
       const { connectionId } = event.payload;
       const { connectionMap } = useSerialStore.getState();

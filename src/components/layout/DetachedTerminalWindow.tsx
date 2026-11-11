@@ -147,6 +147,12 @@ export const DetachedTerminalWindow: React.FC = () => {
     return () => { unlistenPromise.then(fn => fn()); };
   }, [appWindow]);
 
+  useEffect(() => {
+    if (ready && pane && pane.tabs.length === 0) {
+      void appWindow.close().catch(() => {});
+    }
+  }, [ready, pane, appWindow]);
+
   const handleMinimize = useCallback(() => { appWindow.minimize(); }, [appWindow]);
   const handleMaximize = useCallback(() => {
     window.getSelection()?.removeAllRanges();
@@ -494,6 +500,15 @@ export const DetachedTerminalWindow: React.FC = () => {
     const accepts = (id?: string | null) => receive === 'all' || (!!id && receive.includes(id));
 
     // Serial data
+    events.listen('serial-monitor-data', (event) => {
+      for (const record of event.payload) {
+        if (!accepts(record.channelId)) continue;
+        const hex = record.data.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        useTerminalStore.getState().appendEntry(focusedPaneId, record.direction,
+          `${record.direction.toUpperCase()}: ${hex}${(record.flags & 3) ? ' [incomplete capture]' : ''}${record.status ? ` [status 0x${record.status.toString(16)}]` : ''}`,
+          record.timestamp, record.data, undefined, record.source, record.channelId);
+      }
+    });
     events.listen('serial-data-received', (event) => {
       const { connectionId, data, timestamp } = event.payload;
       const mappedChannelId = useSerialStore.getState().connectionMap[connectionId];

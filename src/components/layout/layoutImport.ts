@@ -71,6 +71,7 @@ export function importLayout(content: string, layoutFile?: string): void {
         if (typeof uiData.show_input_prefix === 'boolean') ui.setShowInputPrefix(uiData.show_input_prefix);
         if (typeof uiData.show_timestamp === 'boolean') ui.setShowTimestamp(uiData.show_timestamp);
         if (typeof uiData.show_received === 'boolean') ui.setShowReceived(uiData.show_received);
+        if (typeof uiData.show_serial_mode === 'boolean') ui.setShowSerialMode(uiData.show_serial_mode);
         const terminalChannelSettings = normalizeTerminalChannelSettings(uiData.terminal_channel_settings);
         if (terminalChannelSettings) {
           ui.replaceTerminalChannelSettings(terminalChannelSettings);

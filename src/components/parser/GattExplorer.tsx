@@ -92,7 +92,7 @@ const UuidNameContextMenu: React.FC<UuidNameContextMenuProps> = ({
       <div
         role="menu"
         aria-label={`${targetLabel} UUID actions`}
-        className="fixed z-[9999] min-w-[208px] overflow-hidden rounded-xl border border-border bg-surface-overlay p-1 shadow-xl shadow-black/30 backdrop-blur-sm animate-fade-in"
+        className="fixed z-[9999] min-w-[208px] overflow-hidden rounded-xl border border-border bg-surface-overlay p-1 window-shadow-menu backdrop-blur-sm animate-fade-in"
         style={{ left, top }}
         onContextMenu={(event) => event.preventDefault()}
       >
@@ -165,7 +165,7 @@ const UuidNameDialog: React.FC<UuidNameDialogProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_24px_60px_rgba(0,0,0,0.4)]"
+        className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-surface window-shadow-dialog-xs"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
@@ -291,7 +291,7 @@ const WriteCharacteristicDialog: React.FC<WriteCharacteristicDialogProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="ble-write-dialog-title"
-        className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_24px_60px_rgba(0,0,0,0.4)]"
+        className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-surface window-shadow-dialog-sm"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">

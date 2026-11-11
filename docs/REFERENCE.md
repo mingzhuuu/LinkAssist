@@ -11,7 +11,7 @@
 - vitest 锁定版本：4.1.12；Node.js 范围：`^20.0.0 || ^22.0.0 || >=24.0.0`。
 - jsdom 锁定版本：29.1.1；Node.js 范围：`^20.19.0 || ^22.13.0 || >=24.0.0`。
 
-## Tauri 命令（88）
+## Tauri 命令（93）
 
 前端 invoke 名称以此表为准；参数和返回值仍需核对函数签名及 serde 定义。
 
@@ -56,6 +56,11 @@
 | `send_serial_data` | [src-tauri/src/commands/serial.rs](../src-tauri/src/commands/serial.rs) |
 | `receive_serial_data` | [src-tauri/src/commands/serial.rs](../src-tauri/src/commands/serial.rs) |
 | `get_serial_connections` | [src-tauri/src/commands/serial.rs](../src-tauri/src/commands/serial.rs) |
+| `start_serial_monitor` | [src-tauri/src/commands/serial.rs](../src-tauri/src/commands/serial.rs) |
+| `inspect_serial_monitor` | [src-tauri/src/commands/serial.rs](../src-tauri/src/commands/serial.rs) |
+| `check_usbpcap` | [src-tauri/src/commands/serial.rs](../src-tauri/src/commands/serial.rs) |
+| `open_usbpcap_install_guide` | [src-tauri/src/commands/serial.rs](../src-tauri/src/commands/serial.rs) |
+| `stop_serial_monitor` | [src-tauri/src/commands/serial.rs](../src-tauri/src/commands/serial.rs) |
 | `tcp_connect` | [src-tauri/src/commands/tcp.rs](../src-tauri/src/commands/tcp.rs) |
 | `tcp_disconnect` | [src-tauri/src/commands/tcp.rs](../src-tauri/src/commands/tcp.rs) |
 | `tcp_send` | [src-tauri/src/commands/tcp.rs](../src-tauri/src/commands/tcp.rs) |
@@ -169,7 +174,7 @@
 | `import_from_file` | Import content from a file path. The default 'utf8' encoding fails on binary files; pass encoding 'base64' to read any file, including firmware images. |
 | `get_recent_events` | Return recent Core events/logs buffered by the headless core. |
 
-## 应用文件（293）
+## 应用文件（304）
 
 目录职责见 [架构说明](ARCHITECTURE.md)。根目录构建入口另见 [开发与验证](DEVELOPMENT.md)。
 
@@ -209,6 +214,7 @@
 - [scripts/project-check.mjs](../scripts/project-check.mjs)
 - [scripts/remote-native-smoke.mjs](../scripts/remote-native-smoke.mjs)
 - [scripts/remote-ui-smoke.mjs](../scripts/remote-ui-smoke.mjs)
+- [scripts/serial-monitor-native-smoke.mjs](../scripts/serial-monitor-native-smoke.mjs)
 - [scripts/test-rust-macro-diagnostics.mjs](../scripts/test-rust-macro-diagnostics.mjs)
 - [src-tauri/src/AGENTS.md](../src-tauri/src/AGENTS.md)
 - [src-tauri/src/ble/connection.rs](../src-tauri/src/ble/connection.rs)
@@ -254,7 +260,11 @@
 - [src-tauri/src/script_markers.rs](../src-tauri/src/script_markers.rs)
 - [src-tauri/src/serial/io.rs](../src-tauri/src/serial/io.rs)
 - [src-tauri/src/serial/mod.rs](../src-tauri/src/serial/mod.rs)
+- [src-tauri/src/serial/monitor.rs](../src-tauri/src/serial/monitor.rs)
+- [src-tauri/src/serial/monitor_elevation.rs](../src-tauri/src/serial/monitor_elevation.rs)
 - [src-tauri/src/serial/port.rs](../src-tauri/src/serial/port.rs)
+- [src-tauri/src/serial/usb_discovery.rs](../src-tauri/src/serial/usb_discovery.rs)
+- [src-tauri/src/serial/usb_windows.rs](../src-tauri/src/serial/usb_windows.rs)
 - [src-tauri/src/serial/windows_stream.rs](../src-tauri/src/serial/windows_stream.rs)
 - [src-tauri/src/snapshot.rs](../src-tauri/src/snapshot.rs)
 - [src-tauri/src/tcp/client.rs](../src-tauri/src/tcp/client.rs)
@@ -279,8 +289,11 @@
 - [src/__tests__/RoundedSelect.test.tsx](../src/__tests__/RoundedSelect.test.tsx)
 - [src/__tests__/ScriptCanvasUi.test.tsx](../src/__tests__/ScriptCanvasUi.test.tsx)
 - [src/__tests__/ScriptToolbarButton.test.tsx](../src/__tests__/ScriptToolbarButton.test.tsx)
+- [src/__tests__/SettingsDialogChannel.test.tsx](../src/__tests__/SettingsDialogChannel.test.tsx)
 - [src/__tests__/SettingsDialogMcpMeta.test.tsx](../src/__tests__/SettingsDialogMcpMeta.test.tsx)
 - [src/__tests__/SimpleMode.test.tsx](../src/__tests__/SimpleMode.test.tsx)
+- [src/__tests__/UartMonitorSettings.test.tsx](../src/__tests__/UartMonitorSettings.test.tsx)
+- [src/__tests__/UsbPcapSettings.test.tsx](../src/__tests__/UsbPcapSettings.test.tsx)
 - [src/__tests__/WindowMaximizeResize.test.tsx](../src/__tests__/WindowMaximizeResize.test.tsx)
 - [src/__tests__/bleAppearance.test.ts](../src/__tests__/bleAppearance.test.ts)
 - [src/__tests__/bleDeviceRowLayout.test.ts](../src/__tests__/bleDeviceRowLayout.test.ts)
@@ -308,6 +321,7 @@
 - [src/__tests__/scriptRuntime.test.ts](../src/__tests__/scriptRuntime.test.ts)
 - [src/__tests__/scriptRuntimeLuaHelpers.test.ts](../src/__tests__/scriptRuntimeLuaHelpers.test.ts)
 - [src/__tests__/scriptUiUtils.test.ts](../src/__tests__/scriptUiUtils.test.ts)
+- [src/__tests__/serialMonitor.test.tsx](../src/__tests__/serialMonitor.test.tsx)
 - [src/__tests__/stores.test.ts](../src/__tests__/stores.test.ts)
 - [src/__tests__/terminalStore.test.ts](../src/__tests__/terminalStore.test.ts)
 - [src/__tests__/terminalUtils.test.ts](../src/__tests__/terminalUtils.test.ts)
@@ -316,6 +330,7 @@
 - [src/__tests__/useMainWindowReveal.test.tsx](../src/__tests__/useMainWindowReveal.test.tsx)
 - [src/__tests__/usePersistenceClose.test.tsx](../src/__tests__/usePersistenceClose.test.tsx)
 - [src/__tests__/useTcpRouting.test.ts](../src/__tests__/useTcpRouting.test.ts)
+- [src/__tests__/useValidTerminalChannels.test.tsx](../src/__tests__/useValidTerminalChannels.test.tsx)
 - [src/__tests__/viewportUtils.test.ts](../src/__tests__/viewportUtils.test.ts)
 - [src/components/AGENTS.md](../src/components/AGENTS.md)
 - [src/components/channels/ble/BlePanel.tsx](../src/components/channels/ble/BlePanel.tsx)
@@ -394,6 +409,7 @@
 - [src/components/layout/TerminalLeafPane.tsx](../src/components/layout/TerminalLeafPane.tsx)
 - [src/components/layout/TerminalTabMenu.tsx](../src/components/layout/TerminalTabMenu.tsx)
 - [src/components/layout/TitleBar.tsx](../src/components/layout/TitleBar.tsx)
+- [src/components/layout/UsbPcapSettings.tsx](../src/components/layout/UsbPcapSettings.tsx)
 - [src/components/layout/channelCardGeometry.ts](../src/components/layout/channelCardGeometry.ts)
 - [src/components/layout/eventSubscriptions.ts](../src/components/layout/eventSubscriptions.ts)
 - [src/components/layout/index.ts](../src/components/layout/index.ts)

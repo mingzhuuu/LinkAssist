@@ -36,6 +36,7 @@ export function prepareTerminalNetworkSend(
   if (channel.type === 'serial') {
     const id = Object.entries(useSerialStore.getState().connectionMap).find(([, owner]) => owner === channel.id)?.[0];
     if (!id) throw new Error('No serial port open for this channel');
+    if (id.startsWith('monitor:')) throw new Error('Monitor channels are read-only');
     return () => invoke('send_serial_data', { connectionId: id, data });
   }
   const tcp = useTcpStore.getState();

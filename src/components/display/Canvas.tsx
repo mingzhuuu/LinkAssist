@@ -233,13 +233,15 @@ export const CanvasContainer: React.FC<CanvasProps> = ({
         height: canvas.rect.height,
         zIndex: canvas.zIndex,
         borderColor: getRgba(effectiveColor, borderAlpha),
-        boxShadow: isMoving
-          ? `0 20px 25px -5px ${getRgba(effectiveColor, 0.3)}, 0 8px 10px -6px ${getRgba(effectiveColor, 0.3)}`
+        boxShadow: usesOuterFrame || highContrast
+          ? 'none'
+          : isMoving
+          ? `0 24px 38px -6px rgba(0, 0, 0, 0.34), 0 12px 18px -6px ${getRgba(effectiveColor, 0.4)}`
           : isSelected
-          ? `0 0 0 1px ${getRgba(effectiveColor, 0.6)}, 0 10px 15px -3px ${getRgba(effectiveColor, 0.25)}, 0 4px 6px -4px ${getRgba(effectiveColor, 0.25)}`
+          ? `0 0 0 1px ${getRgba(effectiveColor, 0.6)}, 0 14px 28px -4px rgba(0, 0, 0, 0.26), 0 6px 12px -4px ${getRgba(effectiveColor, 0.35)}`
           : canvas.active
-          ? `0 10px 15px -3px ${getRgba(effectiveColor, 0.2)}, 0 4px 6px -4px ${getRgba(effectiveColor, 0.2)}`
-          : 'none',
+          ? `0 10px 22px -4px rgba(0, 0, 0, 0.2), 0 4px 10px -3px ${getRgba(effectiveColor, 0.3)}`
+          : '0 6px 16px -3px rgba(0, 0, 0, 0.14), 0 2px 6px -2px rgba(0, 0, 0, 0.08)',
       }}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}

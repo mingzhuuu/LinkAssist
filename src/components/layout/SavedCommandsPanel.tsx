@@ -709,7 +709,7 @@ export const SavedCommandsPanel: React.FC<Props> = ({ paneId }) => {
 
       {contextMenu && (
         <div
-          className="fixed z-40 min-w-[120px] overflow-hidden rounded-xl border border-border bg-surface-overlay p-1 shadow-xl shadow-black/30 backdrop-blur-sm"
+          className="fixed z-40 min-w-[120px] overflow-hidden rounded-xl border border-border bg-surface-overlay p-1 window-shadow-menu backdrop-blur-sm"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onMouseDown={event => event.stopPropagation()}
         >

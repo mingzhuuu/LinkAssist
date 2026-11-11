@@ -55,6 +55,21 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
 describe('main-window close decisions', () => {
+  it('restores and saves the USBPcap directory, while legacy configs default to auto', async () => {
+    useUIStore.getState().setUsbpcapDirectory('stale');
+    const first = await mount('exit');
+    expect(useUIStore.getState().usbpcapDirectory).toBe('');
+    act(() => useUIStore.getState().setUsbpcapDirectory('D:\\Capture Tools\\USBPcap'));
+    await close().done;
+    const saved = saves()[0][1].config;
+    expect(saved.ui.usbpcap_directory).toBe('D:\\Capture Tools\\USBPcap');
+    first.unmount();
+    config = saved;
+    useUIStore.getState().setUsbpcapDirectory('');
+    const second = renderHook(() => usePersistence());
+    await waitFor(() => expect(second.result.current).toBe(true));
+    expect(useUIStore.getState().usbpcapDirectory).toBe('D:\\Capture Tools\\USBPcap');
+  });
   it('asks once, remembers background, and saves before hiding', async () => {
     await mount(); const first = close();
     expect(first.preventDefault).toHaveBeenCalledOnce();

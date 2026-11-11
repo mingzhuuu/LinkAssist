@@ -68,6 +68,10 @@ pub struct UiConfig {
     #[serde(default)]
     pub show_received: bool,
     #[serde(default)]
+    pub show_serial_mode: bool,
+    #[serde(default)]
+    pub usbpcap_directory: String,
+    #[serde(default)]
     pub terminal_channel_settings: Option<serde_json::Value>,
     #[serde(default)]
     pub window_state: Option<WindowState>,
@@ -158,6 +162,8 @@ impl Default for UiConfig {
             show_input_prefix: false,
             show_timestamp: false,
             show_received: true,
+            show_serial_mode: false,
+            usbpcap_directory: String::new(),
             terminal_channel_settings: None,
             window_state: None,
             terminal_layout: None,
@@ -348,6 +354,16 @@ fn standalone_config_path() -> PathBuf {
 
 #[cfg(test)]
 mod snapshot_tests {
+    #[test]
+    fn usbpcap_directory_migrates_and_round_trips() {
+        let mut json = serde_json::to_value(super::UiConfig::default()).unwrap();
+        json.as_object_mut().unwrap().remove("usbpcap_directory");
+        let mut config: super::UiConfig = serde_json::from_value(json).unwrap();
+        assert!(config.usbpcap_directory.is_empty());
+        config.usbpcap_directory = r"D:\Capture Tools\USBPcap".into();
+        let restored: super::UiConfig = serde_json::from_str(&serde_json::to_string(&config).unwrap()).unwrap();
+        assert_eq!(restored.usbpcap_directory, config.usbpcap_directory);
+    }
     use super::*;
 
     fn test_path(name: &str) -> PathBuf {

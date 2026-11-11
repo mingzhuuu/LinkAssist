@@ -87,6 +87,7 @@ impl SerialIoManager {
     }
 
     pub async fn open(&self, config: &SerialConfig, app_handle: AppHandle) -> AppResult<String> {
+        if config.monitor { return Err(AppError::Serial("Use the dedicated monitor subscription command".into())); }
         let connection_id = config.path.clone();
         if let Some(existing) = self.connections.write().await.remove(&connection_id) {
             let _ = close_connection(existing).await;
@@ -226,6 +227,9 @@ impl SerialIoManager {
     }
 
     pub async fn send(&self, connection_id: &str, data: &[u8]) -> AppResult<usize> {
+        if connection_id.starts_with("monitor:") {
+            return Err(AppError::Serial("Monitor sessions are read-only".into()));
+        }
         let connections = self.connections.read().await;
         let conn = connections
             .get(connection_id)

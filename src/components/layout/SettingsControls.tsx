@@ -3,7 +3,7 @@ import React from 'react';
 export const SettingGroup: React.FC<{ children: React.ReactNode; title?: string }> = ({ children, title }) => (
   <section className="settings-group mb-6">
     {title && <h3 className="mb-3 text-[14px] font-semibold text-text-primary">{title}</h3>}
-    <div className="settings-card rounded-2xl border border-border bg-surface-secondary dark:bg-surface-overlay px-4">
+    <div className="settings-card rounded-2xl border border-border bg-surface-secondary dark:bg-surface-overlay px-4 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.08)] dark:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.35)]">
       {React.Children.toArray(children).map((child, index) => (
         <div key={React.isValidElement(child) ? child.key ?? index : index} className="settings-group-item">
           {child}

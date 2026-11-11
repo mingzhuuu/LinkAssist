@@ -50,6 +50,8 @@ interface UIStore {
   showInputPrefix: boolean;
   showTimestamp: boolean;
   showReceived: boolean;
+  showSerialMode: boolean;
+  usbpcapDirectory: string;
   terminalChannelSettings: Record<string, TerminalChannelSettings>;
   restoreCanvasLayout: boolean;
   channelQuickOpenSelectedIds: string[];
@@ -75,6 +77,8 @@ interface UIStore {
   setShowInputPrefix: (show: boolean) => void;
   setShowTimestamp: (show: boolean) => void;
   setShowReceived: (show: boolean) => void;
+  setShowSerialMode: (show: boolean) => void;
+  setUsbpcapDirectory: (directory: string) => void;
   setTerminalChannelSettings: (channelId: string, settings: TerminalChannelSettings) => void;
   replaceTerminalChannelSettings: (settings: Record<string, TerminalChannelSettings>) => void;
   setRestoreCanvasLayout: (restore: boolean) => void;
@@ -125,6 +129,8 @@ export const useUIStore = create<UIStore>((set) => ({
   showInputPrefix: true,
   showTimestamp: false,
   showReceived: true,
+  showSerialMode: false,
+  usbpcapDirectory: '',
   terminalChannelSettings: {},
   restoreCanvasLayout: true,
   channelQuickOpenSelectedIds: [],
@@ -160,6 +166,8 @@ export const useUIStore = create<UIStore>((set) => ({
   setShowInputPrefix: (show) => set({ showInputPrefix: show }),
   setShowTimestamp: (show) => set({ showTimestamp: show }),
   setShowReceived: (show) => set({ showReceived: show }),
+  setShowSerialMode: (show) => set({ showSerialMode: show }),
+  setUsbpcapDirectory: (directory) => set({ usbpcapDirectory: directory }),
   setTerminalChannelSettings: (channelId, settings) => set((state) => ({
     terminalChannelSettings: {
       ...state.terminalChannelSettings,

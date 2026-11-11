@@ -114,9 +114,9 @@ export const TcpPanel = React.memo(function TcpPanel({ channelId }: { channelId:
   return (
     <div className="flex w-full max-h-full flex-col items-stretch">
       {/* Top bar — OUTSIDE the bordered content area */}
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 mb-2 transition-all duration-300 min-h-[40px]">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 mb-2 transition-all duration-300 min-h-[40px]">
         {/* Left side: mode selector + status info */}
-        <div className="min-w-0 overflow-hidden">
+        <div className="min-w-0">
           {isActive ? (
             <div className="flex min-w-0 items-center gap-2 overflow-hidden">
               <WifiIcon className="w-5 h-5 shrink-0 text-accent-green" />
@@ -124,15 +124,15 @@ export const TcpPanel = React.memo(function TcpPanel({ channelId }: { channelId:
               <span className="min-w-0 truncate text-text-muted font-mono text-sm ml-2">{statusText}</span>
             </div>
           ) : (
-            <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+            <div className="flex min-w-0 items-center gap-1.5 mt-1.5">
               {(['client', 'server', 'udp'] as const).map(m => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
-                  className={`inline-flex h-6 min-w-[60px] shrink-0 items-center justify-center rounded-md px-2 text-[11px] font-semibold transition-all duration-150 border
+                  className={`inline-flex h-6 min-w-[46px] shrink-0 items-center justify-center rounded-md px-2 text-xs font-semibold transition-all duration-150 border
                     ${mode === m
                       ? 'bg-accent-green/15 border-accent-green/30 text-accent-green'
-                      : 'bg-[var(--layer-hover)] border-border text-text-muted hover:bg-[var(--layer-selected)] hover:text-text-primary'}`}
+                      : 'bg-transparent border-border text-text-muted hover:bg-[var(--layer-hover)] hover:text-text-primary'}`}
                 >
                   {modeLabels[m]}
                 </button>
@@ -141,7 +141,7 @@ export const TcpPanel = React.memo(function TcpPanel({ channelId }: { channelId:
           )}
         </div>
         {/* Right side: action button */}
-        <div className="ml-4 shrink-0">
+        <div className="shrink-0">
           <button
             disabled={pending}
             onClick={() => { setPending(true); void handleAction().finally(() => setPending(false)); }}

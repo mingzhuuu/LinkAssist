@@ -23,14 +23,14 @@ body:has([data-windowed-frame="true"]) .main-dialog-backdrop {
 .channel-config-drawer {
   --card-preview-bg: color-mix(in srgb, rgb(var(--road)) 82%, rgb(var(--surface)));
   --card-border-color: rgb(var(--card-accent, var(--accent-mauve)) / 0.58);
-  --card-shadow: drop-shadow(0 16px 28px rgb(0 0 0 / 0.16)) drop-shadow(0 4px 10px rgb(0 0 0 / 0.06));
+  --card-shadow: drop-shadow(0 18px 26px rgb(0 0 0 / 0.18)) drop-shadow(0 6px 12px rgb(0 0 0 / 0.08));
   visibility: hidden;
   pointer-events: none;
   transition: visibility 0s 320ms;
 }
 
 .dark .channel-config-drawer {
-  --card-shadow: drop-shadow(0 18px 32px rgb(0 0 0 / 0.56)) drop-shadow(0 4px 12px rgb(0 0 0 / 0.34));
+  --card-shadow: drop-shadow(0 20px 32px rgb(0 0 0 / 0.65)) drop-shadow(0 8px 14px rgb(0 0 0 / 0.4));
 }
 
 .high-contrast .channel-config-drawer,
@@ -113,7 +113,11 @@ body:has([data-windowed-frame="true"]) .main-dialog-backdrop {
   border: 1px solid var(--card-border-color);
   backdrop-filter: blur(20px) saturate(1.12);
   -webkit-backdrop-filter: blur(20px) saturate(1.12);
-  box-shadow: 0 16px 36px -14px rgb(0 0 0 / 0.18), 0 4px 12px -4px rgb(0 0 0 / 0.06);
+  box-shadow: 0 18px 36px -10px rgb(0 0 0 / 0.22), 0 6px 14px -4px rgb(0 0 0 / 0.1);
+}
+
+.dark .channel-config-drawer[data-state="preview"] .channel-card-body.is-self-framed {
+  box-shadow: 0 22px 40px -10px rgb(0 0 0 / 0.65), 0 8px 16px -4px rgb(0 0 0 / 0.4);
 }
 
 .channel-config-drawer[data-state="pinned"] .channel-card-blur,
@@ -358,7 +362,7 @@ body:has([data-windowed-frame="true"]) .main-dialog-backdrop {
            transition-colors duration-100 cursor-pointer;
   }
   .btn-channel-action {
-    @apply inline-flex min-w-[88px] h-8 items-center justify-center rounded-lg px-2.5
+    @apply inline-flex min-w-[64px] h-8 items-center justify-center rounded-lg px-2.5
            text-sm font-medium font-sans transition-all duration-150;
   }
   .channel-config-row {
@@ -526,6 +530,100 @@ body:has([data-windowed-frame="true"]) .main-dialog-backdrop {
   }
   .main-window-control.window-control-close:hover::before {
     @apply bg-red-500/80;
+  }
+
+  /* ── Window Bottom Shadows (Tailored per Element Scale & Type) ── */
+  .window-shadow-dialog-lg {
+    box-shadow: 0 28px 56px -12px rgba(15, 23, 42, 0.28), 0 14px 24px -8px rgba(15, 23, 42, 0.16), 0 4px 8px -2px rgba(15, 23, 42, 0.08);
+  }
+  .dark .window-shadow-dialog-lg {
+    box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.75), 0 16px 28px -8px rgba(0, 0, 0, 0.55), 0 4px 8px -2px rgba(0, 0, 0, 0.35);
+  }
+
+  .window-shadow-dialog-md {
+    box-shadow: 0 22px 42px -10px rgba(15, 23, 42, 0.24), 0 10px 20px -6px rgba(15, 23, 42, 0.14), 0 3px 6px -2px rgba(15, 23, 42, 0.06);
+  }
+  .dark .window-shadow-dialog-md {
+    box-shadow: 0 26px 50px -10px rgba(0, 0, 0, 0.7), 0 12px 22px -6px rgba(0, 0, 0, 0.5), 0 3px 6px -2px rgba(0, 0, 0, 0.3);
+  }
+
+  .window-shadow-dialog-sm {
+    box-shadow: 0 18px 36px -8px rgba(15, 23, 42, 0.22), 0 8px 16px -4px rgba(15, 23, 42, 0.12), 0 2px 4px -1px rgba(15, 23, 42, 0.06);
+  }
+  .dark .window-shadow-dialog-sm {
+    box-shadow: 0 22px 40px -8px rgba(0, 0, 0, 0.65), 0 10px 18px -4px rgba(0, 0, 0, 0.45), 0 2px 4px -1px rgba(0, 0, 0, 0.25);
+  }
+
+  .window-shadow-dialog-xs {
+    box-shadow: 0 14px 28px -6px rgba(15, 23, 42, 0.2), 0 6px 12px -3px rgba(15, 23, 42, 0.1), 0 2px 4px -1px rgba(15, 23, 42, 0.05);
+  }
+  .dark .window-shadow-dialog-xs {
+    box-shadow: 0 18px 32px -6px rgba(0, 0, 0, 0.6), 0 8px 14px -3px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  }
+
+  .window-shadow-floating {
+    box-shadow: 0 16px 32px -6px rgba(15, 23, 42, 0.22), 0 8px 16px -4px rgba(15, 23, 42, 0.12), 0 2px 5px -1px rgba(15, 23, 42, 0.06);
+  }
+  .dark .window-shadow-floating {
+    box-shadow: 0 20px 36px -6px rgba(0, 0, 0, 0.65), 0 10px 18px -4px rgba(0, 0, 0, 0.45), 0 2px 5px -1px rgba(0, 0, 0, 0.25);
+  }
+
+  .window-shadow-popover {
+    box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.2), 0 6px 12px -3px rgba(15, 23, 42, 0.1), 0 2px 4px -1px rgba(15, 23, 42, 0.05);
+  }
+  .dark .window-shadow-popover {
+    box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.62), 0 8px 14px -3px rgba(0, 0, 0, 0.42), 0 2px 4px -1px rgba(0, 0, 0, 0.22);
+  }
+
+  .window-shadow-menu {
+    box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.2), 0 4px 10px -2px rgba(15, 23, 42, 0.1), 0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+  .dark .window-shadow-menu {
+    box-shadow: 0 14px 28px -4px rgba(0, 0, 0, 0.6), 0 6px 12px -2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .window-shadow-input-popover {
+    box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.2), 0 6px 12px -3px rgba(15, 23, 42, 0.1);
+  }
+  .dark .window-shadow-input-popover {
+    box-shadow: 0 16px 30px -4px rgba(0, 0, 0, 0.62), 0 8px 14px -3px rgba(0, 0, 0, 0.42);
+  }
+
+  .window-shadow-toast {
+    box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.22), 0 6px 12px -2px rgba(15, 23, 42, 0.12);
+  }
+  .dark .window-shadow-toast {
+    box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.6), 0 8px 14px -2px rgba(0, 0, 0, 0.4);
+  }
+
+  .window-shadow-tooltip {
+    box-shadow: 0 10px 20px -3px rgba(15, 23, 42, 0.24), 0 4px 8px -2px rgba(15, 23, 42, 0.14);
+  }
+  .dark .window-shadow-tooltip {
+    box-shadow: 0 12px 24px -3px rgba(0, 0, 0, 0.6), 0 5px 10px -2px rgba(0, 0, 0, 0.38);
+  }
+
+  .high-contrast .window-shadow-dialog-lg,
+  .high-contrast .window-shadow-dialog-md,
+  .high-contrast .window-shadow-dialog-sm,
+  .high-contrast .window-shadow-dialog-xs,
+  .high-contrast .window-shadow-floating,
+  .high-contrast .window-shadow-popover,
+  .high-contrast .window-shadow-menu,
+  .high-contrast .window-shadow-input-popover,
+  .high-contrast .window-shadow-toast,
+  .high-contrast .window-shadow-tooltip,
+  .high-contrast-light .window-shadow-dialog-lg,
+  .high-contrast-light .window-shadow-dialog-md,
+  .high-contrast-light .window-shadow-dialog-sm,
+  .high-contrast-light .window-shadow-dialog-xs,
+  .high-contrast-light .window-shadow-floating,
+  .high-contrast-light .window-shadow-popover,
+  .high-contrast-light .window-shadow-menu,
+  .high-contrast-light .window-shadow-input-popover,
+  .high-contrast-light .window-shadow-toast,
+  .high-contrast-light .window-shadow-tooltip {
+    box-shadow: none;
   }
 }
 

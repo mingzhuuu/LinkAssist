@@ -33,6 +33,8 @@ export interface UiEntry {
   show_input_prefix?: boolean;
   show_timestamp?: boolean;
   show_received?: boolean;
+  show_serial_mode?: boolean;
+  usbpcap_directory?: string;
   terminal_channel_settings?: Record<string, TerminalChannelSettings> | null;
   window_state?: WindowStateEntry | null;
   terminal_layout?: TerminalLayoutSnapshot | null;

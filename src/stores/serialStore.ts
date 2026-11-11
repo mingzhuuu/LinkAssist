@@ -28,7 +28,16 @@ const pickUnion = <T extends string | number>(value: unknown, allowed: readonly 
  */
 export function normalizeSerialConfig(raw: unknown): SerialConfig {
   const source = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const capture = (source.usbCapture && typeof source.usbCapture === 'object' ? source.usbCapture : {}) as Record<string, unknown>;
   return {
+    monitor: source.monitor === true,
+    monitorManual: source.monitorManual === true,
+    usbCapture: {
+      bus: coerceNumber(capture.bus, 1), address: coerceNumber(capture.address, 0),
+      inEndpoint: coerceNumber(capture.inEndpoint, 129), outEndpoint: coerceNumber(capture.outEndpoint, 2),
+      profile: pickUnion(String(capture.profile ?? ''), ['raw', 'serial', 'ftdi'] as const, 'raw'),
+      packetSize: coerceNumber(capture.packetSize, 64),
+    },
     path: typeof source.path === 'string' ? source.path : DEFAULT_SERIAL_CONFIG.path,
     baudRate: Math.max(1, coerceNumber(source.baudRate, DEFAULT_SERIAL_CONFIG.baudRate)),
     dataBits: pickUnion(coerceNumber(source.dataBits, DEFAULT_SERIAL_CONFIG.dataBits), [5, 6, 7, 8] as const, DEFAULT_SERIAL_CONFIG.dataBits),

@@ -247,11 +247,11 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ collapsed, expansionProgre
     setContextMenu({
       id,
       x: Math.min(e.clientX, window.innerWidth - 184),
-      y: Math.min(e.clientY, window.innerHeight - 92),
+      y: Math.min(e.clientY, window.innerHeight - (centerTopVisible ? 92 : 128)),
       channelX: Math.min(rect.right + 10, window.innerWidth - 232),
       channelY: Math.min(Math.max(rect.top + rect.height / 2, 82), window.innerHeight - 82),
     });
-  }, []);
+  }, [centerTopVisible]);
 
   const handleDragStart = useCallback((id: string) => {
     setChannelTooltip(null);
@@ -315,6 +315,12 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ collapsed, expansionProgre
     setContextMenu(null);
   }, [channels, renameDialog, renameChannel]);
 
+  const handleConfigureChannel = useCallback(() => {
+    if (!contextMenu) return;
+    handlePreviewChannel(contextMenu.id);
+    setContextMenu(null);
+  }, [contextMenu, handlePreviewChannel]);
+
   const openRenameDialog = useCallback(() => {
     if (!contextMenu) return;
 
@@ -336,7 +342,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ collapsed, expansionProgre
   const addChannelMenu = showAddChannelMenu && (
     <div 
       ref={menuRef} 
-      className={`animate-fade-in bg-surface-overlay border border-border overflow-hidden z-50 rounded-xl p-1 shadow-xl shadow-black/30 backdrop-blur-sm ${
+      className={`animate-fade-in bg-surface-overlay border border-border overflow-hidden z-50 rounded-xl p-1 window-shadow-menu backdrop-blur-sm ${
         collapsed 
           ? 'fixed w-36' 
           : 'absolute left-0 right-0 mt-1'
@@ -446,7 +452,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ collapsed, expansionProgre
 
       {channelTooltip && (
         <div
-          className="pointer-events-none fixed z-[60] -translate-y-1/2 animate-fade-in rounded-2xl border border-border bg-surface-overlay/95 px-3 py-2 text-xs font-medium text-text-primary shadow-xl shadow-black/30 backdrop-blur-sm whitespace-nowrap"
+          className="pointer-events-none fixed z-[60] -translate-y-1/2 animate-fade-in rounded-2xl border border-border bg-surface-overlay/95 px-3 py-2 text-xs font-medium text-text-primary window-shadow-tooltip shadow-xl backdrop-blur-sm whitespace-nowrap"
           style={{ top: channelTooltip.y, left: channelTooltip.x }}
         >
           {channelTooltip.name}
@@ -456,9 +462,17 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ collapsed, expansionProgre
       {contextMenu && (
         <div 
           ref={contextMenuRef}
-          className="animate-fade-in fixed bg-surface-overlay border border-border overflow-hidden z-50 w-44 rounded-xl p-1 shadow-xl shadow-black/30 backdrop-blur-sm"
+          className="animate-fade-in fixed bg-surface-overlay border border-border overflow-hidden z-50 w-44 rounded-xl p-1 window-shadow-menu backdrop-blur-sm"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
+          {!centerTopVisible && (
+            <div 
+              className="rounded-lg px-2.5 py-1.5 hover:bg-[var(--layer-selected)] text-text-secondary hover:text-text-primary cursor-pointer flex items-center gap-2 text-sm transition-colors"
+              onClick={handleConfigureChannel}
+            >
+              <SettingsIcon size={14} /> Configure Channel
+            </div>
+          )}
           <div 
             className="rounded-lg px-2.5 py-1.5 hover:bg-[var(--layer-selected)] text-text-secondary hover:text-text-primary cursor-pointer flex items-center gap-2 text-sm transition-colors"
             onClick={openRenameDialog}
@@ -483,7 +497,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ collapsed, expansionProgre
       {renameDialog && (
         <div
           ref={renameDialogRef}
-          className="animate-fade-in fixed z-50 w-56 rounded-xl border border-border bg-surface-overlay p-2 shadow-xl shadow-black/30 backdrop-blur-sm"
+          className="animate-fade-in fixed z-50 w-56 rounded-xl border border-border bg-surface-overlay p-2 window-shadow-input-popover backdrop-blur-sm"
           style={{ top: renameDialog.y, left: renameDialog.x, transform: 'translateY(-50%)' }}
         >
           <div className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
@@ -528,6 +542,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ collapsed, expansionProgre
           <button
             className={`btn-icon transition-colors ${showSettings ? 'text-accent-mauve bg-accent-mauve/10' : 'text-text-muted hover:text-text-secondary hover:bg-[var(--layer-hover)]'}`}
             onClick={onToggleSettings}
+            aria-label="Settings"
           >
             <SettingsIcon size={16} className="translate-y-0.5" />
           </button>

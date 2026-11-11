@@ -482,7 +482,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ persistenceReady = true 
         <div
           ref={titleBarContextMenuRef}
           role="menu"
-          className="fixed z-[10000] w-max overflow-hidden rounded-xl border border-border bg-surface p-1 shadow-xl shadow-black/30 backdrop-blur-sm"
+          className="fixed z-[10000] w-max overflow-hidden rounded-xl border border-border bg-surface p-1 window-shadow-menu backdrop-blur-sm"
           style={{ left: titleBarContextMenu.x, top: titleBarContextMenu.y }}
         >
           {[

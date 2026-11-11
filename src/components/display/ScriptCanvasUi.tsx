@@ -715,7 +715,7 @@ export const ScriptEditableSelect: React.FC<ScriptEditableSelectProps> = ({
         </button>
       </div>
       {open && (
-        <div className="absolute top-full right-0 left-0 z-30 mt-1 max-h-48 overflow-auto rounded-xl border border-border bg-surface-secondary/95 p-1 shadow-xl shadow-black/30 backdrop-blur-sm">
+        <div className="absolute top-full right-0 left-0 z-30 mt-1 max-h-48 overflow-auto rounded-xl border border-border bg-surface-secondary/95 p-1 window-shadow-popover backdrop-blur-sm">
           {allowEmpty !== false && (
             <button
               type="button"

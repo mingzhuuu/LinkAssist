@@ -28,6 +28,11 @@ export interface TcpClientEvent { id: string; addr: string }
 
 /** Shared contract for main-window and detached-terminal receive routing. */
 export interface AppEventMap {
+  'serial-monitor-data': Array<{
+    channelId: string; connectionId: string; direction: 'rx' | 'tx';
+    sequence: string; requestId: string; timestampTicks: string; timestamp: number;
+    status: number; completedBytes: number; flags: number; offset: number; data: number[]; source: string;
+  }>;
   'serial-data-received': ConnectionDataEvent;
   'serial-connection-closed': ConnectionClosedEvent;
   'serial-connection-error': ConnectionErrorEvent;

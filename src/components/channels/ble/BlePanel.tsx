@@ -621,16 +621,16 @@ export const BlePanel = React.memo(function BlePanel({ channelId }: { channelId:
           {connectedDeviceId ? (
             <button
               onClick={handleDisconnect}
-              className={`btn-channel-action appearance-none border-0 shadow-none outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-text-primary/30 bg-accent-red hover:bg-accent-red/80 text-surface animate-fade-in ${isTight ? 'min-w-[76px] text-xs' : 'min-w-[88px]'}`}
+              className={`btn-channel-action appearance-none border-0 shadow-none outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-text-primary/30 bg-accent-red hover:bg-accent-red/80 text-surface animate-fade-in ${isTight ? 'min-w-[56px]' : 'min-w-[64px]'}`}
             >
               Disconnect
             </button>
           ) : (
             <button
               onClick={isChannelScanning ? stopScan : () => startScan(channelId)}
-              className={`btn-channel-action appearance-none border-0 shadow-none outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-text-primary/30 animate-fade-in ${isTight ? 'min-w-[76px] text-xs' : 'min-w-[88px]'} ${isChannelScanning ? 'bg-accent-red hover:bg-accent-red/80 text-surface' : 'bg-accent-blue hover:bg-accent-blue/80 text-surface'}`}
+              className={`btn-channel-action appearance-none border-0 shadow-none outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-text-primary/30 animate-fade-in ${isTight ? 'min-w-[56px]' : 'min-w-[64px]'} ${isChannelScanning ? 'bg-accent-red hover:bg-accent-red/80 text-surface' : 'bg-accent-blue hover:bg-accent-blue/80 text-surface'}`}
             >
-              {isChannelScanning ? 'Stop Scan' : 'Start Scan'}
+              {isChannelScanning ? 'Stop' : 'Scan'}
             </button>
           )}
         </div>

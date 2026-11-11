@@ -104,7 +104,7 @@ export const TerminalContextMenu: React.FC<TerminalContextMenuProps> = ({
         ref={menuRef}
         role="menu"
         aria-label="Terminal options"
-        className="fixed z-[9999] min-w-[200px] max-w-[calc(100vw-16px)] max-h-[calc(100dvh-16px)] overflow-y-auto rounded-xl border border-border bg-surface-overlay p-1 shadow-xl shadow-black/30 backdrop-blur-sm animate-fade-in [&_button:focus-visible]:outline [&_button:focus-visible]:outline-1 [&_button:focus-visible]:outline-accent-mauve"
+        className="fixed z-[9999] min-w-[200px] max-w-[calc(100vw-16px)] max-h-[calc(100dvh-16px)] overflow-y-auto rounded-xl border border-border bg-surface-overlay p-1 window-shadow-menu backdrop-blur-sm animate-fade-in [&_button:focus-visible]:outline [&_button:focus-visible]:outline-1 [&_button:focus-visible]:outline-accent-mauve"
         style={position}
         onKeyDown={event => {
           event.stopPropagation();

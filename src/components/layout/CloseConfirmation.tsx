@@ -14,7 +14,7 @@ export function CloseConfirmation() {
   }, [reason]);
   if (!reason) return null;
   return <div className="fixed inset-0 z-[11000] flex items-center justify-center bg-black/40 p-4" data-no-drag>
-    <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="close-confirm-title" className="w-full max-w-md rounded-2xl border border-border bg-surface-overlay p-5 text-sm text-text-primary shadow-xl" onKeyDown={event => {
+    <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="close-confirm-title" className="w-full max-w-md rounded-2xl border border-border bg-surface-overlay p-5 text-sm text-text-primary window-shadow-dialog-sm" onKeyDown={event => {
       if (event.key === 'Escape') resolve?.('cancel');
       if (event.key === 'Tab') {
         const buttons = [...(dialog.current?.querySelectorAll<HTMLElement>('button, input') ?? [])];

@@ -280,6 +280,14 @@ Portal 脱离局部容器后，要保留主题语境；例如 `RoundedSelect` �
 - 优先限定 `color`、`opacity`、`transform` 等属性。不要为新的数据密集列表无差别添加 `transition-all`。
 - 新增运动效果提供 `prefers-reduced-motion` 降级。现有抽屉与窗口入场已有处理，通用旧动画还需逐项核查。
 - 阴影主要用于浮层、画布选中或拖动；主工作区避免多层重阴影。模糊仅用于确有层次意义的浮动表面，不用于大面积高速更新内容。
+- **圆润窗口底部阴影规范**：应用内所有圆角窗口（大型模态窗口、中型对话框、小型操作弹窗、浮动抽屉与保存命令卡片、下拉选择与菜单浮窗、画布独立窗口等）统一在底部增加定制阴影效果。阴影程度基于元素尺寸、层级深度及使用场景独立设计：
+  - 大型模态窗口（`SettingsDialog`、`CanvasEditDialog`）：使用 `window-shadow-dialog-lg`，大范围柔和弥散加深下坠投影。
+  - 中型模态窗口（`RemoteAccessControl`、`workspaceFileDialog`、`ErrorBoundary`）：使用 `window-shadow-dialog-md`，兼顾适度边界与底部悬浮感。
+  - 小型操作/确认模态（`CloseConfirmation`、断开连接弹窗、BLE 写入弹窗、UUID 编辑弹窗）：使用 `window-shadow-dialog-sm` / `window-shadow-dialog-xs`，紧凑沉稳的底部受光投影。
+  - 浮动工作窗口（`SavedCommandsDialog`、`ChannelConfigDrawer` 预览态）：使用 `window-shadow-floating` 与 `--card-shadow`，凸显高于工作台的操作层级，预览抽屉连接态向下投射且避免横跨轨道产生竖向缝隙。
+  - 下拉选择与菜单浮窗（`RoundedSelect`、`TerminalChannels`、`TerminalTabMenu`、各右键/动作菜单）：使用 `window-shadow-popover` 与 `window-shadow-menu`，保持向下延展的轻快投影。
+  - 画布元素窗口（`Canvas.tsx`）：非激活常态、激活态、选中态与拖动移动态均根据通道主题感知与高对比度模式动态分配逐级增强的底部阴影；最大化无缝接合时平滑归零。
+  - 高对比度模式下（`high-contrast`、`high-contrast-light`）阴影自动置空，保证清晰绝对的单像素结构线边界。
 
 ## 11. 当前待统一项
 
@@ -324,6 +332,15 @@ Portal 脱离局部容器后，要保留主题语境；例如 `RoundedSelect` �
 - 交付说明区分源码检查、自动化测试、浏览器检查和原生实测；未验证项明确保留。
 
 ## 13. 实现导航
+
+### 串口监控模式
+
+- Settings → Channel → Serial Port 的 Supports monitor mode 控制 UART 卡片的 Normal / Monitor 按钮，并控制下方 USBPcap 安装目录、检查结果与未检测到安装时的安装引导显示。关闭时保留目录，正在运行的监控仍显示 Stop。目录标签为 USBPcap installation directory，留空表示自动查找，Browse 选择目录，Reset 恢复自动，Check again 重试工具定位和采集接口检查；未检测到安装时展示安装引导，点击打开官方页面，不自动安装驱动。远程工作区仅提示本地支持限制。
+- 监控态隐藏会修改硬件的串口参数，按钮使用 Monitor / Stop（普通串口使用 Open / Close）；停止订阅与关闭物理串口语义不同。
+- USBPcap 模式先选择 COM；总线/设备地址/端点/解码参数保留在 UART 卡片中，默认显示 Auto，输入值时手动覆盖。卡片不显示详细安装引导或折叠的 Advanced USB settings；安装配置集中在 Channel 设置。切换 COM 清除手动覆盖；旧请求不得覆盖新端口结果。启动前后端重新识别，识别失败禁用自动启动；启动错误保留文字反馈。驱动缺失时禁止回退到普通串口打开。
+- 主/分离终端沿用 TX/RX，采集不完整及失败状态必须有文字提示。监控会话只读，普通发送入口必须拒绝。
+- USBPcap 权限不足时保留 Monitor 可用，点击后请求 Windows UAC。卡片不显示红字警告或 Retry detection，启动异常通过 Toast 反馈。其他检测失败时在检测中显示状态，识别失败禁用启动。无 USB 设备的端口不得通过手动 USB 参数绕过限制。
+- Monitor 端口列表自动过滤不支持的串口，仅显示 USB 串口。切换模式时，已保存的非 USB 端口留在 Normal，Monitor 下拉框留空等待用户明确选择，不显示占位文本。
 
 ### 远程工作区
 

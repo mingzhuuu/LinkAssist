@@ -142,6 +142,8 @@ export function usePersistence() {
           if (typeof config.ui.show_input_prefix === 'boolean') ui.setShowInputPrefix(config.ui.show_input_prefix);
           if (typeof config.ui.show_timestamp === 'boolean') ui.setShowTimestamp(config.ui.show_timestamp);
           if (typeof config.ui.show_received === 'boolean') ui.setShowReceived(config.ui.show_received);
+          if (typeof config.ui.show_serial_mode === 'boolean') ui.setShowSerialMode(config.ui.show_serial_mode);
+          ui.setUsbpcapDirectory(typeof config.ui.usbpcap_directory === 'string' ? config.ui.usbpcap_directory : '');
           const channelSettings = normalizeTerminalChannelSettings(config.ui.terminal_channel_settings);
           if (channelSettings) {
             ui.replaceTerminalChannelSettings(channelSettings);
@@ -366,6 +368,8 @@ export function usePersistence() {
         show_input_prefix: ui.showInputPrefix,
         show_timestamp: ui.showTimestamp,
         show_received: ui.showReceived,
+        show_serial_mode: ui.showSerialMode,
+        usbpcap_directory: ui.usbpcapDirectory,
         terminal_channel_settings: ui.terminalChannelSettings,
         window_state: windowState,
         terminal_layout: terminal.getLayoutSnapshot(),

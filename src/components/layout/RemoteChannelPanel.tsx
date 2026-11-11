@@ -39,7 +39,7 @@ export const RemoteChannelPanel: React.FC<{ item: RemoteChannel; snapshot: Remot
       <div className="flex gap-2"><select aria-label="Remote BLE device" className="input-base min-w-0 flex-1" value={deviceId} onChange={event => setDeviceId(event.target.value)} disabled={connected}>
         <option value="">Select device / reconnect remembered device</option>
         {(item.ble?.devices ?? []).map(device => <option key={device.id} value={device.id}>{device.name || device.id} ({device.rssi} dBm)</option>)}
-      </select><button className="btn-channel-action px-3" onClick={() => void call(snapshot.scanning ? 'ble.stopScan' : 'ble.scan').catch(() => {})}>{snapshot.scanning ? 'Stop scan' : 'Scan'}</button></div>
+      </select><button className="btn-channel-action px-3" onClick={() => void call(snapshot.scanning ? 'ble.stopScan' : 'ble.scan').catch(() => {})}>{snapshot.scanning ? 'Stop' : 'Scan'}</button></div>
       {connected && <div className="flex flex-wrap gap-2"><select aria-label="Remote BLE characteristic" className="input-base min-w-0 flex-1 font-mono text-xs" value={characteristic} onChange={event => setCharacteristic(event.target.value)}>
         <option value="">Select characteristic</option>{characteristics.map(char => <option key={`${char.serviceUuid}/${char.uuid}`} value={`${char.serviceUuid}/${char.uuid}`}>{char.uuid} · {char.properties.join(', ')}</option>)}
       </select>

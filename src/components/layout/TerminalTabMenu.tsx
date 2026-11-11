@@ -34,7 +34,7 @@ export function TerminalTabMenu({ anchor, hiddenTabs, channels, onSelectTab, onA
   return createPortal(<>
     <div className="fixed inset-0 z-[9998]" onMouseDown={onClose} onContextMenu={event => { event.preventDefault(); onClose(); }} />
     <div ref={menuRef} role="dialog" aria-label="Terminal channels"
-      className="fixed left-1 top-1 z-[9999] w-max min-w-[180px] max-w-[calc(100vw-8px)] rounded-xl border border-border bg-surface-overlay p-1.5 shadow-xl shadow-black/30"
+      className="fixed left-1 top-1 z-[9999] w-max min-w-[180px] max-w-[calc(100vw-8px)] rounded-xl border border-border bg-surface-overlay p-1.5 window-shadow-popover"
       style={{ transform: `translate(clamp(0px, ${rect.left - 4}px, calc(100vw - 8px - 100%)), clamp(0px, ${rect.bottom}px, calc(100vh - 8px - 100%)))` }}>
       <div className="max-h-[min(24rem,calc(100vh-24px))] overflow-y-auto">
         {hiddenTabs.map(tab => <button key={tab.id} className={buttonClass} onClick={() => run(() => onSelectTab(tab.id))}>

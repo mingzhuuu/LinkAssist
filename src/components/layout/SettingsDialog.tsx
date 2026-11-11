@@ -21,6 +21,7 @@ import {
 } from '../common/Icons';
 
 import { SettingGroup, ToggleSetting } from './SettingsControls';
+import { UsbPcapSettings } from './UsbPcapSettings';
 
 type SettingsSection = 'interface' | 'channel' | 'terminal' | 'table' | 'layout' | 'mcp' | 'remote';
 
@@ -83,7 +84,7 @@ const DropdownSetting = <T extends string>({
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-full mt-2 z-50 w-36 overflow-hidden rounded-xl border border-border bg-surface-overlay p-1 shadow-2xl">
+          <div className="absolute right-0 top-full mt-2 z-50 w-36 overflow-hidden rounded-xl border border-border bg-surface-overlay p-1 window-shadow-popover">
             {options.map((o) => (
               <button
                 key={o.value}
@@ -142,6 +143,8 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose, o
     setThemeMode,
     showReceived,
     setShowReceived,
+    showSerialMode,
+    setShowSerialMode,
     restoreCanvasLayout,
     setRestoreCanvasLayout,
     closeBehavior,
@@ -325,6 +328,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose, o
           show_input_prefix: ui.showInputPrefix,
           show_timestamp: ui.showTimestamp,
           show_received: ui.showReceived,
+          show_serial_mode: ui.showSerialMode,
           terminal_channel_settings: ui.terminalChannelSettings,
           terminal_layout: terminal.getLayoutSnapshot(),
           restore_canvas_layout: ui.restoreCanvasLayout,
@@ -376,6 +380,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose, o
       ui.setShowInputPrefix(true);
       ui.setShowTimestamp(false);
       ui.setShowReceived(true);
+      ui.setShowSerialMode(false);
       ui.replaceTerminalChannelSettings({});
 
       // Reset terminal layout to single default pane
@@ -467,7 +472,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose, o
       <div
         role="dialog"
         aria-modal="true"
-        className="settings-dialog relative flex h-[min(640px,calc(100vh-4rem))] w-[min(900px,calc(100vw-4rem))] overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_24px_60px_rgba(0,0,0,0.4)]"
+        className="settings-dialog relative flex h-[min(640px,calc(100vh-4rem))] w-[min(900px,calc(100vw-4rem))] overflow-hidden rounded-2xl border border-border bg-surface window-shadow-dialog-lg"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sidebar */}
@@ -675,6 +680,28 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose, o
                       {isResetting ? 'Resetting…' : 'Reset'}
                     </button>
                   </div>
+                </SettingGroup>
+              </div>
+            )}
+
+            {activeSection === 'channel' && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <SettingGroup title="Serial Port">
+                  <ToggleSetting
+                    title="Supports monitor mode"
+                    description="Allow switching between Normal and Monitor mode."
+                    checked={showSerialMode}
+                    onChange={setShowSerialMode}
+                  />
+                  {showSerialMode && (remote ? (
+                    <div className="py-3">
+                      <p className="text-[12px] text-text-secondary">
+                        USBPcap is available in local workspace only.
+                      </p>
+                    </div>
+                  ) : (
+                    <UsbPcapSettings />
+                  ))}
                 </SettingGroup>
               </div>
             )}
